@@ -42,9 +42,10 @@ build_xen() {
 		cd xen
 	fi
 	git clean -fdX
-	./configure --libdir=/usr/lib --build=x86_64-unknown-linux-gnu --host=aarch64-linux-gnu \
-		--disable-docs --disable-golang --disable-ocamltools \
-		--with-system-qemu=/root/qemu/build/i386-softmmu/qemu-system-i386
+	./configure --libdir=/usr/lib \
+	    --build=x86_64-unknown-linux-gnu --host=aarch64-linux-gnu \
+	    --disable-docs --disable-golang --disable-ocamltools \
+	    --with-system-qemu=/root/qemu/build/i386-softmmu/qemu-system-i386
 	make -j9 debball CROSS_COMPILE=aarch64-linux-gnu- XEN_TARGET_ARCH=arm64
 }
 
@@ -64,7 +65,8 @@ build_xen_vhost_frontend() {
 		cd xen-vhost-frontend
 	fi
 	. ~/.cargo/env
-	cargo build --release --all-features --target aarch64-unknown-linux-gnu
+	cargo build --release --all-features \
+		--target aarch64-unknown-linux-gnu
 }
 
 build_vhost_device() {
@@ -77,7 +79,8 @@ build_vhost_device() {
 		cd vhost-device
 	fi
 	. ~/.cargo/env
-	cargo build --bin vhost-device-i2c --release --all-features --target aarch64-unknown-linux-gnu
+	cargo build --bin vhost-device-i2c --release --all-features \
+		--target aarch64-unknown-linux-gnu
 }
 
 build_linux() {
@@ -109,7 +112,10 @@ build_linux() {
 	fakeroot make INSTALL_MOD_STRIP=1 install modules_install
 	fakeroot make dtbs_install || true
 	#fakeroot make firmware_install || true
-	(cd $INSTALL_PATH_BASE; mkdir -p lib/firmware; mv modules-$KREL.tar.gz modules-$KREL.tar.gz.old >/dev/null 2>&1 || true; fakeroot tar czvf modules-$KREL.tar.gz lib/modules/$KREL lib/firmware)
+	(cd $INSTALL_PATH_BASE;
+	  mkdir -p lib/firmware;
+	  mv modules-$KREL.tar.gz modules-$KREL.tar.gz.old >/dev/null 2>&1 || true;
+	  fakeroot tar czvf modules-$KREL.tar.gz lib/modules/$KREL lib/firmware)
 }
 
 build_qemu() {
