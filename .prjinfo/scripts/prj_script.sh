@@ -34,7 +34,13 @@ prj_build() {
 
 build_xen() {
 	echo "****** Build xen"
-	cd xen
+	if [ ! -d xen ]; then
+		git clone https://github.com/vireshk/xen
+		cd xen
+		#git reset --hard 35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406
+	else
+		cd xen
+	fi
 	git clean -fdX
 	./configure --libdir=/usr/lib --build=x86_64-unknown-linux-gnu --host=aarch64-linux-gnu \
 		--disable-docs --disable-golang --disable-ocamltools \
@@ -50,7 +56,14 @@ build_rust() {
 
 build_xen_vhost_frontend() {
 	echo "****** Build xen-vhost-frontend"
-	cd xen-vhost-frontend
+	if [ ! -d xen-vhost-frontend ]; then
+		git clone https://github.com/vireshk/xen-vhost-frontend
+		cd xen-vhost-frontend
+		git checkout virtio-msg
+		#git reset --hard de22910cf2d8ff088d7d560b73d93f9121c832cf
+	else
+		cd xen-vhost-frontend
+	fi
 	. ~/.cargo/env
 	cargo build --release --all-features --target aarch64-unknown-linux-gnu
 	cd ..
@@ -58,7 +71,13 @@ build_xen_vhost_frontend() {
 
 build_vhost_device() {
 	echo "****** Build vhost-device"
-	cd vhost-device
+	if [ ! -d vhost-device ]; then
+		git clone https://github.com/rust-vmm/vhost-device
+		cd vhost-device
+		#git reset --hard 079d9024be604135ca2016e2bc63e55c013bea39
+	else
+		cd vhost-device
+	fi
 	# ~/.cargo/env is still active
 	cargo build --bin vhost-device-i2c --release --all-features --target aarch64-unknown-linux-gnu
 	cd ..
