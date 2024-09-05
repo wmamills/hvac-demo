@@ -142,7 +142,7 @@ build_qemu() {
 	make install
 }
 
-CMD=${1/-/_}; shift
+CMD=${1//-/_}; shift
 
 case $CMD in
 admin_setup|prj_setup|prj_build)
