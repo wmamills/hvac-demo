@@ -1,0 +1,2 @@
+# config settings for prjtool utilities like dockit
+: ${DOCKIT_DISTRO:=debian:12}
