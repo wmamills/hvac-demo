@@ -253,7 +253,7 @@ build_*)
 	($CMD "$@")
 	;;
 *)
-	echo "Unknown prj_script command $1"
+	echo "Unknown prj_script command $CMD"
 	exit 2
 	;;
 esac
