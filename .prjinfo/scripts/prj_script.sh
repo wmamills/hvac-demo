@@ -51,6 +51,9 @@ build_xen() {
 	    --disable-docs --disable-golang --disable-ocamltools \
 	    --with-system-qemu=/opt/qemu/bin/qemu-system-i386
 	make -j9 debball CROSS_COMPILE=aarch64-linux-gnu- XEN_TARGET_ARCH=arm64
+
+	# symlink for run command
+	ln -fs ../xen/dist/install/boot/xen ../build/xen
 }
 
 build_rust() {
@@ -71,6 +74,7 @@ build_xen_vhost_frontend() {
 	. ~/.cargo/env
 	cargo build --release --all-features \
 		--target aarch64-unknown-linux-gnu
+	ln -fs ../xen-vhost-frontend/target/aarch64-unknown-linux-gnu/release/xen-vhost-frontend ../build/
 }
 
 build_vhost_device() {
@@ -85,6 +89,7 @@ build_vhost_device() {
 	. ~/.cargo/env
 	cargo build --bin vhost-device-i2c --release --all-features \
 		--target aarch64-unknown-linux-gnu
+	ln -fs ../vhost-device/target/aarch64-unknown-linux-gnu/release/vhost-device-i2c ../build/
 }
 
 build_linux() {
@@ -120,6 +125,11 @@ build_linux() {
 	  mkdir -p lib/firmware;
 	  mv modules-$KREL.tar.gz modules-$KREL.tar.gz.old >/dev/null 2>&1 || true;
 	  fakeroot tar czvf modules-$KREL.tar.gz lib/modules/$KREL lib/firmware)
+
+	# symlink for run command
+	LINUX=$(cd ../build/linux-install/boot; ls -1 vmlinuz-*)
+	echo "Symlinking to $LINUX"
+	ln -fs  linux-install/boot/$LINUX ../build/Image
 }
 
 build_qemu() {
