@@ -206,6 +206,19 @@ build_disk() {
 		(cd build/disk; wget $URL_BASE/$ORIG_DISK)
 	fi
 
+	ORIG_CPIO=virtio_msg_rootfs.cpio
+	URL_CPIO_BASE=http://people.linaro.org/~manos.pitsidianakis
+	if [ ! -r build/disk/$ORIG_CPIO ]; then
+		echo "****** Fetch original guest rootfs cpio image"
+		mkdir -p build/disk
+		(cd build/disk; wget $URL_CPIO_BASE/$ORIG_CPIO)
+	fi
+	# source is not compressed for some reason
+	gzip <build/disk/$ORIG_CPIO >build/disk/$ORIG_CPIO.gz
+
+	# our mixins for dom0
+	fakeroot tar cvzf build/mixins-dom0.tar.gz -C mixins/dom0 .
+
 	# now make a copy and add our stuff to it
 	echo "****** Modify a disk image copy"
 	rm -rf build/disk.qcow2
@@ -218,9 +231,12 @@ mount /dev/sda1 /
 mkdir /opt/qemu
 tar-in $MODULES_TAR / compress:gzip
 tar-in build/qemu-xen-arm64.tar.gz /opt/qemu compress:gzip
+tar-in build/mixins-dom0.tar.gz / compress:gzip
 upload build/vhost-device-i2c /root/vhost-device-i2c
 upload build/xen-vhost-frontend /root/xen-vhost-frontend
 upload xen/dist/$XEN_DEB /root/$XEN_DEB
+upload build/disk/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
+upload build/Image /root/Image
 EOF
 }
 
