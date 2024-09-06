@@ -43,6 +43,7 @@ prj_build() {
 
 build_xen() {
 	echo "****** Build xen"
+	mkdir -p build
 	if [ ! -d xen ]; then
 		git clone https://github.com/vireshk/xen
 		cd xen
@@ -68,6 +69,7 @@ build_rust() {
 
 build_xen_vhost_frontend() {
 	echo "****** Build xen-vhost-frontend"
+	mkdir -p build
 	if [ ! -d xen-vhost-frontend ]; then
 		git clone https://github.com/vireshk/xen-vhost-frontend
 		cd xen-vhost-frontend
@@ -84,6 +86,7 @@ build_xen_vhost_frontend() {
 
 build_vhost_device() {
 	echo "****** Build vhost-device"
+	mkdir -p build
 	if [ ! -d vhost-device ]; then
 		git clone https://github.com/rust-vmm/vhost-device
 		cd vhost-device
