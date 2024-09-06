@@ -13,6 +13,9 @@ admin_setup() {
 	# qemu build support
 	apt-get install -yqq python3-pip python3-venv ninja-build libglib2.0-dev \
 	    libpixman-1-dev libslirp-dev
+	# qemu cross compile support
+	apt-get install -yqq pkg-config:arm64 libglib2.0-dev:arm64 \
+	    libpixman-1-dev:arm64 libslirp-dev:arm64
 }
 
 prj_setup() {
@@ -29,6 +32,7 @@ prj_build() {
 	(build_vhost_device)
 	(build_linux)
 	(build_qemu)
+	(build_qemu_cross)
 	echo "****** Done"
 }
 
@@ -45,7 +49,7 @@ build_xen() {
 	./configure --libdir=/usr/lib \
 	    --build=x86_64-unknown-linux-gnu --host=aarch64-linux-gnu \
 	    --disable-docs --disable-golang --disable-ocamltools \
-	    --with-system-qemu=/root/qemu/build/i386-softmmu/qemu-system-i386
+	    --with-system-qemu=/opt/qemu/bin/qemu-system-i386
 	make -j9 debball CROSS_COMPILE=aarch64-linux-gnu- XEN_TARGET_ARCH=arm64
 }
 
@@ -119,7 +123,7 @@ build_linux() {
 }
 
 build_qemu() {
-	echo "****** Build qemu"
+	echo "****** Build qemu (host side for system emulation)"
 	if [ ! -d qemu ]; then
 		git clone https://github.com/vireshk/qemu
 		cd qemu
@@ -140,6 +144,41 @@ build_qemu() {
 		--disable-alsa --disable-jack --disable-oss --disable-pa
 	make -j10
 	make install
+}
+
+build_qemu_cross() {
+	echo "****** Build qemu cross (target side for device model)"
+	if [ ! -d qemu ]; then
+		echo "Build host side qemu first"
+		exit 2
+	fi
+	DEB=$(cd xen/dist; ls -1 xen-*.deb)
+	if [ -f xen/dist/$DEB ]; then
+		# we install the arm64 deb file to get the arm64 libraries
+		sudo apt install ./xen/dist/$DEB
+	else
+		echo "Build xen (target side) first"
+		exit 2
+	fi
+	mkdir -p build/qemu-cross
+	mkdir -p build/qemu-cross-install
+	cd build/qemu-cross
+	../../qemu/configure \
+		--cross-prefix=aarch64-linux-gnu- \
+		--target-list="aarch64-softmmu,i386-softmmu" \
+		--prefix="$(cd ../qemu-cross-install; pwd)" \
+		--enable-xen \
+		--enable-fdt --enable-slirp --enable-strip \
+		--disable-docs \
+		--disable-gtk --disable-opengl --disable-sdl \
+		--disable-dbus-display --disable-virglrenderer \
+		--disable-vte --disable-brlapi \
+		--disable-alsa --disable-jack --disable-oss --disable-pa
+	make -j10
+	make install
+
+	# make a tar file for easy install
+	fakeroot tar cvzf ../qemu-xen-arm64.tar.gz -C ../qemu-cross-install .
 }
 
 CMD=${1//-/_}; shift
