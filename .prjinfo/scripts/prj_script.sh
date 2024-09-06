@@ -16,6 +16,10 @@ admin_setup() {
 	# qemu cross compile support
 	apt-get install -yqq pkg-config:arm64 libglib2.0-dev:arm64 \
 	    libpixman-1-dev:arm64 libslirp-dev:arm64
+
+	# guestfish support, it also needs a readable kernel in /boot
+	apt-get install -yqq --no-install-recommends guestfish linux-image-amd64
+	chmod +r /boot/*
 }
 
 prj_setup() {
@@ -33,6 +37,7 @@ prj_build() {
 	(build_linux)
 	(build_qemu)
 	(build_qemu_cross)
+	(build_disk)
 	echo "****** Done"
 }
 
@@ -189,6 +194,34 @@ build_qemu_cross() {
 
 	# make a tar file for easy install
 	fakeroot tar cvzf ../qemu-xen-arm64.tar.gz -C ../qemu-cross-install .
+}
+
+build_disk() {
+	# make sure we have a copy of the upstream disk image
+	ORIG_DISK=debian-12-nocloud-arm64.qcow2
+	URL_BASE=https://cloud.debian.org/images/cloud/bookworm/latest
+	if [ ! -r build/disk/$ORIG_DISK ]; then
+		echo "****** Fetch original debian disk image"
+		mkdir -p build/disk
+		(cd build/disk; wget $URL_BASE/$ORIG_DISK)
+	fi
+
+	# now make a copy and add our stuff to it
+	echo "****** Modify a disk image copy"
+	rm -rf build/disk.qcow2
+	cp build/disk/$ORIG_DISK build/disk.qcow2
+	MODULES_TAR=$(ls -1 build/linux-install/modules-*.tar.gz)
+	XEN_DEB=$(cd xen/dist; ls -1 xen-*.deb)
+	guestfish --rw -a build/disk.qcow2 <<EOF
+run
+mount /dev/sda1 /
+mkdir /opt/qemu
+tar-in $MODULES_TAR / compress:gzip
+tar-in build/qemu-xen-arm64.tar.gz /opt/qemu compress:gzip
+upload build/vhost-device-i2c /root/vhost-device-i2c
+upload build/xen-vhost-frontend /root/xen-vhost-frontend
+upload xen/dist/$XEN_DEB /root/$XEN_DEB
+EOF
 }
 
 CMD=${1//-/_}; shift
