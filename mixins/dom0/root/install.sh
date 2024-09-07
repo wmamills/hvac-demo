@@ -3,7 +3,7 @@
 set -e 
 
 if [ -e install.done ]; then
-    exit 0
+	exit 0
 fi
 
 echo "Installing packages ..."
