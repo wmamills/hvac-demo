@@ -105,6 +105,26 @@ prj_setup() {
 }
 
 prj_build() {
+	items=("$@")
+	if [ -z "${items[0]}" ]; then
+		items=( "all" )
+	fi
+
+	for item in "${items[@]}"; do
+		item=${item//-/_}
+		case $item in
+		demo*)
+			(./$item)
+			;;
+		*)
+			(build_${item})
+			;;
+		esac
+	done
+	echo "****** Done"
+}
+
+build_all() {
 	(build_xen)
 	(build_xen_vhost_frontend)
 	(build_vhost_device)
@@ -112,7 +132,6 @@ prj_build() {
 	(build_qemu)
 	(build_qemu_cross)
 	(build_disk)
-	echo "****** Done"
 }
 
 build_xen() {
