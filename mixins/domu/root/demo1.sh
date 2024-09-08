@@ -15,9 +15,5 @@ else
 	echo "***** TEST PASSED, hwclock worked"
 fi
 
-echo "Hit Ctrl-C now to stop auto poweroff of this domu"
-sleep 10
-
-poweroff
 
 
