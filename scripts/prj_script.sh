@@ -316,6 +316,12 @@ build_disk() {
 	# our mixins for dom0
 	fakeroot tar czf build/mixins-dom0.tar.gz -C mixins/dom0 .
 
+	# our mixins for domu & composite initrd cpio
+	TOP=$PWD
+	(cd mixins/domu; find . | fakeroot cpio -H newc -o 2>/dev/null |
+		gzip >$TOP/build/mixins-domu.cpio.gz)
+	cat build/disk/$ORIG_CPIO.gz build/mixins-domu.cpio.gz \
+		>build/$ORIG_CPIO.gz
 
 	# now make a copy and add our stuff to it
 	rm -rf build/disk.qcow2
@@ -332,7 +338,7 @@ tar-in build/mixins-dom0.tar.gz / compress:gzip
 upload build/vhost-device-i2c /root/vhost-device-i2c
 upload build/xen-vhost-frontend /root/xen-vhost-frontend
 upload xen/dist/$XEN_DEB /root/$XEN_DEB
-upload build/disk/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
+upload build/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
 upload build/Image /root/Image
 EOF
 }
