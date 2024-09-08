@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "*** DomU guest demo start"
+
 # create the new virtio i2c device
 echo ds1338 0x20 > /sys/bus/i2c/devices/i2c-0/new_device
 
