@@ -308,15 +308,16 @@ build_disk() {
 		echo "****** Fetch original guest rootfs cpio image"
 		mkdir -p build/disk
 		(cd build/disk; wget $URL_CPIO_BASE/$ORIG_CPIO)
+		# source is not compressed for some reason
+		gzip <build/disk/$ORIG_CPIO >build/disk/$ORIG_CPIO.gz
 	fi
-	# source is not compressed for some reason
-	gzip <build/disk/$ORIG_CPIO >build/disk/$ORIG_CPIO.gz
 
+	echo "****** Modify a disk image copy"
 	# our mixins for dom0
-	fakeroot tar cvzf build/mixins-dom0.tar.gz -C mixins/dom0 .
+	fakeroot tar czf build/mixins-dom0.tar.gz -C mixins/dom0 .
+
 
 	# now make a copy and add our stuff to it
-	echo "****** Modify a disk image copy"
 	rm -rf build/disk.qcow2
 	cp build/disk/$ORIG_DISK build/disk.qcow2
 	MODULES_TAR=$(ls -1 build/linux-install/modules-*.tar.gz)
