@@ -327,6 +327,16 @@ build_qemu_xen_arm64() {
 	fakeroot tar cvzf ../qemu-xen-arm64.tar.gz -C ../qemu-xen-cross-install .
 }
 
+build_qemu_msg() {
+	echo "****** Build qemu w/ virtio-msg (host side for system emulation)"
+	URL=https://github.com/edgarigl/qemu.git
+	COMMIT=""
+	BRANCH="edgar/virtio-msg"
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG=""
+	qemu_common qemu-msg
+}
+
 build_disk() {
 	# make sure we have a copy of the upstream disk image
 	ORIG_DISK=debian-12-nocloud-arm64.qcow2
