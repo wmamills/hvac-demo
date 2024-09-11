@@ -236,6 +236,8 @@ build_linux() {
 # all native build qemus
 build_qemu() {
 	(build_qemu_i2c)
+	(build_qemu_msg)
+	(build_qemu_ivshmem_flat)
 }
 
 # all cross build qemus
@@ -335,6 +337,16 @@ build_qemu_msg() {
 	TARGETS="aarch64-softmmu"
 	EXTRA_CONFIG=""
 	qemu_common qemu-msg
+}
+
+build_qemu_ivshmem_flat() {
+	echo "****** Build qemu w/ ivshmem-flat (host side for system emulation)"
+	URL=https://github.com/gromero/qemu.git
+	COMMIT=""
+	BRANCH="ivshmem_rebased_on_v9_0_2"
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG=""
+	qemu_common qemu-ivshmem-flat
 }
 
 build_disk() {
