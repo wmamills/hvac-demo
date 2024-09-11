@@ -233,20 +233,55 @@ build_linux() {
 	ln -fs  linux-install/boot/$LINUX ../build/Image
 }
 
+# all native build qemus
 build_qemu() {
-	echo "****** Build qemu (host side for system emulation)"
-	if [ ! -d qemu ]; then
-		git clone https://github.com/vireshk/qemu
-		cd qemu
-		git reset --hard b7890a2c3d6949e8f462bb3630d5b48ecae8239f
+	(build_qemu_i2c)
+}
+
+# all cross build qemus
+build_qemu_cross() {
+	(build_qemu_xen_arm64)
+}
+
+# build all qemus
+build_qemu_all() {
+	(build_qemu)
+	(build_qemu_cross)
+}
+
+# Common part of qemu builds
+# Argumenets
+# * name
+# ENV
+# * URL
+# * COMMIT
+# * BRANCH
+# * EXTRA_CONFIG
+# * TARGETS
+qemu_common() {
+	NAME=$1
+
+	if [ ! -d qemu.git ]; then
+		git clone --bare https://github.com/qemu/qemu.git
+	fi
+	if [ ! -d $NAME ]; then
+		cd qemu.git
+		git remote add $NAME $URL
+		git fetch $NAME
+		git worktree add ../$NAME $NAME/$BRANCH
+		cd ../$NAME
+		if [ -n "$COMMIT" ]; then
+			git reset --hard $COMMIT
+		fi
 		cd ..
 	fi
-	mkdir -p build/qemu
-	mkdir -p build/qemu-install
-	cd build/qemu
-	../../qemu/configure \
-		--target-list="aarch64-softmmu" \
-		--prefix="$(cd ../qemu-install; pwd)" \
+	mkdir -p build/$NAME
+	mkdir -p build/$NAME-install
+	cd build/$NAME
+	../../$NAME/configure \
+		$EXTRA_CONFIG \
+		--target-list="$TARGETS" \
+		--prefix="$(cd ../$NAME-install; pwd)" \
 		--enable-fdt --enable-slirp --enable-strip \
 		--disable-docs \
 		--disable-gtk --disable-opengl --disable-sdl \
@@ -257,12 +292,18 @@ build_qemu() {
 	make install
 }
 
-build_qemu_cross() {
-	echo "****** Build qemu cross (target side for device model)"
-	if [ ! -d qemu ]; then
-		echo "Build host side qemu first"
-		exit 2
-	fi
+build_qemu_i2c() {
+	echo "****** Build qemu w/ virtio-i2c (host side for system emulation)"
+	URL=https://github.com/vireshk/qemu
+	COMMIT=b7890a2c3d6949e8f462bb3630d5b48ecae8239f
+	BRANCH=master
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG=""
+	qemu_common qemu-i2c
+}
+
+build_qemu_xen_arm64() {
+	echo "****** Build qemu xen arm64 (target side for device model)"
 	DEB=$(cd xen/dist; ls -1 xen-*.deb)
 	if [ -f xen/dist/$DEB ]; then
 		# we install the arm64 deb file to get the arm64 libraries
@@ -271,25 +312,19 @@ build_qemu_cross() {
 		echo "Build xen (target side) first"
 		exit 2
 	fi
-	mkdir -p build/qemu-cross
-	mkdir -p build/qemu-cross-install
-	cd build/qemu-cross
-	../../qemu/configure \
-		--cross-prefix=aarch64-linux-gnu- \
-		--target-list="aarch64-softmmu,i386-softmmu" \
-		--prefix="$(cd ../qemu-cross-install; pwd)" \
-		--enable-xen \
-		--enable-fdt --enable-slirp --enable-strip \
-		--disable-docs \
-		--disable-gtk --disable-opengl --disable-sdl \
-		--disable-dbus-display --disable-virglrenderer \
-		--disable-vte --disable-brlapi \
-		--disable-alsa --disable-jack --disable-oss --disable-pa
-	make -j10
-	make install
+
+	# for now just use the same as i2c
+	URL=https://github.com/vireshk/qemu
+	COMMIT=b7890a2c3d6949e8f462bb3630d5b48ecae8239f
+	BRANCH=master
+
+	# but we need different config
+	TARGETS="aarch64-softmmu,i386-softmmu"
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --enable-xen"
+	qemu_common qemu-xen-cross
 
 	# make a tar file for easy install
-	fakeroot tar cvzf ../qemu-xen-arm64.tar.gz -C ../qemu-cross-install .
+	fakeroot tar cvzf ../qemu-xen-arm64.tar.gz -C ../qemu-xen-cross-install .
 }
 
 build_disk() {

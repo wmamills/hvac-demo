@@ -1,7 +1,8 @@
 build/
 xen/
 linux/
-qemu/
+qemu.git/
+qemu-*/
 xen-vhost-frontend/
 vhost-device
 

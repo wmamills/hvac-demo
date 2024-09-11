@@ -1,6 +1,7 @@
 #!/bin/bash
 
-./build/qemu-install/bin/qemu-system-aarch64 -machine virt,virtualization=on -cpu cortex-a57 -serial mon:stdio \
+./build/qemu-i2c-install/bin/qemu-system-aarch64 \
+  -machine virt,virtualization=on -cpu cortex-a57 -serial mon:stdio \
   -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::8022-:22 \
   -drive file=./build/disk.qcow2,id=hd0,if=none,format=qcow2 \
   -device virtio-scsi-pci -device scsi-hd,drive=hd0 \
