@@ -350,7 +350,7 @@ build_qemu_xen_arm64() {
 build_qemu_msg() {
 	echo "****** Build qemu w/ virtio-msg (host side for system emulation)"
 	URL=https://github.com/edgarigl/qemu.git
-	COMMIT=""
+	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
 	BRANCH="edgar/virtio-msg"
 	TARGETS="aarch64-softmmu"
 	EXTRA_CONFIG=""
