@@ -1,10 +1,11 @@
 #!/bin/bash
 
-rm -fr queue-linux-user-d*
+rm -f ./queue-linux-user-d*
+rm -f ./qemu-ram
 
 ./build/qemu-msg-install/bin/qemu-system-aarch64 \
      -M x-virtio-msg -m 2G -cpu cortex-a72 \
-     -object memory-backend-file,id=mem,size=2G,mem-path=/dev/shm/qemu-ram,share=on \
+     -object memory-backend-file,id=mem,size=2G,mem-path=./qemu-ram,share=on \
      -machine memory-backend=mem \
      -chardev socket,id=chr0,path=linux-user.socket,server=on,wait=false \
      -serial mon:stdio -display none \
