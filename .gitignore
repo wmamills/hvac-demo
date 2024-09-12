@@ -1,4 +1,5 @@
 build/
+logs/
 xen/
 linux/
 qemu.git/

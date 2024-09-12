@@ -94,6 +94,9 @@ admin_setup() {
 	# guestfish support, it also needs a readable kernel in /boot
 	apt-get install -yqq --no-install-recommends guestfish linux-image-amd64
 	chmod +r /boot/*
+
+	# for demos and because we are not savages forced to use vi
+	apt-get install -yqq tmux nano
 }
 
 prj_setup() {
@@ -134,13 +137,20 @@ build_all() {
 	(build_disk)
 }
 
+
 build_xen() {
 	echo "****** Build xen"
 	mkdir -p build
 	if [ ! -d xen ]; then
-		git clone https://github.com/vireshk/xen
+		# git clone https://github.com/vireshk/xen
+		# (cd xen; git reset --hard 35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406)
+		git clone https://github.com/edgarigl/xen.git --branch edgar/virtio-msg
+		# git clone https://github.com/xen-project/xen.git
 		cd xen
-		#git reset --hard 35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406
+		CF=xen/arch/arm/configs/arm64_defconfig
+		echo "CONFIG_IOREQ_SERVER=y" 	>>$CF
+		echo "CONFIG_EXPERT=y" 		>>$CF
+		echo "CONFIG_TESTS=y" 		>>$CF
 	else
 		cd xen
 	fi
