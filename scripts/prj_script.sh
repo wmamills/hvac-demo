@@ -278,8 +278,10 @@ qemu_common() {
 	fi
 	if [ ! -d $NAME ]; then
 		cd qemu.git
+		git remote rm $NAME || true
 		git remote add $NAME $URL
 		git fetch $NAME
+		git worktree prune
 		git worktree add ../$NAME $NAME/$BRANCH
 		cd ../$NAME
 		if [ -n "$COMMIT" ]; then
