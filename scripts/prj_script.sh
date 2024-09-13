@@ -144,7 +144,7 @@ build_xen() {
 		# git clone https://github.com/vireshk/xen
 		# (cd xen; git reset --hard 35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406)
 		git clone https://github.com/edgarigl/xen.git --branch edgar/virtio-msg
-		# git clone https://github.com/xen-project/xen.git
+		# git clone https://github.com/xen-project/xen.git --branch RELEASE-4.19.0
 		cd xen
 		CF=xen/arch/arm/configs/arm64_defconfig
 		echo "CONFIG_IOREQ_SERVER=y" 	>>$CF
