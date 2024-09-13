@@ -137,7 +137,6 @@ build_all() {
 	(build_disk)
 }
 
-
 build_xen() {
 	echo "****** Build xen"
 	mkdir -p build
