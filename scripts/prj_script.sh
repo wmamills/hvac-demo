@@ -325,6 +325,8 @@ build_qemu_xen_arm64() {
 	DEB=$(cd xen/dist; ls -1 xen-*.deb)
 	if [ -f xen/dist/$DEB ]; then
 		# we install the arm64 deb file to get the arm64 libraries
+		# first remove any existing version in case it has changed
+		sudo apt purge xen-upstream:arm64 || true
 		sudo apt install ./xen/dist/$DEB
 	else
 		echo "Build xen (target side) first"
