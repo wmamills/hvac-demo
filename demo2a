@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./scripts/multi-qemu demo2a.d
