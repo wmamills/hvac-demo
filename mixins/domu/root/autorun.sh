@@ -1,7 +1,18 @@
 #!/bin/sh
 
-START_TIME=3
-STOP_TIME=5
+get_cmdline_arg() {
+    PARAM=$1
+    DEF_VALUE=$2
+
+    if grep -q $PARAM /proc/cmdline; then
+        VALUE=$(sed -e "s#^.*$PARAM=\\([^[:space:]]*\\).*\$#\\1#" /proc/cmdline)
+        if [ -n $VALUE ]; then
+            echo $VALUE
+            return
+        fi
+    fi
+    echo $DEF_VALUE
+}
 
 delay() {
 	DELAY=$1
@@ -11,15 +22,23 @@ delay() {
 	done
 }
 
-echo "To stop autorun, hit ctrl-c in the next $START_TIME seconds"
-delay $START_TIME
+AUTORUN=$(get_cmdline_arg autorun "")
+AUTORUN_DELAY=$(get_cmdline_arg autorun_delay 5)
 
-./demo1.sh
+echo "/proc/cmdline: $(cat /proc/cmdline)"
+echo "AUTORUN=$AUTORUN AUTORUN_DELAY=$AUTORUN_DELAY"
 
-echo "To stop poweroff, hit ctrl-c in the next $STOP_TIME seconds"
-delay $STOP_TIME
+if [ -z "$AUTORUN" ]; then
+    exit
+fi
 
-echo "DomU guest poweroff"
+echo "To stop autorun, hit ctrl-c in the next $AUTORUN_DELAY seconds"
+delay $AUTORUN_DELAY
+
+"$AUTORUN"
+
+echo "To stop poweroff, hit ctrl-c in the next $AUTORUN_DELAY seconds"
+delay $AUTORUN_DELAY
+
+echo "busybox poweroff"
 poweroff
-
-
