@@ -14,8 +14,8 @@ $BASE_DIR/build/qemu-msg-install/bin/qemu-system-aarch64 \
      -machine memory-backend=mem \
      -serial mon:stdio -display none \
      -kernel $BASE_DIR/build/Image \
-     -initrd $BASE_DIR/build/disk/virtio_msg_rootfs.cpio.gz \
-     -append "console=ttyAMA0" \
+     -initrd $BASE_DIR/build/demo2a-rootfs.cpio.gz \
+     -append "console=ttyAMA0 autorun=./demo2a.sh" \
      -chardev socket,id=chr0,path=linux-user.socket \
      -device virtio-msg-proxy-driver-pci,virtio-id=0x1 \
      -device virtio-msg-bus-linux-user,name=linux-user,chardev=chr0
