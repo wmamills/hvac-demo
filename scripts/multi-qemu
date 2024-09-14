@@ -178,7 +178,11 @@ start_qemus() {
 
 do_host_demo() {
     tmux_panel_title "host side" "$@"
-    echo "Starting qemu"
+
+    # do host side logging
+    exec > >(tee $LOGS/host-log.txt) 2>&1
+
+    echo "Starting qemu(s)"
     start_qemus
     bash
     tmux kill-win
@@ -195,7 +199,13 @@ qemu_done_demo() {
 # This is a tmux window pane function to actually run qemu
 do_qemu() {
     IDX=${1:-0}; shift 1
-    tmux_panel_title "${QEMU_SSH_NAME[$IDX]}" "$@"
+
+    NAME=${QEMU_SSH_NAME[$IDX]}
+    tmux_panel_title "$NAME" "$@"
+
+    # do logging
+    exec > >(tee $LOGS/$NAME-log.txt) 2>&1
+
     QEMU_TMUX=no $BASE_DIR/${QEMU_BOOT_SCRIPT[$IDX]} ${QEMU_BOOT_ARG[$IDX]} "$@"
     #echo "QEMU finsihed"; bash
     qemu_done_$MODE
@@ -280,7 +290,7 @@ main() {
     # if finished or killed (but not detached)
     if ! tmux has -t$SESS >/dev/null 2>&1; then
         cleanup
-        echo "LOG=$LOG"
+        echo "LOGS=$LOGS"
         cat $TOTALS
     fi
 }
