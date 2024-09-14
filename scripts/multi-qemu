@@ -13,14 +13,14 @@ export IMAGES=$BASE_DIR/images
 
 MODE=demo
 
-LOGS=$BASE_DIR/logs
-mkdir -p $LOGS
-PID_FILE=$LOGS/qemu.pid
-
 : ${NOW:=$(date +%Y-%m-%d-%H%M%S)}
 export NOW
-LOG=$LOGS/$NOW-test-log.txt
-TOTALS=$LOGS/$NOW-totals.txt
+export LOGS=$BASE_DIR/logs/$NOW
+mkdir -p $LOGS
+
+PID_FILE=$LOGS/qemu.pid
+LOG=$LOGS/test-log.txt
+TOTALS=$LOGS/totals.txt
 
 TMP_MARKER=test-qemu-marker
 
