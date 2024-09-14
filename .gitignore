@@ -1,8 +1,11 @@
 build/
+logs/
 xen/
 linux/
 qemu.git/
 qemu-*/
 xen-vhost-frontend/
-vhost-device
-
+vhost-device/
+qemu-ram
+net.pcap
+queue-linux-user-d*
