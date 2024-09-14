@@ -5,3 +5,6 @@
 # this does not give run-A.sh to cleanup the memory files so we do it here
 rm -f ./queue-linux-user-d*
 rm -f ./qemu-ram
+
+tcpdump -r $LOGS/net.pcap
+grep "^\*\*\*\*\* TEST" $LOGS/qemu2-log.txt
