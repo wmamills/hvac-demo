@@ -370,7 +370,19 @@ build_qemu_ivshmem_flat() {
 	qemu_common qemu-ivshmem-flat
 }
 
-build_disk() {
+disk_common_buildroot() {
+	ORIG_CPIO=virtio_msg_rootfs.cpio
+	URL_CPIO_BASE=http://people.linaro.org/~manos.pitsidianakis
+	if [ ! -r build/disk/$ORIG_CPIO ]; then
+		echo "****** Fetch original buildroot rootfs cpio image"
+		mkdir -p build/disk
+		(cd build/disk; wget $URL_CPIO_BASE/$ORIG_CPIO)
+		# source is not compressed for some reason
+		gzip <build/disk/$ORIG_CPIO >build/disk/$ORIG_CPIO.gz
+	fi
+}
+
+disk_common_debian() {
 	# make sure we have a copy of the upstream disk image
 	ORIG_DISK=debian-12-nocloud-arm64.qcow2
 	URL_BASE=https://cloud.debian.org/images/cloud/bookworm/latest
@@ -379,18 +391,30 @@ build_disk() {
 		mkdir -p build/disk
 		(cd build/disk; wget $URL_BASE/$ORIG_DISK)
 	fi
+}
 
-	ORIG_CPIO=virtio_msg_rootfs.cpio
-	URL_CPIO_BASE=http://people.linaro.org/~manos.pitsidianakis
-	if [ ! -r build/disk/$ORIG_CPIO ]; then
-		echo "****** Fetch original guest rootfs cpio image"
-		mkdir -p build/disk
-		(cd build/disk; wget $URL_CPIO_BASE/$ORIG_CPIO)
-		# source is not compressed for some reason
-		gzip <build/disk/$ORIG_CPIO >build/disk/$ORIG_CPIO.gz
-	fi
+build_disk_demo2a() {
+	disk_common_buildroot
 
-	echo "****** Modify a disk image copy"
+	echo "****** Modify a disk image copy for demo2a"
+
+	# our mixins for domu & composite initrd cpio
+	TOP=$PWD
+	(cd mixins/domu; find . | fakeroot cpio -H newc -o 2>/dev/null |
+		gzip >$TOP/build/mixins-domu.cpio.gz)
+	(cd demo2a.d/mixins/qemu2; find . | fakeroot cpio -H newc -o 2>/dev/null |
+		gzip >$TOP/build/mixins-demo2a-qemu1.cpio.gz)
+	cat build/disk/$ORIG_CPIO.gz \
+		build/mixins-domu.cpio.gz \
+		build/mixins-demo2a-qemu1.cpio.gz \
+		>build/demo2a-rootfs.cpio.gz
+}
+
+build_disk_demo1() {
+	disk_common_debian
+	disk_common_buildroot
+
+	echo "****** Modify a disk image copy for demo1"
 	# our mixins for dom0
 	fakeroot tar czf build/mixins-dom0.tar.gz -C mixins/dom0 .
 
@@ -419,6 +443,11 @@ upload xen/dist/$XEN_DEB /root/$XEN_DEB
 upload build/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
 upload build/Image /root/Image
 EOF
+}
+
+build_disk() {
+	(build_disk_demo1)
+	(build_disk_demo2a)
 }
 
 CMD=${1//-/_}; shift
