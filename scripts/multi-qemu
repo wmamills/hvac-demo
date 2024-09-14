@@ -42,6 +42,8 @@ QEMU_SSH_NAME[0]=qemu
 QEMU_BOOT_SCRIPT[0]="./demo1"
 QEMU_BOOT_ARG[0]="xen"
 
+CLEANUP_SCRIPT=""
+
 SESSION_NAME=$MY_NAME
 
 error() {
@@ -146,7 +148,7 @@ kill_qemu() {
 
 ###### Windows and main
 
-clean_tmp() {
+cleanup() {
     MY_TMPDIR=$(dirname $TMPDIR)
     if [ -e $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER ]; then
         echo "cleaning our private tmp dir"
@@ -154,6 +156,11 @@ clean_tmp() {
         touch $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER || error "Can't touch tmp marker"
     else
         echo "private tmp dir not found"
+    fi
+
+    if [ -n "$CLEANUP_SCRIPT" ]; then
+        echo "running $CLEANUP_SCRIPT"
+        $BASE_DIR/$CLEANUP_SCRIPT
     fi
 }
 
@@ -272,7 +279,7 @@ main() {
 
     # if finished or killed (but not detached)
     if ! tmux has -t$SESS >/dev/null 2>&1; then
-        clean_tmp
+        cleanup
         echo "LOG=$LOG"
         cat $TOTALS
     fi
