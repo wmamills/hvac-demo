@@ -94,6 +94,9 @@ admin_setup() {
 	# guestfish support, it also needs a readable kernel in /boot
 	apt-get install -yqq --no-install-recommends guestfish linux-image-amd64
 	chmod +r /boot/*
+
+	# for demos and because we are not savages forced to use vi
+	apt-get install -yqq tmux nano
 }
 
 prj_setup() {
