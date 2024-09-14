@@ -1,0 +1,312 @@
+#!/bin/bash
+
+# This is a cut down of the qemu-test/demo script
+
+#set -x
+
+ME_ABS=$(readlink -f $0)
+MY_NAME=$(basename $0)
+MY_DIR=$(dirname $ME_ABS)
+ME=$MY_DIR/$MY_NAME
+export BASE_DIR=$(dirname $MY_DIR)
+export IMAGES=$BASE_DIR/images
+
+MODE=demo
+
+LOGS=$BASE_DIR/logs
+mkdir -p $LOGS
+PID_FILE=$LOGS/qemu.pid
+
+: ${NOW:=$(date +%Y-%m-%d-%H%M%S)}
+export NOW
+LOG=$LOGS/$NOW-test-log.txt
+TOTALS=$LOGS/$NOW-totals.txt
+
+TMP_MARKER=test-qemu-marker
+
+RUNS=2
+TRYS=2
+
+BOOT_WAIT=30
+SHUTDOWN_WAIT=30
+KILL_WAIT=10
+
+TEST_WAIT=60
+SSH_FAIL_COUNT=5
+TRY_CONTINUE=true
+
+FILTER_TOTALS=true
+
+NUM_QEMU=1
+QEMU_SSH_NAME[0]=qemu
+QEMU_BOOT_SCRIPT[0]="./demo1"
+QEMU_BOOT_ARG[0]="xen"
+
+SESSION_NAME=$MY_NAME
+
+error() {
+    echo "$@"
+    exit 2
+}
+
+tmux_panel_title() {
+    TITLE="$@ "
+    printf '\033]2;%s\033\\' "$TITLE"
+}
+
+format_msg() {
+    MSG1=$(printf "%-8s %4d %-8s %s" $1 $2 $3 $4)
+    shift 4
+    echo "$MSG1" "$@"
+}
+
+start_timer() {
+    START=$(date +%s)
+}
+
+get_timer() {
+    END=$(date +%s)
+    echo $(( $END - $START ))
+}
+
+###### Shutdown support
+qemu_running_one() {
+    IDX=$1
+    if [ -r ${PID_FILE[$IDX]} ]; then
+        ps --pid $(cat ${PID_FILE[$IDX]}) >/dev/null
+    else
+        false
+    fi
+}
+
+qemu_running_any() {
+    for IDX in $(seq $NUM_QEMU); do
+        if qemu_running_one $IDX; then
+            return
+        fi
+    done
+    false
+}
+
+qemu_running_all() {
+    for IDX in $(seq $NUM_QEMU); do
+        if ! qemu_running_one $IDX; then
+            false
+            return
+        fi
+    done
+    true
+}
+
+wait_qemu_stop() {
+    echo -n "waiting for qemu to stop "
+    start_timer
+    for i in $(seq 1 $SHUTDOWN_WAIT); do
+        if ! qemu_running_all; then
+            DELAY=$(get_timer)
+            echo " OK"
+            return
+        fi
+        echo -n "."
+        sleep 1
+    done
+    DELAY=$(get_timer)
+    echo " TIMEOUT"
+    false
+}
+
+kill_qemu() {
+    # there is a 2 second delay in qemu-run on error exit
+    # after we know qemu is dead, we must wait longer than this
+    # we could also poll for the existence of the qemu window 
+    # but do this for now
+
+    #echo "kill_qemu, hit enter to continue"; read ignore
+    if [ -r $PID_FILE ]; then
+        PID=$(cat $PID_FILE)
+    else
+        # qemu deletes the pid file on orderly exit
+        # if it does not exist, qemu must have exited
+        # give extra time for the pane script to exit
+        sleep 3
+        return 0
+    fi
+
+    for i in $(seq 1 $KILL_WAIT); do
+        if qemu_running; then
+            kill -3 $PID
+            sleep 1
+        else
+            sleep 3
+            return 0
+        fi
+    done
+    false
+}
+
+###### Windows and main
+
+clean_tmp() {
+    MY_TMPDIR=$(dirname $TMPDIR)
+    if [ -e $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER ]; then
+        echo "cleaning our private tmp dir"
+        rm -rf $MY_TMPDIR/test-qemu-tmp/* || true
+        touch $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER || error "Can't touch tmp marker"
+    else
+        echo "private tmp dir not found"
+    fi
+}
+
+start_qemus() {
+    for (( i = 0; i < $NUM_QEMU; i++ )); do
+        tmux split-window -h "$ME subcmd qemu $i"
+    done
+
+    # now put our host window small across the top,
+    # and split the width with the others
+    # The "main" window appears to be the oldest, not the one with the focus
+    tmux setw main-pane-height 8
+    tmux select-layout main-horizontal
+}
+
+do_host_demo() {
+    tmux_panel_title "host side" "$@"
+    echo "Starting qemu"
+    start_qemus
+    bash
+    tmux kill-win
+}
+
+qemu_done_test() {
+    true
+}
+
+qemu_done_demo() {
+    tmux kill-win
+}
+
+# This is a tmux window pane function to actually run qemu
+do_qemu() {
+    IDX=${1:-0}; shift 1
+    tmux_panel_title "${QEMU_SSH_NAME[$IDX]}" "$@"
+    QEMU_TMUX=no $BASE_DIR/${QEMU_BOOT_SCRIPT[$IDX]} ${QEMU_BOOT_ARG[$IDX]} "$@"
+    #echo "QEMU finsihed"; bash
+    qemu_done_$MODE
+}
+
+mk_env() {
+cat >$ENV_FILE <<EOF
+export TEST_DIR="$TEST_DIR"
+
+RUNS="$RUNS"
+TRYS="$TRYS"
+BOOT_WAIT="$BOOT_WAIT"
+SHUTDOWN_WAIT="$SHUTDOWN_WAIT"
+KILL_WAIT="$KILL_WAIT"
+TEST_WAIT="$TEST_WAIT"
+SSH_FAIL_COUNT="$SSH_FAIL_COUNT"
+TRY_CONTINUE="$TRY_CONTINUE"
+FILTER_TOTALS="$FILTER_TOTALS"
+QEMU_SSH_NAME="$QEMU_SSH_NAME"
+QEMU_BOOT_SCRIPT="$QEMU_BOOT_SCRIPT"
+QEMU_BOOT_ARG="$QEMU_BOOT_ARG"
+SESSION_NAME="$SESSION_NAME"
+
+NUM_QEMU="$NUM_QEMU"
+QEMU_SSH_NAME=( ${QEMU_SSH_NAME[@]} )
+QEMU_BOOT_SCRIPT=( ${QEMU_BOOT_SCRIPT[@]} )
+QEMU_BOOT_ARG=( ${QEMU_BOOT_ARG[@]} )
+
+TESTS=( ${TESTS[@]} )
+EOF
+}
+
+start_tmux_demo() {
+    touch $LOG
+    echo "" >$TOTALS
+
+    tmux start-server
+    tmux new-session -d -s QEMU -n $QEMU_WIN_NAME -d "$ME subcmd host_$MODE"
+    SESS="QEMU"
+    tmux set -s -t $SESS mouse on
+
+    tmux set -w -t $SESS:$QEMU_WIN_NAME pane-border-status top
+
+    tmux attach -t$SESS:$QEMU_WIN_NAME
+}
+
+# main starts things up and then waits for tmux to finish or detach
+main() {
+    TESTS=( )
+
+    if [ -n "$TMUX" ]; then
+        echo "nested tmux not supported"
+        exit 2
+    fi
+
+    if [ -z "$1" -o ! -d $1 ]; then
+        error -e "The first argument to $MY_NAME should be a directory, like:\n" \
+        "./scripts/$MY_NAME tests/dummy"
+    else
+        cd $1; shift
+        TEST_DIR=$PWD
+    fi
+
+    if [ -e ./test-qemu-vars ]; then
+        . ./test-qemu-vars
+    fi
+
+    export ENV_FILE=$LOGS/this-session-qemu-vars
+    mk_env
+    export TEST_QEMU_VARS=$ENV_FILE
+
+    : ${TMPDIR:=/tmp}
+    export MY_TMPDIR=$(mktemp -d -p $TMPDIR test-qemu-XXXXXXXX)
+    mkdir -p $MY_TMPDIR/test-qemu-tmp || error "Can't create tmp dir"
+    if ! touch $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER; then
+        error "Can't create private tmpdir"
+    fi
+    export TMPDIR=$MY_TMPDIR/test-qemu-tmp
+
+    start_tmux_$MODE
+
+    # if finished or killed (but not detached)
+    if ! tmux has -t$SESS >/dev/null 2>&1; then
+        clean_tmp
+        echo "LOG=$LOG"
+        cat $TOTALS
+    fi
+}
+
+do_help_test() {
+    echo "this runs a sequence of tests using qemu"
+    echo "look at test-qemu-vars for examples"
+}
+
+do_help_demo() {
+    echo "This runs a host shell and one or more qemu instances in panes of a tmux session"
+}
+
+if [ -n "$TEST_QEMU_VARS" ]; then
+    . $TEST_QEMU_VARS
+fi
+
+case $MODE in
+test|demo)
+    true
+    ;;
+*)
+    echo "Unknown mode $MODE"
+    exit 2
+esac
+
+if [ x"$1" = x"subcmd" ]; then
+    CMD=$2
+    shift; shift;
+    do_$CMD "$@"
+elif [ x"$1" = x"help" ]; then
+    do_help_$MODE
+    exit 2
+else
+    main "$@"
+fi
