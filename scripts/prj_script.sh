@@ -335,6 +335,18 @@ build_u_boot() {
 	ln -fs  u-boot-el2/u-boot.bin ../build/u-boot-el2.bin
 }
 
+build_devmem2() {
+	echo "****** Build devmem2 for arm64"
+	if [ ! -d devmem2 ]; then
+		git clone https://github.com/radii/devmem2.git
+		cd devmem2
+	else
+		cd devmem2
+	fi
+	mkdir -p ../build/
+	aarch64-linux-gnu-gcc devmem2.c -o ../build/devmem2
+}
+
 # all native build qemus
 build_qemu() {
 	(build_qemu_i2c)
