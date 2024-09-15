@@ -5,7 +5,7 @@
   -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::8022-:22 \
   -drive file=./build/disk.qcow2,id=hd0,if=none,format=qcow2 \
   -device virtio-scsi-pci -device scsi-hd,drive=hd0 \
-  -display none -m 8192 -smp 8 -kernel ./build/xen \
+  -display none -m 8192 -smp 8 -kernel ./build/xen-upstream \
   -append "dom0_mem=5G,max:5G dom0_max_vcpus=7 loglvl=all guest_loglvl=all" \
   -device guest-loader,addr=0x49000000,kernel=./build/Image,bootargs="root=/dev/sda1 console=hvc0 earlyprintk=xen" \
   -device ds1338,address=0x20

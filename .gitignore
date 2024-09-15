@@ -1,6 +1,7 @@
 build/
 logs/
-xen/
+xen.git/
+xen-*/
 linux/
 qemu.git/
 qemu-*/
