@@ -12,3 +12,7 @@
 qemu-ram
 net.pcap
 queue-linux-user-d*
+qemu-xen-vm?-ram
+shm.pid
+shm.sock
+*.dtb
