@@ -1,0 +1,33 @@
+/ {
+	/*
+        shm@23f000000 {
+                compatible = "mmio-sram";
+                xen,passthrough;
+                reg = <0x2 0x3f000000 0x0 0x01000000>;
+        };
+*/
+	chosen {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		linux,initrd-start = <0x50000000>;
+		linux,initrd-end = <0x54000000>;
+
+		stdout-path = "/pl011@9000000";
+		kaslr-seed = <0xd68ecccf 0x8bdd7e5a>;
+		bootargs = "rdinit=/bin/sh console=ttyAMA0,115200n8 earlyprintk=serial,ttyAMA0";
+		xen,xen-bootargs = "dom0_mem=2G bootscrub=0";
+		xen,dom0-bootargs = "rw root=/dev/ram rdinit=/sbin/init earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot";
+
+		module@0 {
+			compatible = "xen,linux-zimage", "xen,multiboot-module";
+			reg = <0x47000000 0x29a1a00>;
+			bootargs = "rw root=/dev/ram rdinit=/sbin/init earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot";
+		};
+
+		module@1 {
+			compatible = "xen,linux-initrd", "xen,multiboot-module";
+			reg = <0x50000000 0x8000000>;
+		};
+	};
+};
