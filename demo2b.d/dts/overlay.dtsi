@@ -15,14 +15,14 @@
 
 		stdout-path = "/pl011@9000000";
 		kaslr-seed = <0xd68ecccf 0x8bdd7e5a>;
-		bootargs = "rdinit=/bin/sh console=ttyAMA0,115200n8 earlyprintk=serial,ttyAMA0";
+		bootargs = "console=ttyAMA0,115200n8 earlyprintk=serial,ttyAMA0";
 		xen,xen-bootargs = "dom0_mem=2G bootscrub=0";
-		xen,dom0-bootargs = "rw root=/dev/ram rdinit=/sbin/init earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot";
+		xen,dom0-bootargs = "earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot";
 
 		module@0 {
 			compatible = "xen,linux-zimage", "xen,multiboot-module";
 			reg = <0x47000000 0x29a1a00>;
-			bootargs = "rw root=/dev/ram rdinit=/sbin/init earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot";
+			bootargs = "earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot";
 		};
 
 		module@1 {
