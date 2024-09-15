@@ -9,7 +9,7 @@ MY_NAME=$(basename $0)
 MY_DIR=$(dirname $ME_ABS)
 ME=$MY_DIR/$MY_NAME
 export BASE_DIR=$(dirname $MY_DIR)
-export IMAGES=$BASE_DIR/images
+export IMAGES=$BASE_DIR/build
 
 MODE=demo
 
@@ -43,6 +43,7 @@ QEMU_BOOT_SCRIPT[0]="./demo1"
 QEMU_BOOT_ARG[0]="xen"
 
 CLEANUP_SCRIPT=""
+SETUP_SCRIPT=""
 
 SESSION_NAME=$MY_NAME
 
@@ -284,6 +285,11 @@ main() {
         error "Can't create private tmpdir"
     fi
     export TMPDIR=$MY_TMPDIR/test-qemu-tmp
+
+    if [ -n "$SETUP_SCRIPT" ]; then
+        echo "running $SETUP_SCRIPT"
+        $BASE_DIR/$SETUP_SCRIPT
+    fi
 
     start_tmux_$MODE
 
