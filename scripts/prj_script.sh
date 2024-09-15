@@ -96,7 +96,7 @@ admin_setup() {
 	chmod +r /boot/*
 
 	# for demos and because we are not savages forced to use vi
-	apt-get install -yqq tmux tcpdump nano
+	apt-get install -yqq tmux tcpdump device-tree-compiler nano
 }
 
 prj_setup() {
