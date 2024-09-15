@@ -3,6 +3,7 @@ logs/
 xen.git/
 xen-*/
 linux/
+u-boot/
 qemu.git/
 qemu-*/
 xen-vhost-frontend/

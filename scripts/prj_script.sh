@@ -314,6 +314,27 @@ build_linux() {
 	ln -fs  linux-install/boot/$LINUX ../build/Image
 }
 
+build_u_boot() {
+	echo "****** Build U-boot (EL2)"
+	if [ ! -d u-boot ]; then
+		git clone https://github.com/u-boot/u-boot.git
+		cd u-boot
+		git checkout v2024.07
+	else
+		cd u-boot
+	fi
+	mkdir -p ../build/u-boot-el2
+	export ARCH=arm64
+	export CROSS_COMPILE=aarch64-linux-gnu-
+	export KBUILD_OUTPUT="$(cd ../build/u-boot-el2; pwd)"
+
+	make qemu_arm64_defconfig
+	make -j10
+
+	# symlink for run command
+	ln -fs  u-boot-el2/u-boot.bin ../build/u-boot-el2.bin
+}
+
 # all native build qemus
 build_qemu() {
 	(build_qemu_i2c)
