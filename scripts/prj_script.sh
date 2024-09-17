@@ -508,13 +508,16 @@ build_disk_demo2a() {
 		>build/demo2a-rootfs.cpio.gz
 }
 
-build_disk_demo1() {
+build_disk_debian() {
 	disk_common_debian
 	disk_common_buildroot
 
-	echo "****** Modify a disk image copy for demo1"
-	# our mixins for dom0
-	fakeroot tar czf build/mixins-dom0.tar.gz -C mixins/dom0 .
+	echo "****** Modify a disk image copy for debian based demos"
+	rm -f build/demo*-disk.qcow2
+	rm -f build/disk.qcow2
+
+	# our mixins for debian
+	fakeroot tar czf build/mixins-debian.tar.gz -C mixins/debian .
 
 	# our mixins for domu & composite initrd cpio
 	TOP=$PWD
@@ -533,17 +536,19 @@ mount /dev/sda1 /
 mkdir /opt/qemu
 tar-in $MODULES_TAR / compress:gzip
 tar-in build/qemu-xen-arm64.tar.gz /opt/qemu compress:gzip
-tar-in build/mixins-dom0.tar.gz / compress:gzip
+tar-in build/mixins-debian.tar.gz / compress:gzip
 upload build/vhost-device-i2c /root/vhost-device-i2c
 upload build/xen-vhost-frontend /root/xen-vhost-frontend
-upload build/$XEN_DEB /root/$XEN_DEB.deb
+upload build/xen-upstream.deb /root/xen-upstream.deb
+upload build/xen-virtio-msg.deb /root/xen-virt-msg.deb
+upload build/devmem2 /root/devmem2
 upload build/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
 upload build/Image /root/Image
 EOF
 }
 
 build_disk() {
-	(build_disk_demo1)
+	(build_disk_debian)
 	(build_disk_demo2a)
 }
 
