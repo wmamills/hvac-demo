@@ -1,3 +1,27 @@
 #!/bin/bash
 
-./scripts/multi-qemu demo2b.d
+ARG1=${1:-KVM}; shift
+ARG2=${1:-$ARG1}; shift
+
+fixup_arg() {
+    ORIG_ARG=$1
+    ARG="${1//-/_}"
+    ARG="${ARG^^?}"
+
+    case $ARG in
+    "KVM"|"XEN"|"U_BOOT")
+        echo "$ARG"
+        ;;
+    *)
+        echo "Error: unknown mode $ORIG_ARG" >&2
+        exit 2
+        ;;
+    esac
+}
+
+ARG1=$(fixup_arg "$ARG1")
+ARG2=$(fixup_arg "$ARG2")
+
+#echo "ARG1=$ARG1 ARG2=$ARG2"
+
+./scripts/multi-qemu demo2b.d $ARG1 $ARG2 "$@"
