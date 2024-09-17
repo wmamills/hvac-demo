@@ -1,5 +1,9 @@
 #!/bin/bash
 
+ARG1=${1:-KVM}; shift
+ARG2=${1:-$ARG1}; shift
+
+MODE=$ARG1
 NAME=demo2b-A
 
 # include the common variable settings
@@ -12,14 +16,17 @@ if [ ! -e $IMAGES/${NAME}-disk.qcow2 ]; then
 	cp $IMAGES/disk.qcow2 $IMAGES/${NAME}-disk.qcow2
 fi
 
-echo booti 0x42000000 - 0x44000000
-echo booti 0x47000000 - 0x44000000
+if [ "$MODE" == "U_BOOT" ]; then
+    echo booti 0x42000000 - 0x44000000
+    echo booti 0x47000000 - 0x44000000
+fi
 
 #set -x
+OPT_MODE_NAME="QEMU_$MODE[@]"
 
 ${QEMU} \
 	"${QEMU_BASE[@]}" \
-	"${QEMU_KVM[@]}" \
+	"${!OPT_MODE_NAME}" \
 	-machine memory-backend=vm0_mem \
 	-netdev type=user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::2223-10.0.2.16:22 \
 	-device ivshmem-plain,memdev=vm1_mem \
