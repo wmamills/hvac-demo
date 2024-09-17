@@ -5,13 +5,21 @@ ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
-# normally the demo exits via qemu2 exiting via powerdown (or host shell exit)
-# when either of those happen, the qemu1 pane is killed
-# this does not give run-A.sh to cleanup the memory files so we do it here
+# cleam up the memory files
 rm -f ./qemu-xen-vm?-ram
 
 kill $(cat shm.pid)
+rm -f shm.pid
+rm -f shm.sock
 
-tcpdump -r $LOGS/net.pcap
+if [ -r $LOGS/net.pcap ]; then
+    tcpdump -r $LOGS/net.pcap
+fi
 grep "^\*\*\*\*\* TEST" $LOGS/qemu1-log.txt
 grep "^\*\*\*\*\* TEST" $LOGS/qemu2-log.txt
+
+# startup debug support
+#echo "**** QEMU1 logs"
+#cat $LOGS/qemu1-log.txt
+#echo "**** QEMU2 logs"
+#cat $LOGS/qemu2-log.txt
