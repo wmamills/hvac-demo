@@ -47,10 +47,17 @@ if [ -z "$AUTORUN" ]; then
 	exit
 fi
 
-echo "To stop autorun, hit ctrl-c in the next $AUTORUN_DELAY seconds"
-delay $AUTORUN_DELAY
+if [ -x "$AUTORUN" ]; then
+    echo "To stop autorun, hit ctrl-c in the next $AUTORUN_DELAY seconds"
+    delay $AUTORUN_DELAY
 
-"$AUTORUN"
+    "$AUTORUN"
+else
+    echo "$AUTORUN does not exist or is not executable"
+    # for debug, uncomment the below, for CI leave commented
+    # exit
+    AUTORUN_DELAY=30
+fi
 
 echo "To stop poweroff, hit ctrl-c in the next $AUTORUN_DELAY seconds"
 delay $AUTORUN_DELAY
