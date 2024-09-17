@@ -185,7 +185,7 @@ do_host_demo() {
 
     echo "Starting qemu(s)"
     start_qemus
-    bash
+    bash -i
     tmux kill-win
 }
 
