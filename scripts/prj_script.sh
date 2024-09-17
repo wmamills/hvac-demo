@@ -496,14 +496,14 @@ build_disk_demo2a() {
 
 	echo "****** Modify a disk image copy for demo2a"
 
-	# our mixins for domu & composite initrd cpio
+	# our mixins for minimal & composite initrd cpio
 	TOP=$PWD
-	(cd mixins/domu; find . | fakeroot cpio -H newc -o 2>/dev/null |
-		gzip >$TOP/build/mixins-domu.cpio.gz)
+	(cd mixins/minimal; find . | fakeroot cpio -H newc -o 2>/dev/null |
+		gzip >$TOP/build/mixins-minimal.cpio.gz)
 	(cd demo2a.d/mixins/qemu2; find . | fakeroot cpio -H newc -o 2>/dev/null |
 		gzip >$TOP/build/mixins-demo2a-qemu1.cpio.gz)
 	cat build/disk/$ORIG_CPIO.gz \
-		build/mixins-domu.cpio.gz \
+		build/mixins-minimal.cpio.gz \
 		build/mixins-demo2a-qemu1.cpio.gz \
 		>build/demo2a-rootfs.cpio.gz
 }
@@ -519,11 +519,11 @@ build_disk_debian() {
 	# our mixins for debian
 	fakeroot tar czf build/mixins-debian.tar.gz -C mixins/debian .
 
-	# our mixins for domu & composite initrd cpio
+	# our mixins for minimal & composite initrd cpio
 	TOP=$PWD
-	(cd mixins/domu; find . | fakeroot cpio -H newc -o 2>/dev/null |
-		gzip >$TOP/build/mixins-domu.cpio.gz)
-	cat build/disk/$ORIG_CPIO.gz build/mixins-domu.cpio.gz \
+	(cd mixins/minimal; find . | fakeroot cpio -H newc -o 2>/dev/null |
+		gzip >$TOP/build/mixins-minimal.cpio.gz)
+	cat build/disk/$ORIG_CPIO.gz build/mixins-minimal.cpio.gz \
 		>build/$ORIG_CPIO.gz
 
 	# now make a copy and add our stuff to it
