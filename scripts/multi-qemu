@@ -207,7 +207,9 @@ do_qemu() {
     # do logging
     exec > >(tee $LOGS/$NAME-log.txt) 2>&1
 
-    QEMU_TMUX=no $BASE_DIR/${QEMU_BOOT_SCRIPT[$IDX]} ${QEMU_BOOT_ARG[$IDX]} "$@"
+    QEMU_TMUX=no $BASE_DIR/${QEMU_BOOT_SCRIPT[$IDX]} ${QEMU_BOOT_ARG[$IDX]} \
+        "${SUB_ARGS[@]}"
+
     #echo "QEMU finsihed"; bash
     qemu_done_$MODE
 }
@@ -236,6 +238,9 @@ QEMU_BOOT_SCRIPT=( ${QEMU_BOOT_SCRIPT[@]} )
 QEMU_BOOT_ARG=( ${QEMU_BOOT_ARG[@]} )
 
 TESTS=( ${TESTS[@]} )
+
+SUB_ARGS=( ${SUB_ARGS[@]} )
+
 EOF
 }
 
@@ -273,6 +278,9 @@ main() {
     if [ -e ./test-qemu-vars ]; then
         . ./test-qemu-vars
     fi
+
+    # save the rest of the arguments for the sub-processes
+    SUB_ARGS=( "$@" )
 
     export ENV_FILE=$LOGS/this-session-qemu-vars
     mk_env
