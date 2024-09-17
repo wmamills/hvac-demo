@@ -2,6 +2,8 @@
 
 set -e
 
+./install-demo1.sh
+
 # once per dom0 boot
 # /run is volatile and does not persist from boot to boot
 if [ ! -e /run/demo1-setup.done ]; then
