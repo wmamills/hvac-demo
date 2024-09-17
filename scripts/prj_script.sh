@@ -433,10 +433,11 @@ build_qemu_xen_arm64() {
 		exit 2
 	fi
 
-	# for now just use the same as i2c
+	# use the same as virtio-msg
+	URL=https://github.com/edgarigl/qemu.git
+	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
+	BRANCH="edgar/virtio-msg"
 	URL=https://github.com/vireshk/qemu
-	COMMIT=b7890a2c3d6949e8f462bb3630d5b48ecae8239f
-	BRANCH=master
 
 	# but we need different config
 	TARGETS="aarch64-softmmu,i386-softmmu"
