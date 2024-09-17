@@ -18,7 +18,8 @@ echo booti 0x47000000 - 0x44000000
 #set -x
 
 ${QEMU} \
-	${QEMU_BASE} \
+	"${QEMU_BASE[@]}" \
+	"${QEMU_KVM[@]}" \
 	-machine memory-backend=vm0_mem \
 	-netdev type=user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::2223-10.0.2.16:22 \
 	-device ivshmem-plain,memdev=vm1_mem \
