@@ -23,3 +23,4 @@ grep "^\*\*\*\*\* TEST" $LOGS/qemu2-log.txt
 #cat $LOGS/qemu1-log.txt
 #echo "**** QEMU2 logs"
 #cat $LOGS/qemu2-log.txt
+#echo ; echo "**** end QEMU logs"
