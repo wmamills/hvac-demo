@@ -20,9 +20,9 @@ IVSHMEM_SERVER=$IMAGES/qemu-msg/contrib/ivshmem-server/ivshmem-server
 QEMU_BASE="
 -machine virt,gic_version=3,iommu=smmuv3
 -machine virtualization=true
--object memory-backend-file,id=vm0_mem,size=4G,mem-path=./qemu-xen-vm0-ram,share=on
--object memory-backend-file,id=vm1_mem,size=4G,mem-path=./qemu-xen-vm1-ram,share=on
--cpu cortex-a57 -machine type=virt -m 4G -smp 2
+-object memory-backend-file,id=vm0_mem,size=1G,mem-path=./qemu-xen-vm0-ram,share=on
+-object memory-backend-file,id=vm1_mem,size=1G,mem-path=./qemu-xen-vm1-ram,share=on
+-cpu cortex-a57 -machine type=virt -m 1G -smp 2
 -bios ${UBOOT}
 -device loader,file=${XEN},force-raw=on,addr=0x42000000
 -device loader,file=${KERNEL},addr=0x47000000
