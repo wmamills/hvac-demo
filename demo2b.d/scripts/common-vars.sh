@@ -23,6 +23,8 @@ QEMU_BASE="
 -object memory-backend-file,id=vm0_mem,size=1G,mem-path=./qemu-xen-vm0-ram,share=on
 -object memory-backend-file,id=vm1_mem,size=1G,mem-path=./qemu-xen-vm1-ram,share=on
 -cpu cortex-a57 -machine type=virt -m 1G -smp 2
+-drive file=${IMAGES}/${NAME}-disk.qcow2,id=hd0,if=none,format=qcow2 \
+-device virtio-scsi-pci -device scsi-hd,drive=hd0 \
 -bios ${UBOOT}
 -device loader,file=${XEN},force-raw=on,addr=0x42000000
 -device loader,file=${KERNEL},addr=0x47000000
