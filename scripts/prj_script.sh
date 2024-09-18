@@ -531,26 +531,38 @@ disk_common_debian() {
 	fi
 }
 
-build_disk_demo2a() {
+buildroot_mixins_common() {
+	NAME=$1; shift
+	DIR=$1; shift
 	disk_common_buildroot
 
-	echo "****** Modify a disk image copy for demo2a"
+	echo "****** Create composite cpio.gz image for $NAME"
 
 	# our mixins for minimal & composite initrd cpio
 	TOP=$PWD
 	(cd mixins/minimal; find . | fakeroot cpio -H newc -o 2>/dev/null |
 		gzip >$TOP/build/mixins-minimal.cpio.gz)
-	(cd demo2a.d/mixins/qemu2; find . | fakeroot cpio -H newc -o 2>/dev/null |
-		gzip >$TOP/build/mixins-demo2a-qemu1.cpio.gz)
+	(cd $DIR; find . | fakeroot cpio -H newc -o 2>/dev/null |
+		gzip >$TOP/build/mixins-$NAME.cpio.gz)
 	cat build/disk/$ORIG_CPIO.gz \
 		build/mixins-minimal.cpio.gz \
-		build/mixins-demo2a-qemu1.cpio.gz \
-		>build/demo2a-rootfs.cpio.gz
+		build/mixins-$NAME.cpio.gz \
+		>build/$NAME-rootfs.cpio.gz
+
+}
+
+build_disk_demo2a() {
+	buildroot_mixins_common demo2a demo2a.d/mixins/qemu2
+}
+
+build_disk_demo2b() {
+	buildroot_mixins_common demo2b demo2b.d/mixins/qemu2
 }
 
 build_disk_debian() {
 	disk_common_debian
 	disk_common_buildroot
+	(build_disk_demo2b)
 
 	echo "****** Modify a disk image copy for debian based demos"
 	rm -f build/demo*-disk.qcow2
@@ -586,6 +598,7 @@ upload build/xen-upstream.deb /root/xen-upstream.deb
 upload build/xen-virtio-msg.deb /root/xen-virtio-msg.deb
 upload build/devmem2 /root/devmem2
 upload build/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
+upload build/demo2b-rootfs.cpio.gz /root/demo2b-rootfs.cpio.gz
 upload build/Image /root/Image
 EOF
 }
