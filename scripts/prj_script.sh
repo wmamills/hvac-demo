@@ -281,6 +281,7 @@ build_linux() {
 		cd linux
 		git checkout virtio/msg
 		#git reset --hard 1e5e683a3d1aa8b584f279edd144b4b1d5aad45c
+		cp ../mixins/linux/virtio-msg.config arch/arm64/configs
 	else
 		cd linux
 	fi
@@ -293,7 +294,7 @@ build_linux() {
 	export INSTALL_DTBS_PATH=$INSTALL_PATH/dtb
 	export INSTALL_MOD_PATH=$INSTALL_PATH_BASE
 
-	make defconfig
+	make defconfig virtio-msg.config
 	make -j10 Image modules dtbs
 
 	rm -rf ../build/linux-install
