@@ -92,7 +92,8 @@ admin_setup() {
 	    libpixman-1-dev:arm64 libslirp-dev:arm64
 
 	# guestfish support, it also needs a readable kernel in /boot
-	apt-get install -yqq --no-install-recommends guestfish linux-image-amd64
+	apt-get install -yqq --no-install-recommends \
+		guestfish linux-image-amd64 guestfs-tools
 	chmod +r /boot/*
 
 	# for demos and because we are not savages forced to use vi
@@ -526,14 +527,20 @@ build_disk_debian() {
 	cat build/disk/$ORIG_CPIO.gz build/mixins-minimal.cpio.gz \
 		>build/$ORIG_CPIO.gz
 
-	# now make a copy and add our stuff to it
+	# now make a copy of the template and expand it
+	# side effect /dev/sda15 -> /dev/sda1 & /dev/sda1 -> /dev/sda2
 	rm -rf build/disk.qcow2
-	cp build/disk/$ORIG_DISK build/disk.qcow2
+	qemu-img create -f qcow2 build/disk.qcow2 10G
+	virt-resize --expand /dev/sda1 \
+		build/disk/$ORIG_DISK \
+		build/disk.qcow2
+
+	# collect the stuff we need to add
 	MODULES_TAR=$(ls -1 build/linux-install/modules-*.tar.gz)
 	XEN_DEB=xen-upstream.deb
 	guestfish --rw -a build/disk.qcow2 <<EOF
 run
-mount /dev/sda1 /
+mount /dev/sda2 /
 mkdir /opt/qemu
 tar-in $MODULES_TAR / compress:gzip
 tar-in build/qemu-xen-arm64.tar.gz /opt/qemu compress:gzip
