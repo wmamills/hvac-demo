@@ -4,7 +4,7 @@ if [ ! -e build/demo1-disk.qcow2 ]; then
 	cp build/disk.qcow2 build/demo1-disk.qcow2
 fi
 
-BOOTARGS="root=/dev/sda1 console=hvc0 earlyprintk=xen autorun=./demo1.sh"
+BOOTARGS="root=/dev/sda2 console=hvc0 earlyprintk=xen autorun=./demo1.sh"
 
 ./build/qemu-i2c-install/bin/qemu-system-aarch64 \
   -machine virt,virtualization=on -cpu cortex-a57 -serial mon:stdio \
