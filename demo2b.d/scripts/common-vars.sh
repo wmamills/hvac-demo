@@ -45,11 +45,11 @@ QEMU_U_BOOT=(
 # use direct linux boot (where you can use kvm if you wish)
 QEMU_KVM=(
 -kernel "${KERNEL}"
--append "root=/dev/sda1 console=ttyAMA0 earlycon autorun=./${NAME}-kvm.sh"
+-append "root=/dev/sda2 console=ttyAMA0 earlycon autorun=./demo2b/${NAME}-kvm.sh"
 )
 
 # use Xen and Dom0 boot
-XBA="root=/dev/sda1 console=hvc0 earlyprintk=xen autorun=./${NAME}-xen.sh"
+XBA="root=/dev/sda2 console=hvc0 earlyprintk=xen autorun=./demo2b/${NAME}-xen.sh"
 QEMU_XEN=(
 -kernel "${XEN}"
 -append "dom0_mem=512M,max:512M dom0_max_vcpus=7 loglvl=all guest_loglvl=all"
