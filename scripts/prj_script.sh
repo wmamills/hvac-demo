@@ -359,6 +359,7 @@ build_qemu() {
 # all cross build qemus
 build_qemu_cross() {
 	(build_qemu_xen_arm64)
+	(build_qemu_msg_arm64)
 }
 
 # build all qemus
@@ -422,20 +423,35 @@ build_qemu_i2c() {
 	qemu_common qemu-i2c
 }
 
+qemu_common_cross() {
+	NAME=$1
+
+	# first remove any existing version in case it has changed
+	# also do this if we don't want any xen support
+	# we pass --disable-xen in this case but just to make sure ...
+	sudo apt-get purge -y xen-upstream:arm64 || true
+
+	if [ -n "$XEN_DEB" ]; then
+		if [ -f build/$XEN_DEB ]; then
+			# we install the arm64 deb file to get the arm64 libraries
+			sudo apt-get install -y ./build/$XEN_DEB
+		else
+			echo "Build $XEN_DEB first"
+			exit 2
+		fi
+	fi
+
+	qemu_common $NAME
+
+	# make a tar file for easy install
+	fakeroot tar cvzf ../$NAME.tar.gz -C ../${NAME}-install .
+}
+
 build_qemu_xen_arm64() {
 	echo "****** Build qemu xen arm64 (target side for device model)"
 	XEN_DEB=xen-upstream.deb
-	if [ -f build/$XEN_DEB ]; then
-		# we install the arm64 deb file to get the arm64 libraries
-		# first remove any existing version in case it has changed
-		sudo apt purge xen-upstream:arm64 || true
-		sudo apt install ./build/$XEN_DEB
-	else
-		echo "Build xen-upstream (target side) first"
-		exit 2
-	fi
 
-	# for now just use the same as i2c
+	# use the same as virtio-i2c
 	URL=https://github.com/vireshk/qemu
 	COMMIT=b7890a2c3d6949e8f462bb3630d5b48ecae8239f
 	BRANCH=master
@@ -443,10 +459,22 @@ build_qemu_xen_arm64() {
 	# but we need different config
 	TARGETS="aarch64-softmmu,i386-softmmu"
 	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --enable-xen"
-	qemu_common qemu-xen-cross
+	qemu_common_cross qemu-xen-arm64
+}
 
-	# make a tar file for easy install
-	fakeroot tar cvzf ../qemu-xen-arm64.tar.gz -C ../qemu-xen-cross-install .
+build_qemu_msg_arm64() {
+	echo "****** Build qemu virtio-msg arm64 (target side)"
+	XEN_DEB=""
+
+	# use the same as virtio-msg
+	URL=https://github.com/edgarigl/qemu.git
+	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
+	BRANCH="edgar/virtio-msg"
+
+	# but we need different config
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-xen"
+	qemu_common_cross qemu-msg-arm64
 }
 
 build_qemu_msg() {
@@ -547,9 +575,11 @@ build_disk_debian() {
 	guestfish --rw -a build/disk.qcow2 <<EOF
 run
 mount /dev/sda2 /
-mkdir /opt/qemu
+mkdir /opt/qemu-xen
+mkdir /opt/qemu-msg
 tar-in $MODULES_TAR / compress:gzip
-tar-in build/qemu-xen-arm64.tar.gz /opt/qemu compress:gzip
+tar-in build/qemu-xen-arm64.tar.gz /opt/qemu-xen compress:gzip
+tar-in build/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
 tar-in build/mixins-debian.tar.gz / compress:gzip
 upload build/vhost-device-i2c /root/vhost-device-i2c
 upload build/xen-vhost-frontend /root/xen-vhost-frontend
