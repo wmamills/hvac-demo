@@ -1,4 +1,4 @@
-#/bin/sh
+#/bin/bash
 
 MY_DIR=$(dirname $0)
 
@@ -15,16 +15,12 @@ xen_startup
 # should only show Domain-0
 xl list
 
-echo "Wait for other qemu to be ready"
-wait_ready
-sleep 5
-echo; echo "OK"
+wait_ready_seq
 
 echo "THIS IS NOT WORKING YET; hit enter to go on anyway"; read
 
 # now start the quest
 xl create -c $MY_DIR/guest-virtio-msg.cfg
 
-# stop the poweroff until it is working
+echo "start subshell to stop the poweroff until it is working"
 bash
-

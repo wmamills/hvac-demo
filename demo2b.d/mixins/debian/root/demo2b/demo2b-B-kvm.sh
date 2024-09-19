@@ -1,4 +1,4 @@
-#/bin/sh
+#/bin/bash
 
 MY_DIR=$(dirname $0)
 
@@ -10,10 +10,7 @@ install_common
 install_qemu_deps
 vfio_setup
 
-echo "Wait for other qemu to be ready"
-wait_ready
-sleep 5
-echo; echo "OK"
+wait_ready_seq
 
 $MY_DIR/guest-qemu-run-virt.sh 0x00
 

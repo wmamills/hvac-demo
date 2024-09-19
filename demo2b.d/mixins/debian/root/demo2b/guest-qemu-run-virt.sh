@@ -4,7 +4,7 @@
 QEMU=/opt/qemu-msg/bin/qemu-system-aarch64
 MACHINE="-M virt"
 KERNEL=${HOME}/Image
-ROOTFS=${HOME}/demo2b-rootfs.cpio.gz
+ROOTFS=${HOME}/demo2b-kvm-rootfs.cpio.gz
 R_VMID=$1
 shift
 
