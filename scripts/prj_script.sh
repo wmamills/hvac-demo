@@ -533,22 +533,43 @@ disk_common_debian() {
 
 buildroot_mixins_common() {
 	NAME=$1; shift
-	DIR=$1; shift
 	disk_common_buildroot
 
 	echo "****** Create composite cpio.gz image for $NAME"
 
 	# our mixins for minimal & composite initrd cpio
 	TOP=$PWD
-	(cd mixins/minimal; find . | fakeroot cpio -H newc -o 2>/dev/null |
-		gzip >$TOP/build/mixins-minimal.cpio.gz)
-	(cd $DIR; find . | fakeroot cpio -H newc -o 2>/dev/null |
+	rm -rf build/mixins/$NAME || true
+	mkdir -p build/mixins/$NAME
+	for DIR in mixins/minimal "$@"; do
+		cp -a $DIR/. build/mixins/$NAME
+	done
+	(cd build/mixins/$NAME; find . | fakeroot cpio -H newc -o 2>/dev/null |
 		gzip >$TOP/build/mixins-$NAME.cpio.gz)
+
+	# build the composite even if not everyone will use it
 	cat build/disk/$ORIG_CPIO.gz \
-		build/mixins-minimal.cpio.gz \
 		build/mixins-$NAME.cpio.gz \
 		>build/$NAME-rootfs.cpio.gz
+}
 
+debian_mixins_common() {
+	NAME=$1; shift
+
+	echo "****** Create $NAME-mixins.tar.gz"
+	TOP=$PWD
+	rm -rf build/mixins/$NAME || true
+	mkdir -p build/mixins/$NAME
+	for DIR in mixins/debian "$@"; do
+		cp -a $DIR/. build/mixins/$NAME
+	done
+
+	# our mixins for debian
+	fakeroot tar czf build/mixins-$NAME.tar.gz -C build/mixins/$NAME .
+}
+
+build_disk_demo1_guest() {
+	buildroot_mixins_common demo1 demo1.d/mixins/qemu1-guest
 }
 
 build_disk_demo2a() {
@@ -556,27 +577,27 @@ build_disk_demo2a() {
 }
 
 build_disk_demo2b() {
-	buildroot_mixins_common demo2b demo2b.d/mixins/qemu2
+	buildroot_mixins_common demo2b-kvm demo2b.d/mixins/qemu2-guest{,-kvm}
+	buildroot_mixins_common demo2b-xen demo2b.d/mixins/qemu2-guest
+}
+
+build_disk_debian_mixins() {
+	debian_mixins_common debian \
+		demo1.d/mixins/debian \
+		demo2b.d/mixins/debian
+
 }
 
 build_disk_debian() {
 	disk_common_debian
 	disk_common_buildroot
+	(build_disk_demo1_guest)
 	(build_disk_demo2b)
+	(build_disk_debian_mixins)
 
 	echo "****** Modify a disk image copy for debian based demos"
 	rm -f build/demo*-disk.qcow2
 	rm -f build/disk.qcow2
-
-	# our mixins for debian
-	fakeroot tar czf build/mixins-debian.tar.gz -C mixins/debian .
-
-	# our mixins for minimal & composite initrd cpio
-	TOP=$PWD
-	(cd mixins/minimal; find . | fakeroot cpio -H newc -o 2>/dev/null |
-		gzip >$TOP/build/mixins-minimal.cpio.gz)
-	cat build/disk/$ORIG_CPIO.gz build/mixins-minimal.cpio.gz \
-		>build/$ORIG_CPIO.gz
 
 	# now make a copy of the (expanded) template
 	cp build/disk/$BIG_DISK build/disk.qcow2
@@ -598,8 +619,9 @@ upload build/xen-vhost-frontend /root/xen-vhost-frontend
 upload build/xen-upstream.deb /root/xen-upstream.deb
 upload build/xen-virtio-msg.deb /root/xen-virt-msg.deb
 upload build/devmem2 /root/devmem2
-upload build/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
-upload build/demo2b-rootfs.cpio.gz /root/demo2b-rootfs.cpio.gz
+upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
+upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
+upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
 upload build/Image /root/Image
 EOF
 }
