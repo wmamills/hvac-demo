@@ -62,5 +62,5 @@ fi
 echo "To stop poweroff, hit ctrl-c in the next $AUTORUN_DELAY seconds"
 delay $AUTORUN_DELAY
 
-echo "busybox poweroff"
+echo "debian poweroff"
 poweroff
