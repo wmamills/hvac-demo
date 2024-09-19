@@ -40,4 +40,4 @@ null::sysinit:/bin/ln -sf /proc/self/fd/2 /dev/stderr
 ::shutdown:/bin/umount -a -r
 
 # Auto-login as root on the hvc0 tty
-ttyAMA0:12345:respawn:/bin/start_getty_login 0 ttyAMA0 linux root
+console:12345:respawn:/bin/start_getty_login 0 console linux root
