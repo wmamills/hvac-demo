@@ -518,6 +518,17 @@ disk_common_debian() {
 		mkdir -p build/disk
 		(cd build/disk; wget $URL_BASE/$ORIG_DISK)
 	fi
+
+	# now make a copy of the template and expand it
+	BIG_DISK=debian-12-arm64-big.qcow2
+	if [ ! -r build/disk/$BIG_DISK ]; then
+		# side effect /dev/sda15 -> /dev/sda1 & /dev/sda1 -> /dev/sda2
+		echo "****** resize debian disk image"
+		qemu-img create -f qcow2 build/disk/debian-12-arm64-big.qcow2 10G
+		virt-resize --expand /dev/sda1 \
+			build/disk/$ORIG_DISK \
+			build/disk/debian-12-arm64-big.qcow2
+	fi
 }
 
 buildroot_mixins_common() {
@@ -567,13 +578,8 @@ build_disk_debian() {
 	cat build/disk/$ORIG_CPIO.gz build/mixins-minimal.cpio.gz \
 		>build/$ORIG_CPIO.gz
 
-	# now make a copy of the template and expand it
-	# side effect /dev/sda15 -> /dev/sda1 & /dev/sda1 -> /dev/sda2
-	rm -rf build/disk.qcow2
-	qemu-img create -f qcow2 build/disk.qcow2 10G
-	virt-resize --expand /dev/sda1 \
-		build/disk/$ORIG_DISK \
-		build/disk.qcow2
+	# now make a copy of the (expanded) template
+	cp build/disk/$BIG_DISK build/disk.qcow2
 
 	# collect the stuff we need to add
 	MODULES_TAR=$(ls -1 build/linux-install/modules-*.tar.gz)
