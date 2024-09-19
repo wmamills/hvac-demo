@@ -8,9 +8,10 @@ set -e
 
 install_common
 install_qemu_deps
-install_xen xen-upstream qemu-xen
+install_xen xen-virtio-msg qemu-xen
 vfio_setup
 xen_startup
+dummy_disk
 
 # should only show Domain-0
 xl list

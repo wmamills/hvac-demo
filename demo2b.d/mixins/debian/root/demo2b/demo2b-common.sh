@@ -82,6 +82,15 @@ xen_startup() {
 	touch /run/xen_startup.done
 }
 
+dummy_disk() {
+	if [ -e ~/dummy.img ]; then
+		return 0
+	fi
+
+	# make a dummy (blank) disk image for the guests
+	dd if=/dev/zero of=dummy.img bs=1M count=16
+}
+
 # use the first word of the last 16 bytes of the shared 1M memory
 # anything not READY is not ready, the memory will start as 0s
 READY=0x42
@@ -124,5 +133,5 @@ wait_ready_seq() {
 	wait_ready
 	echo; echo "Now wait a bit more"
 	sleep 5
-	echo; echo "OK"
+	echo "OK"
 }
