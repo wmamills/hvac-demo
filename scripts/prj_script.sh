@@ -137,22 +137,47 @@ build_all() {
 	(build_disk)
 }
 
-build_xen() {
-	echo "****** Build xen"
+# Common part of qemu builds
+# Argumenets
+# * name
+# ENV
+# * URL
+# * COMMIT
+# * BRANCH
+# * EXTRA_CONFIG
+xen_common() {
+	NAME=$1
+
 	mkdir -p build
-	if [ ! -d xen ]; then
-		# git clone https://github.com/vireshk/xen
-		# (cd xen; git reset --hard 35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406)
-		# git clone https://github.com/edgarigl/xen.git --branch edgar/virtio-msg
-		git clone https://github.com/xen-project/xen.git --branch RELEASE-4.19.0
-		cd xen
-		CF=xen/arch/arm/configs/arm64_defconfig
-		echo "CONFIG_IOREQ_SERVER=y" 	>>$CF
-		echo "CONFIG_EXPERT=y" 		>>$CF
-		echo "CONFIG_TESTS=y" 		>>$CF
-	else
-		cd xen
+
+	if [ ! -d xen.git ]; then
+		git clone --bare https://github.com/xen-project/xen.git
 	fi
+	if [ ! -d $NAME ]; then
+		cd xen.git
+		git remote rm $NAME >/dev/null 2>&1 || true
+		git remote add $NAME $URL
+		git fetch $NAME
+		git worktree prune
+		if [ -n "$BRANCH" ]; then
+			git worktree add ../$NAME $NAME/$BRANCH
+		elif [ -n "$TAG" ]; then
+			git worktree add ../$NAME $TAG
+		else
+			echo "for $NAME, must define BRANCH or TAG"
+		fi
+		cd ../$NAME
+		if [ -n "$COMMIT" ]; then
+			git reset --hard $COMMIT
+		fi
+		if [ -n "$EXTRA_CONFIG" ]; then
+			CF=xen/arch/arm/configs/arm64_defconfig
+			echo -e "$EXTRA_CONFIG" >>$CF
+		fi
+	else
+		cd $NAME
+	fi
+
 	git clean -fdX
 	./configure --libdir=/usr/lib \
 	    --build=x86_64-unknown-linux-gnu --host=aarch64-linux-gnu \
@@ -161,7 +186,46 @@ build_xen() {
 	make -j9 debball CROSS_COMPILE=aarch64-linux-gnu- XEN_TARGET_ARCH=arm64
 
 	# symlink for run command
-	ln -fs ../xen/dist/install/boot/xen ../build/xen
+	ln -fs ../$NAME/dist/install/boot/xen ../build/$NAME
+
+	# symlink to deb package for install
+	XEN_DEB=$(cd dist; ls -1 xen-*.deb)
+	ln -fs ../$NAME/dist/$XEN_DEB ../build/$NAME.deb
+}
+
+build_xen_upstream() {
+	URL=https://github.com/xen-project/xen.git
+	TAG=RELEASE-4.19.0
+	BRANCH=""
+	COMMIT=""
+	EXTRA_CONFIG=""\
+"CONFIG_IOREQ_SERVER=y\n"\
+"CONFIG_EXPERT=y\n"\
+"CONFIG_TESTS=y\n"
+	xen_common xen-upstream
+}
+
+build_xen_virtio_msg() {
+	URL=https://github.com/edgarigl/xen.git
+	BRANCH=edgar/virtio-msg
+	COMMIT=""
+	EXTRA_CONFIG=""
+	xen_common xen-virtio-msg
+}
+
+build_xen_orko() {
+	URL=https://github.com/vireshk/xen
+	BRANCH=master
+	COMMIT="35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406"
+	EXTRA_CONFIG=""
+	xen_common xen-orko
+}
+
+# fallback target to build all xen versions
+build_xen() {
+	(build_xen_upstream)
+	(build_xen_virtio_msg)
+	(build_xen_orko)
 }
 
 build_rust() {
@@ -325,14 +389,14 @@ build_qemu_i2c() {
 
 build_qemu_xen_arm64() {
 	echo "****** Build qemu xen arm64 (target side for device model)"
-	DEB=$(cd xen/dist; ls -1 xen-*.deb)
-	if [ -f xen/dist/$DEB ]; then
+	XEN_DEB=xen-upstream.deb
+	if [ -f build/$XEN_DEB ]; then
 		# we install the arm64 deb file to get the arm64 libraries
 		# first remove any existing version in case it has changed
 		sudo apt purge xen-upstream:arm64 || true
-		sudo apt install ./xen/dist/$DEB
+		sudo apt install ./build/$XEN_DEB
 	else
-		echo "Build xen (target side) first"
+		echo "Build xen-upstream (target side) first"
 		exit 2
 	fi
 
@@ -429,7 +493,7 @@ build_disk_demo1() {
 	rm -rf build/disk.qcow2
 	cp build/disk/$ORIG_DISK build/disk.qcow2
 	MODULES_TAR=$(ls -1 build/linux-install/modules-*.tar.gz)
-	XEN_DEB=$(cd xen/dist; ls -1 xen-*.deb)
+	XEN_DEB=xen-upstream.deb
 	guestfish --rw -a build/disk.qcow2 <<EOF
 run
 mount /dev/sda1 /
@@ -439,7 +503,7 @@ tar-in build/qemu-xen-arm64.tar.gz /opt/qemu compress:gzip
 tar-in build/mixins-dom0.tar.gz / compress:gzip
 upload build/vhost-device-i2c /root/vhost-device-i2c
 upload build/xen-vhost-frontend /root/xen-vhost-frontend
-upload xen/dist/$XEN_DEB /root/$XEN_DEB
+upload build/$XEN_DEB /root/$XEN_DEB.deb
 upload build/$ORIG_CPIO.gz /root/$ORIG_CPIO.gz
 upload build/Image /root/Image
 EOF
