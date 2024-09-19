@@ -4,6 +4,7 @@
 /xen-*/
 /linux/
 /u-boot/
+/devmem2/
 /qemu.git/
 /qemu-*/
 /xen-vhost-frontend/
