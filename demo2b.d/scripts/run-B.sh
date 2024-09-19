@@ -11,7 +11,7 @@ ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
-echo "Waiting for qemu1 to start first (so it gets VMID 0"
+echo "Waiting for qemu1 to start first (so it gets VMID 0)"
 sleep 5
 
 if [ "$MODE" == "U_BOOT" ]; then
