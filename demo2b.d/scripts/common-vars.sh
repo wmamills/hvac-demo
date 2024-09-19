@@ -9,11 +9,14 @@
 : ${IMAGES:=$BASE_DIR/build}
 
 QEMU=$IMAGES/qemu-msg-install/bin/qemu-system-aarch64
-XEN=$IMAGES/xen-virtio-msg
 KERNEL=$IMAGES/Image
 UBOOT=$IMAGES/u-boot-el2.bin
 DTB=$TEST_DIR/dts/xen.dtb
 ROOTFS=$IMAGES/disk/virtio_msg_rootfs.cpio.gz
+
+# we want xen-virtio-msg but for now use upstream
+#XEN=$IMAGES/xen-virtio-msg
+XEN=$IMAGES/xen-upstream
 
 IVSHMEM_SERVER=$IMAGES/qemu-msg/contrib/ivshmem-server/ivshmem-server
 
