@@ -42,7 +42,7 @@ install_xen() {
 		libzstd1 libuuid1
 	apt-get install ./${XEN_NAME}.deb
 
-	# use /opt/qemu-xen as /opt/qemu
+	# use specified QEMU version as /opt/qemu
 	ln -fs -T $QEMU_NAME /opt/qemu
 
 	dd if=/dev/zero of=~/dummy.img bs=1M count=5
@@ -80,6 +80,15 @@ xen_startup() {
 	/etc/init.d/xencommons start
 
 	touch /run/xen_startup.done
+}
+
+dummy_disk() {
+	if [ -e ~/dummy.img ]; then
+		return 0
+	fi
+
+	# make a dummy (blank) disk image for the guests
+	dd if=/dev/zero of=dummy.img bs=1M count=16
 }
 
 # use the first word of the last 16 bytes of the shared 1M memory
@@ -124,5 +133,5 @@ wait_ready_seq() {
 	wait_ready
 	echo; echo "Now wait a bit more"
 	sleep 5
-	echo; echo "OK"
+	echo "OK"
 }
