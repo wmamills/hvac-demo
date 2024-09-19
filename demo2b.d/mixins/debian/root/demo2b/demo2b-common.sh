@@ -1,10 +1,10 @@
-#/bin/sh
+# to be included not executed
 
 set -e
 
 install_common() {
 	if [ -e ~/.done/install-common.done ]; then
-		return
+		return 0
 	fi
 
 	echo "Installing basic packages ..."
@@ -18,7 +18,7 @@ install_common() {
 
 install_qemu_deps() {
 	if [ -e ~/.done/qemu-install.done ]; then
-		return
+		return 0
 	fi
 
 	echo "Installing packages for qemu ..."
@@ -34,7 +34,7 @@ install_xen() {
 	QEMU_NAME=$2
 
 	if [ -e ~/.done/${XEN_NAME}-install.done ]; then
-		exit 0
+		return 0
 	fi
 
 	echo "Installing packages for xen ..."
@@ -54,7 +54,7 @@ vfio_setup() {
 	# this needs to run once per boot
 	# /run is volatile and does not persist from boot to boot
 	if [ -e /run/vfio-setup.done ]; then
-		return
+		return 0
 	fi
 
 	echo "Per boot vfio setup ..."
@@ -73,7 +73,7 @@ xen_startup() {
 	# This needs to run once per dom0 boot
 	# /run is volatile and does not persist from boot to boot
 	if [ -e /run/xen_startup.done ]; then
-		return
+		return 0
 	fi
 
 	# start the xen daemons
@@ -117,4 +117,12 @@ wait_ready() {
 		sleep 1
 	done
 	false
+}
+
+wait_ready_seq() {
+	echo "Wait for other qemu to be ready"
+	wait_ready
+	echo; echo "Now wait a bit more"
+	sleep 5
+	echo; echo "OK"
 }
