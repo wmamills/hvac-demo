@@ -135,6 +135,8 @@ build_all() {
 	(build_linux)
 	(build_qemu)
 	(build_qemu_cross)
+	(build_devmem2)
+	(build_u_boot)
 	(build_disk)
 }
 
