@@ -604,7 +604,6 @@ build_disk_debian() {
 
 	# collect the stuff we need to add
 	MODULES_TAR=$(ls -1 build/linux-install/modules-*.tar.gz)
-	XEN_DEB=xen-upstream.deb
 	guestfish --rw -a build/disk.qcow2 <<EOF
 run
 mount /dev/sda2 /
