@@ -1,17 +1,3 @@
 #!/bin/bash
 
-if [ ! -e build/demo1-disk.qcow2 ]; then
-	cp build/disk.qcow2 build/demo1-disk.qcow2
-fi
-
-BOOTARGS="root=/dev/sda2 console=hvc0 earlyprintk=xen autorun=./demo1.sh"
-
-./build/qemu-i2c-install/bin/qemu-system-aarch64 \
-  -machine virt,virtualization=on -cpu cortex-a57 -serial mon:stdio \
-  -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::8022-:22 \
-  -drive file=./build/demo1-disk.qcow2,id=hd0,if=none,format=qcow2 \
-  -device virtio-scsi-pci -device scsi-hd,drive=hd0 \
-  -display none -m 8192 -smp 8 -kernel ./build/xen-upstream \
-  -append "dom0_mem=5G,max:5G dom0_max_vcpus=7 loglvl=all guest_loglvl=all" \
-  -device guest-loader,addr=0x49000000,kernel=./build/Image,bootargs="$BOOTARGS" \
-  -device ds1338,address=0x20
+./scripts/multi-qemu demo1.d

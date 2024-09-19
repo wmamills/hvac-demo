@@ -1,0 +1,9 @@
+NUM_QEMU=1
+
+# The first qemu is only for device model, there is no software and no ssh
+# but give it a name anyway
+QEMU_SSH_NAME[0]=qemu1
+QEMU_BOOT_SCRIPT[0]="demo1.d/scripts/run-A.sh"
+QEMU_BOOT_ARG[0]=""
+
+CLEANUP_SCRIPT="demo1.d/scripts/cleanup.sh"
