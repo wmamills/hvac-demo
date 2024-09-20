@@ -6,7 +6,7 @@
 * Add demo for ivshmem-flat
 * Document how to use with dockit
 * Move all git cloned source to source/ directory
-    * when adding a worktree, fixup the link so it works outside of container also
+    x when adding a worktree, fixup the link so it works outside of container also
 	/prj/ -> ../
 * Add test mode to multi-qemu
     * record return code from each qemu instance and the host process
