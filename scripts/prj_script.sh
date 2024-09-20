@@ -391,7 +391,13 @@ qemu_common() {
 		git remote add $NAME $URL
 		git fetch $NAME
 		git worktree prune
-		git worktree add ../$NAME $NAME/$BRANCH
+		if [ -n "$BRANCH" ]; then
+			git worktree add ../$NAME $NAME/$BRANCH
+		elif [ -n "$TAG" ]; then
+			git worktree add ../$NAME $TAG
+		else
+			echo "for $NAME, must define BRANCH or TAG"
+		fi
 		cd ../$NAME
 		if [ -n "$COMMIT" ]; then
 			git reset --hard $COMMIT
