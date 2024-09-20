@@ -464,7 +464,7 @@ qemu_common_cross() {
 
 build_qemu_xen_arm64() {
 	echo "****** Build qemu xen arm64 (target side for device model)"
-	XEN_DEB=xen-upstream.deb
+	XEN_DEB=xen-virtio-msg.deb
 
 	# use the same as virtio-msg
 	URL=https://github.com/edgarigl/qemu.git
