@@ -470,7 +470,7 @@ build_qemu_xen_arm64() {
 	URL=https://github.com/qemu/qemu.git
 	COMMIT=""
 	BRANCH=""
-	TAG="v8.0.0"
+	TAG="v9.0.0"
 
 	# but we need different config
 	TARGETS="aarch64-softmmu,i386-softmmu"
