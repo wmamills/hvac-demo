@@ -408,6 +408,9 @@ qemu_common() {
 		if [ -n "$COMMIT" ]; then
 			git reset --hard $COMMIT
 		fi
+		if [ -n "$PATCH" ]; then
+			git apply $PATCH
+		fi
 		cd ..
 	fi
 	mkdir -p build/$NAME
@@ -470,6 +473,7 @@ build_qemu_xen_arm64() {
 	URL=https://github.com/edgarigl/qemu.git
 	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
 	BRANCH="edgar/virtio-msg"
+	PATCH="../mixins/qemu/0001-HACK-work-around-no-prototype-for-xc_domain_gfn2mfn.patch"
 
 	# but we need different config
 	TARGETS="aarch64-softmmu,i386-softmmu"
