@@ -459,10 +459,11 @@ build_qemu_xen_arm64() {
 	echo "****** Build qemu xen arm64 (target side for device model)"
 	XEN_DEB=xen-upstream.deb
 
-	# use the same as virtio-i2c
-	URL=https://github.com/vireshk/qemu
-	COMMIT=b7890a2c3d6949e8f462bb3630d5b48ecae8239f
-	BRANCH=master
+	# use upstream from tag
+	URL=https://github.com/qemu/qemu.git
+	COMMIT=""
+	BRANCH=""
+	TAG="v8.0.0"
 
 	# but we need different config
 	TARGETS="aarch64-softmmu,i386-softmmu"
