@@ -170,6 +170,7 @@ xen_common() {
 			echo "for $NAME, must define BRANCH or TAG"
 		fi
 		cd ../$NAME
+		sed -i -e 's#^gitdir: /prj/#gitdir: ../#' .git
 		if [ -n "$COMMIT" ]; then
 			git reset --hard $COMMIT
 		fi
@@ -399,6 +400,7 @@ qemu_common() {
 			echo "for $NAME, must define BRANCH or TAG"
 		fi
 		cd ../$NAME
+		sed -i -e 's#^gitdir: /prj/#gitdir: ../#' .git
 		if [ -n "$COMMIT" ]; then
 			git reset --hard $COMMIT
 		fi
