@@ -1,0 +1,56 @@
+From d6a010fd7b82e083445fd019e0e46032ae1b311f Mon Sep 17 00:00:00 2001
+From: Bill Mills <bill.mills@linaro.org>
+Date: Fri, 20 Sep 2024 11:47:01 -0400
+Subject: [PATCH] HACK: work around no prototype for xc_domain_gfn2mfn
+
+This just keeps the compiler happy.
+
+This is intentionally ugly.
+
+We should NOT have more than one place to define the prototype and
+neither of these is the right place to put that one.
+
+(No sign-off on HACKS)
+---
+ hw/virtio/virtio-msg-bus.c | 7 +++++++
+ hw/xen/xen-operations.c    | 6 ++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/hw/virtio/virtio-msg-bus.c b/hw/virtio/virtio-msg-bus.c
+index beb9cb39f7..550c3249e2 100644
+--- a/hw/virtio/virtio-msg-bus.c
++++ b/hw/virtio/virtio-msg-bus.c
+@@ -14,6 +14,13 @@
+ 
+ #ifdef CONFIG_XEN
+ #include "hw/xen/xen_native.h"
++
++int xc_domain_gfn2mfn(xc_interface *xch,
++                      uint32_t domid,
++                      uint64_t gfn,
++                      uint64_t *mfn,
++                      xenmem_access_t *access);
++
+ #endif
+ 
+ IOMMUTLBEntry virtio_msg_bus_xen_translate(VirtIOMSGBusDevice *bd,
+diff --git a/hw/xen/xen-operations.c b/hw/xen/xen-operations.c
+index 654fb2536f..600616bad2 100644
+--- a/hw/xen/xen-operations.c
++++ b/hw/xen/xen-operations.c
+@@ -404,6 +404,12 @@ struct xenstore_backend_ops libxenstore_backend_ops = {
+     .transaction_end = libxenstore_transaction_end,
+ };
+ 
++int xc_domain_gfn2mfn(xc_interface *xch,
++                      uint32_t domid,
++                      uint64_t gfn,
++                      uint64_t *mfn,
++                      xenmem_access_t *access);
++
+ int xc_domain_gfn2mfn(xc_interface *xch,
+                       uint32_t domid,
+                       uint64_t gfn,
+-- 
+2.34.1
+
