@@ -466,11 +466,10 @@ build_qemu_xen_arm64() {
 	echo "****** Build qemu xen arm64 (target side for device model)"
 	XEN_DEB=xen-upstream.deb
 
-	# use upstream from tag
-	URL=https://github.com/qemu/qemu.git
-	COMMIT=""
-	BRANCH=""
-	TAG="v9.0.0"
+	# use the same as virtio-msg
+	URL=https://github.com/edgarigl/qemu.git
+	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
+	BRANCH="edgar/virtio-msg"
 
 	# but we need different config
 	TARGETS="aarch64-softmmu,i386-softmmu"
