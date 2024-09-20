@@ -142,23 +142,27 @@ build_all() {
 
 # Common part of qemu builds
 # Argumenets
-# * name
+# * upstream reference name
+# * upstream reference url
+# * name of this worktree
 # ENV
 # * URL
 # * COMMIT
 # * BRANCH
-# * EXTRA_CONFIG
-xen_common() {
-	NAME=$1
+# returns
+#	true for a new clone
+#	false otherwise
+worktree_common() {
+	REF_NAME=$1
+	REF_URL=$2
+	NAME=$3
 
-	mkdir -p build
-
-	if [ ! -d xen.git ]; then
-		git clone --bare https://github.com/xen-project/xen.git
+	if [ ! -d $REF_NAME.git ]; then
+		git clone --bare $REF_URL
 	fi
 	if [ ! -d $NAME ]; then
-		cd xen.git
-		git remote rm $NAME >/dev/null 2>&1 || true
+		cd $REF_NAME.git
+		git remote rm $NAME || true
 		git remote add $NAME $URL
 		git fetch $NAME
 		git worktree prune
@@ -174,13 +178,37 @@ xen_common() {
 		if [ -n "$COMMIT" ]; then
 			git reset --hard $COMMIT
 		fi
+		if [ -n "$PATCH" ]; then
+			git apply $PATCH
+		fi
+		cd ..
+		true
+	else
+		false
+	fi
+}
+
+# Common part of qemu builds
+# Argumenets
+# * name
+# ENV
+# * URL
+# * COMMIT
+# * BRANCH
+# * EXTRA_CONFIG
+xen_common() {
+	NAME=$1
+
+	mkdir -p build
+
+	if worktree_common xen https://github.com/xen-project/xen.git $NAME; then
+		# new clone, adjust the defconfig
 		if [ -n "$EXTRA_CONFIG" ]; then
-			CF=xen/arch/arm/configs/arm64_defconfig
+			CF=$NAME/xen/arch/arm/configs/arm64_defconfig
 			echo -e "$EXTRA_CONFIG" >>$CF
 		fi
-	else
-		cd $NAME
 	fi
+	cd $NAME
 
 	git clean -fdX
 	./configure --libdir=/usr/lib \
@@ -217,7 +245,10 @@ build_xen_virtio_msg() {
 	URL=https://github.com/edgarigl/xen.git
 	BRANCH=edgar/virtio-msg
 	COMMIT=""
-	EXTRA_CONFIG=""
+	EXTRA_CONFIG=""\
+"CONFIG_IOREQ_SERVER=y\n"\
+"CONFIG_EXPERT=y\n"\
+"CONFIG_TESTS=y\n"
 	xen_common xen-virtio-msg
 }
 
@@ -387,32 +418,7 @@ build_qemu_all() {
 qemu_common() {
 	NAME=$1
 
-	if [ ! -d qemu.git ]; then
-		git clone --bare https://github.com/qemu/qemu.git
-	fi
-	if [ ! -d $NAME ]; then
-		cd qemu.git
-		git remote rm $NAME || true
-		git remote add $NAME $URL
-		git fetch $NAME
-		git worktree prune
-		if [ -n "$BRANCH" ]; then
-			git worktree add ../$NAME $NAME/$BRANCH
-		elif [ -n "$TAG" ]; then
-			git worktree add ../$NAME $TAG
-		else
-			echo "for $NAME, must define BRANCH or TAG"
-		fi
-		cd ../$NAME
-		sed -i -e 's#^gitdir: /prj/#gitdir: ../#' .git
-		if [ -n "$COMMIT" ]; then
-			git reset --hard $COMMIT
-		fi
-		if [ -n "$PATCH" ]; then
-			git apply $PATCH
-		fi
-		cd ..
-	fi
+	worktree_common qemu https://github.com/qemu/qemu.git $NAME
 	mkdir -p build/$NAME
 	mkdir -p build/$NAME-install
 	cd build/$NAME
