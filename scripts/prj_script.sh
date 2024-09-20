@@ -365,7 +365,7 @@ build_qemu() {
 
 # all cross build qemus
 build_qemu_cross() {
-	(build_qemu_xen_arm64)
+	(build_qemu_upstream_arm64)
 	(build_qemu_msg_arm64)
 }
 
@@ -407,6 +407,9 @@ qemu_common() {
 		sed -i -e 's#^gitdir: /prj/#gitdir: ../#' .git
 		if [ -n "$COMMIT" ]; then
 			git reset --hard $COMMIT
+		fi
+		if [ -n "$PATCH" ]; then
+			git apply $PATCH
 		fi
 		cd ..
 	fi
@@ -462,33 +465,35 @@ qemu_common_cross() {
 	fi
 }
 
-build_qemu_xen_arm64() {
+build_qemu_upstream_arm64() {
 	echo "****** Build qemu xen arm64 (target side for device model)"
 	XEN_DEB=xen-upstream.deb
 
-	# use the same as virtio-i2c
-	URL=https://github.com/vireshk/qemu
-	COMMIT=b7890a2c3d6949e8f462bb3630d5b48ecae8239f
-	BRANCH=master
+	# use the same as virtio-msg
+	URL=https://github.com/qemu/qemu.git
+	COMMIT=""
+	TAG="v9.1.0"
+	PATCH=""
 
-	# but we need different config
+	# build for kvm and xen
 	TARGETS="aarch64-softmmu,i386-softmmu"
-	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --enable-xen"
-	qemu_common_cross qemu-xen-arm64
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-werror --enable-xen"
+	qemu_common_cross qemu-upstream-arm64
 }
 
 build_qemu_msg_arm64() {
 	echo "****** Build qemu virtio-msg arm64 (target side)"
-	XEN_DEB=""
+	XEN_DEB=xen-virtio-msg.deb
 
 	# use the same as virtio-msg
 	URL=https://github.com/edgarigl/qemu.git
 	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
 	BRANCH="edgar/virtio-msg"
+	PATCH=""
 
-	# but we need different config
-	TARGETS="aarch64-softmmu"
-	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-xen"
+	# build for kvm and xen
+	TARGETS="aarch64-softmmu,i386-softmmu"
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-werror --enable-xen"
 	qemu_common_cross qemu-msg-arm64
 }
 
@@ -622,10 +627,10 @@ build_disk_debian() {
 	guestfish --rw -a build/disk.qcow2 <<EOF
 run
 mount /dev/sda2 /
-mkdir /opt/qemu-xen
+mkdir /opt/qemu-upstream
 mkdir /opt/qemu-msg
 tar-in $MODULES_TAR / compress:gzip
-tar-in build/qemu-xen-arm64.tar.gz /opt/qemu-xen compress:gzip
+tar-in build/qemu-upstream-arm64.tar.gz /opt/qemu-upstream compress:gzip
 tar-in build/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
 tar-in build/mixins-debian.tar.gz / compress:gzip
 upload build/vhost-device-i2c /root/vhost-device-i2c
