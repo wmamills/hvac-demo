@@ -635,7 +635,7 @@ tar-in build/mixins-debian.tar.gz / compress:gzip
 upload build/vhost-device-i2c /root/vhost-device-i2c
 upload build/xen-vhost-frontend /root/xen-vhost-frontend
 upload build/xen-upstream.deb /root/xen-upstream.deb
-upload build/xen-virtio-msg.deb /root/xen-virt-msg.deb
+upload build/xen-virtio-msg.deb /root/xen-virtio-msg.deb
 upload build/devmem2 /root/devmem2
 upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
