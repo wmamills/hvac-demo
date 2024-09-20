@@ -187,7 +187,11 @@ xen_common() {
 	    --build=x86_64-unknown-linux-gnu --host=aarch64-linux-gnu \
 	    --disable-docs --disable-golang --disable-ocamltools \
 	    --with-system-qemu=/opt/qemu/bin/qemu-system-i386
-	make -j9 debball CROSS_COMPILE=aarch64-linux-gnu- XEN_TARGET_ARCH=arm64
+	if ! make -j9 debball \
+		CROSS_COMPILE=aarch64-linux-gnu- \
+		XEN_TARGET_ARCH=arm64; then
+		return
+	fi
 
 	# symlink for run command
 	ln -fs ../$NAME/dist/install/boot/xen ../build/$NAME
@@ -419,8 +423,7 @@ qemu_common() {
 		--disable-dbus-display --disable-virglrenderer \
 		--disable-vte --disable-brlapi \
 		--disable-alsa --disable-jack --disable-oss --disable-pa
-	make -j10
-	make install
+	make -j10 && make install
 }
 
 build_qemu_i2c() {
@@ -451,10 +454,12 @@ qemu_common_cross() {
 		fi
 	fi
 
-	qemu_common $NAME
-
-	# make a tar file for easy install
-	fakeroot tar cvzf ../$NAME.tar.gz -C ../${NAME}-install .
+	if qemu_common $NAME; then
+		# make a tar file for easy install
+		fakeroot tar cvzf ../$NAME.tar.gz -C ../${NAME}-install .
+	else
+		false
+	fi
 }
 
 build_qemu_xen_arm64() {
