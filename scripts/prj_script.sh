@@ -474,7 +474,7 @@ build_qemu_xen_arm64() {
 
 	# but we need different config
 	TARGETS="aarch64-softmmu,i386-softmmu"
-	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --enable-xen"
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --enable-xen --disable-kvm"
 	qemu_common_cross qemu-xen-arm64
 }
 
