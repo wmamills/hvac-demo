@@ -1,22 +1,13 @@
 # HVAC Demo(s) TODO file
 
-* Fix demo2b with Xen on B side 
-    * fix qemu-virtio-msg build w/ xen enabled
-    * figure out what is going on w/ qemu start in target
 * Add demo for ivshmem-flat
+* Add demo for kernel using ivshmem directly (no qemu proxy)
 * Document how to use with dockit
 * Move all git cloned source to source/ directory
-    x when adding a worktree, fixup the link so it works outside of container also
-	/prj/ -> ../
 * Add test mode to multi-qemu
     * record return code from each qemu instance and the host process
     * add timeout for the qemu's to exit, kill and declare failure in timeout
     * parse logs to detect pass/fail
-* fixup demo1 so it looks like others
-    * create demo1.d/
-    * move unique mixins here
-    * move qemu command line to scripts/
-    * run with multi-qemu (even though just one)
 * add clean, clean-src, and clean-src-all
     * clean: clean all built items
     * clean-src: also remove the cloned sources xen, qemu-*, etc
