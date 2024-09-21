@@ -1,8 +1,14 @@
 # HVAC Demo(s) TODO file
 
+* THIS BRANCH IS NOT TESTED w/ CLEAN BUILD!
+  * rebuild and retest everything when you get back from vacation
 * Fix demo2b with Xen on B side 
-    * fix qemu-virtio-msg build w/ xen enabled
-    * figure out what is going on w/ qemu start in target
+    X fix qemu-virtio-msg build w/ xen enabled
+    * figure out what is going on w/ qemu start in target (partial progress)
+    * try the full build flow
+    * Try --disable-werror to get an arm64 qemu-virtio-msg w/ kvm & xen both
+* Refix demo1
+    * Changes made to fix demo2b xen mode have broken it
 * Add demo for ivshmem-flat
 * Document how to use with dockit
 * Move all git cloned source to source/ directory
