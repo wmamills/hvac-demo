@@ -16,7 +16,7 @@ ROOTFS=$IMAGES/disk/virtio_msg_rootfs.cpio.gz
 
 # we want xen-virtio-msg but for now use upstream
 #XEN=$IMAGES/xen-virtio-msg
-XEN=$IMAGES/xen-upstream
+XEN=$IMAGES/xen-virtio-msg
 
 IVSHMEM_SERVER=$IMAGES/qemu-msg/contrib/ivshmem-server/ivshmem-server
 
