@@ -313,45 +313,85 @@ build_vhost_device() {
 	ln -fs ../vhost-device/target/aarch64-unknown-linux-gnu/release/vhost-device-i2c ../build/
 }
 
-build_linux() {
-	echo "****** Build Linux"
-	if [ ! -d linux ]; then
-		git clone git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-		cd linux
-		git checkout virtio/msg
-		#git reset --hard 1e5e683a3d1aa8b584f279edd144b4b1d5aad45c
-		cp ../mixins/linux/virtio-msg.config arch/arm64/configs
-	else
-		cd linux
+linux_common() {
+	NAME=$1
+
+	echo "****** Build $NAME"
+	if worktree_common linux \
+		https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
+		$NAME; then
+		for f in $EXTRA_CONFIG_FILES; do
+			echo "adding config file $f"
+			cp $f $NAME/arch/arm64/configs/.
+		done
 	fi
-	mkdir -p ../build/linux
+	cd $NAME
+
 	export ARCH=arm64
 	export CROSS_COMPILE=aarch64-linux-gnu-
-	export KBUILD_OUTPUT="$(cd ../build/linux; pwd)"
-	export INSTALL_PATH_BASE=${KBUILD_OUTPUT}-install
+	export KBUILD_BASE="$(cd ../build; pwd)/${NAME}"
+	export KBUILD_OUTPUT=${KBUILD_BASE}-build
+	export INSTALL_PATH_BASE=${KBUILD_BASE}-install
 	export INSTALL_PATH=$INSTALL_PATH_BASE/boot
 	export INSTALL_DTBS_PATH=$INSTALL_PATH/dtb
 	export INSTALL_MOD_PATH=$INSTALL_PATH_BASE
+	mkdir -p $KBUILD_OUTPUT
 
-	make defconfig virtio-msg.config
+	make $CONFIG
 	make -j10 Image modules dtbs
 
-	rm -rf ../build/linux-install
-	mkdir -p ../build/linux-install/boot
-	mkdir -p ../build/linux-install/lib/modules
+	rm -rf ../build/${NAME}-install
+	mkdir -p ../build/${NAME}-install/boot
+	mkdir -p ../build/${NAME}-install/lib/modules
 	KREL=$(make --no-print-directory kernelrelease)
+	echo "KREL=$KREL"
 	fakeroot make INSTALL_MOD_STRIP=1 install modules_install
 	fakeroot make dtbs_install || true
 	#fakeroot make firmware_install || true
 	(cd $INSTALL_PATH_BASE;
 	  mkdir -p lib/firmware;
-	  mv modules-$KREL.tar.gz modules-$KREL.tar.gz.old >/dev/null 2>&1 || true;
 	  fakeroot tar czvf modules-$KREL.tar.gz lib/modules/$KREL lib/firmware)
 
 	# symlink for run command
-	LINUX=$(cd ../build/linux-install/boot; ls -1 vmlinuz-*)
-	echo "Symlinking to $LINUX"
-	ln -fs  linux-install/boot/$LINUX ../build/Image
+	LINUX=$(cd ../build/${NAME}-install/boot; ls -1 vmlinuz-*)
+	MODULES=$(cd ../build/${NAME}-install; ls -1 modules-*.tar.gz)
+	echo "Symlinking $NAME to $LINUX"
+	ln -fs  ${NAME}-install/boot/$LINUX ../build/$NAME-Image
+	ln -fs  ${NAME}-install/$MODULES ../build/$NAME-modules.tar.gz
+}
+
+build_linux_virtio_msg() {
+	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+	BRANCH=virtio/msg
+	COMMIT="1e5e683a3d1aa8b584f279edd144b4b1d5aad45c"
+	CONFIG="defconfig virtio-msg.config"
+	EXTRA_CONFIG_FILES="mixins/linux/virtio-msg.config"
+	linux_common linux-virtio-msg
+}
+
+linux_upstream_inner() {
+	URL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+	BRANCH=""
+	TAG="v6.11"
+	COMMIT=""
+	CONFIG="defconfig virtio-msg.config"
+	EXTRA_CONFIG_FILES=""mixins/linux/virtio-msg.config""
+	linux_common linux-upstream
+}
+
+build_linux_upstream() {
+	(linux_upstream_inner)
+
+	# make the default linux-virtio-msg
+	echo "Default linux is linux-upstream"
+	pwd
+	ln -fs linux-upstream-Image build/Image
+	ln -fs linux-upstream-modules.tar.gz build/modules.tar.gz
+}
+
+build_linux() {
+	(build_linux_virtio_msg)
+	(build_linux_upstream)
 }
 
 build_u_boot() {
@@ -628,13 +668,12 @@ build_disk_debian() {
 	cp build/disk/$BIG_DISK build/disk.qcow2
 
 	# collect the stuff we need to add
-	MODULES_TAR=$(ls -1 build/linux-install/modules-*.tar.gz)
 	guestfish --rw -a build/disk.qcow2 <<EOF
 run
 mount /dev/sda2 /
 mkdir /opt/qemu-xen
 mkdir /opt/qemu-msg
-tar-in $MODULES_TAR / compress:gzip
+tar-in build/modules.tar.gz / compress:gzip
 tar-in build/qemu-xen-arm64.tar.gz /opt/qemu-xen compress:gzip
 tar-in build/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
 tar-in build/mixins-debian.tar.gz / compress:gzip
@@ -646,7 +685,8 @@ upload build/devmem2 /root/devmem2
 upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
-upload build/Image /root/Image
+upload build/linux-virtio-msg-Image /root/linux-virtio-msg-Image
+upload build/linux-upstream-Image /root/linux-upstream-Image
 EOF
 }
 
