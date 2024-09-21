@@ -124,5 +124,5 @@ wait_ready_seq() {
 	wait_ready
 	echo; echo "Now wait a bit more"
 	sleep 5
-	echo; echo "OK"
+	echo "OK"
 }
