@@ -8,7 +8,7 @@ will focus on that combination.
 I cross build xen 4.19 for arm64 and then install it.  I then cross build QEMU
 with --enable-xen and get the errors described down below.
 
-## Solution 1
+## Workaround 1
 
 This issue goes away if you use QEMU 8.x.  (Tested 8.0.0)
 
@@ -16,7 +16,7 @@ This is not a real solution for us but is very strange.  Something in QEMU has
 changed in 9.x that shows this conflict between xen and kernel that has been
 there for years.
 
-## Solution 2
+## Workaround 2
 
 When enabling xen, disable kvm.  This makes the problem go away.
 This is what I have implemented.
@@ -25,12 +25,12 @@ This is what I have implemented.
 EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --enable-xen --disable-kvm"
 ```
 
-## Solution 3
+## Workaround 3
 
 Disable -werror in the QEMU build.
 
-Unfortunately I don't know how to do that as QEMU build is a layer of
-Make / meson / ninja that I have not dived into.
+The qemu config line can take a --disable-werror option to do this.
+I have not tested this yet.
 
 ## Question 1
 
