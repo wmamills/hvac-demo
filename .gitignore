@@ -2,7 +2,8 @@
 /logs/
 /xen.git/
 /xen-*/
-/linux/
+/linux.git/
+/linux-*
 /u-boot/
 /devmem2/
 /qemu.git/
