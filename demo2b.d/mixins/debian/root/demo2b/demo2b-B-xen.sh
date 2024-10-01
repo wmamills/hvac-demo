@@ -18,8 +18,6 @@ xl list
 
 wait_ready_seq
 
-echo "THIS IS NOT WORKING YET; hit enter to go on anyway"; read
-
 # now start the quest
 xl create -c $MY_DIR/guest-virtio-msg.cfg
 
