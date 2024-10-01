@@ -20,6 +20,3 @@ wait_ready_seq
 
 # now start the quest
 xl create -c $MY_DIR/guest-virtio-msg.cfg
-
-echo "start subshell to stop the poweroff until it is working"
-bash
