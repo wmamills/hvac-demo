@@ -364,8 +364,11 @@ build_linux_virtio_msg() {
 	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
 	BRANCH=virtio/msg
 	COMMIT="1e5e683a3d1aa8b584f279edd144b4b1d5aad45c"
-	CONFIG="defconfig virtio-msg.config"
-	EXTRA_CONFIG_FILES="mixins/linux/virtio-msg.config"
+
+	# The branch above has an altered defconfig that has everything needed
+	# VIRTIO_MMIO must remain OFF for this version to work
+	CONFIG="defconfig"
+	EXTRA_CONFIG_FILES=""
 	linux_common linux-virtio-msg
 }
 
