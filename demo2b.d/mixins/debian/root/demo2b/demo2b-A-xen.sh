@@ -9,7 +9,7 @@ set -e
 mark_not_ready
 install_common
 install_qemu_deps
-install_xen xen-virtio-msg qemu-xen
+install_xen xen-virtio-msg qemu-msg
 vfio_setup
 xen_startup
 

@@ -42,7 +42,7 @@ install_xen() {
 		libzstd1 libuuid1
 	apt-get install ./${XEN_NAME}.deb
 
-	# use /opt/qemu-xen as /opt/qemu
+	# use specified QEMU version as /opt/qemu
 	ln -fs -T $QEMU_NAME /opt/qemu
 
 	dd if=/dev/zero of=~/dummy.img bs=1M count=5

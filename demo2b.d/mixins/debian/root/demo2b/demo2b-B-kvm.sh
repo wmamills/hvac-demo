@@ -8,6 +8,9 @@ set -e
 
 install_common
 install_qemu_deps
+
+# we need xen because qemu needs the library even though it won't use it
+install_xen xen-virtio-msg qemu-msg
 vfio_setup
 
 wait_ready_seq
