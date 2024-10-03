@@ -3,7 +3,7 @@
 #MACHINE="-M virt,memory-backend=foo.ram"
 QEMU=/opt/qemu-msg/bin/qemu-system-aarch64
 MACHINE="-M virt"
-KERNEL=${HOME}/Image
+KERNEL=${HOME}/linux-upstream-Image
 ROOTFS=${HOME}/demo2b-kvm-rootfs.cpio.gz
 R_VMID=$1
 shift
