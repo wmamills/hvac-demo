@@ -677,7 +677,7 @@ run
 mount /dev/sda2 /
 mkdir /opt/qemu-upstream
 mkdir /opt/qemu-msg
-tar-in build/modules.tar.gz / compress:gzip
+tar-in build/linux-upstream-modules.tar.gz / compress:gzip
 tar-in build/qemu-upstream-arm64.tar.gz /opt/qemu-upstream compress:gzip
 tar-in build/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
 tar-in build/mixins-debian.tar.gz / compress:gzip
