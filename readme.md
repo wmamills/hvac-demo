@@ -175,6 +175,14 @@ The build steps are any of `xen`, `rust`, `linux`, `qemu`, `qemu-cross`,
 have run. The `qemu-cross` step requires the xen and qemu steps to have been
 run.
 
+The build steps `clean`, `clean-src`, and `'clean-src-all` are supported.
+The `clean` step removes the build/ directory and does a git clean in each
+source repo that builds in-tree (currently only xen steps).
+The `clean-src` step does everything that clean does but also removes the
+cloned source directories but leaves the reference clones.
+The `clean-src-all` step does everything that clean-src does but also removes
+the reference clones, currently linux.git, qemu.git, and xen.git.
+
 Due to the current state of demos, multiple versions of `linux`, `qemu`,
 `qemu-cross`, and `xen` are built.  You can build the individual version by
 finding the build function name in `prj_script.sh`.  Any function in that script

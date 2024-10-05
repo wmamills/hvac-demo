@@ -140,6 +140,30 @@ build_all() {
 	(build_disk)
 }
 
+build_clean() {
+	rm -rf build
+	for d in xen-orko xen-upstream xen-virtio-msg; do
+		if [ -d $d ]; then
+			(cd $d; git clean -fdX)
+		fi
+	done
+}
+
+build_clean_src() {
+	rm -rf xen-orko xen-upstream xen-virtio-msg
+	rm -rf qemu-i2c qemu-ivshmem-flat qemu-msg
+	rm -rf qemu-msg-arm64 qemu-upstream-arm64
+	rm -rf linux-upstream linux-virtio-msg
+	rm -rf xen-vhost-frontend vhost-device
+	rm -rf u-boot devmem2
+	build_clean
+}
+
+build_clean_src_all() {
+	build_clean_src
+	rm -rf linux.git xen.git qemu.git
+}
+
 # Common part of qemu builds
 # Argumenets
 # * upstream reference name

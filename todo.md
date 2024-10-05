@@ -7,10 +7,6 @@
     * record return code from each qemu instance and the host process
     * add timeout for the qemu's to exit, kill and declare failure in timeout
     * parse logs to detect pass/fail
-* add clean, clean-src, and clean-src-all
-    * clean: clean all built items
-    * clean-src: also remove the cloned sources xen, qemu-*, etc
-    * clean-src-all: also remove the reference repos like qemu.git
 * add Makefile at top for easy understanding
     * break build_* functions out of prj_script.sh into scripts/build/*
     * Makefile will check dependencies and then run the scripts
