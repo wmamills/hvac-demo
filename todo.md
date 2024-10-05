@@ -2,7 +2,6 @@
 
 * Add demo for ivshmem-flat
 * Add demo for kernel using ivshmem directly (no qemu proxy)
-* Document how to use with dockit
 * Move all git cloned source to source/ directory
 * Add test mode to multi-qemu
     * record return code from each qemu instance and the host process
@@ -22,3 +21,4 @@
   * can work w/ mounted user /prj or not
 * make container run work on arm64
 * make build run on arm64
+* fix kernel oops in xen for virtio-pci devices (is not fatal but is ugly)
