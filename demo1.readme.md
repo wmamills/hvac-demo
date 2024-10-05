@@ -21,4 +21,23 @@ chooses to and uses Guest PA in virtqueues.
 
 These items will be addressed in later work.
 
-The current version of rustc at the time this page was written was 1.80.1
+### Demo1 software layers
+
+```
+* QEMU system model of arm64.
+  has i2c based rtc on virtio-i2c over virtio-mmio
+  * Xen hypervisor
+    * Dom0: Kernel + Debian rootfs on disk
+      has i2c bus with rtc configured but unbound
+      * vhost-device-i2c
+        bridges vhost-i2c to kernel's i2c bus
+      * xen-vhost-frontend
+        converts xen io-req requests to standard vhost interface
+      * xl tool stack
+        creates the domu and connects its console to xen console
+    * DomU: Kernel + minimal initrd
+        implements virtio-i2c over virtio-msg-mmio
+        binds kernel rtc driver to i2c rtc on virtio-msg
+        * hwclock
+          tests rtc
+```
