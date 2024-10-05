@@ -50,24 +50,25 @@ if you do not want that.
 To do setup, use:
 
 ```
-sudo ./scripts/prj_script.sh admin_setup
-./scripts/prj_script.sh prj_setup
+./setup
 ```
 
-The *_setup steps only need to be run once per machine.
+The setup script will use sudo to do the admin_setup and then setup the current
+user for rust development.  The admin_setup will install all the needed
+packages. The `setup` step only need to be run once per machine.
 
 To build everything use:
 
 ```
-./scripts/prj_script.sh prj_build
+./Build all
 ```
 
-The prj_build step can be run as many times as you wish.  The first build will
+The `Build` script can be run as many times as you wish.  The first build will
 clone the sources you need.  If the source already exists when the build
 happens, the source will be used as-is.
 
-You can run individual builds steps by adding them to the prj_build command
-line.  See the section on build steps below for more information.
+You can run individual builds steps by replacing `all` with the individual steps
+to run.  See the section on build steps below for more information.
 
 After building you can run the demos using commands like this:
 
@@ -79,11 +80,11 @@ After building you can run the demos using commands like this:
 
 Make sure docker is installed and you can run it.
 
-The following command will build everything and run it:
+The following command will start the container:
 
 ```
 docker run -it --name hvac-demo -v$PWD:/prj debian:12 \
-    /prj/scripts/prj_script.sh container-main shell
+    /prj/scripts/container-main
 ```
 
 `container-main` will run the distro setup and create your user and give you sudo
@@ -91,13 +92,13 @@ access.  It will then run the admin_setup, switch to your user and run the
 prj_setup.  After that it will give you a shell where you can follow the
 instructions above for building.
 
-To reuse a container use:
+To reuse a container after exit, use:
 ```
 docker start hvac-demo
 docker attach hvac-demo
 ```
 
-When you exit the shell the conatiner will stop again.
+When you exit the shell the container will stop again.
 
 To delete the container use:
 

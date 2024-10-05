@@ -65,7 +65,7 @@ container_main() {
 	build)
 		userjmp $THIS_SCRIPT prj_build "$@"
 		;;
-	shell)
+	shell|"")
 		userjmp /bin/bash -l
 		;;
 	*)
