@@ -78,7 +78,8 @@ After building you can run the demos using commands like this:
 
 ### Building in a Container
 
-Make sure docker is installed and you can run it.
+Make sure you [install docker](Docker install cheat-sheat) and that you can run
+it.
 
 The following command will start the container:
 
@@ -147,6 +148,9 @@ There are lots of guides to installing docker on the internet.  However most
 tell you to install the non-free docker-desktop or docker-engine.  If you are
 already running Linux then you can (and should IMHO) use the open source docker
 already packaged with your distro.
+
+(If you have need of the docker-desktop or very latest version of docker for
+other projects, that should work with this project just fine as well.)
 
 To install on Ubuntu do this:
 
