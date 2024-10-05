@@ -3,6 +3,9 @@
 THIS_SCRIPT=$0
 NAME=hvac-demo
 
+# exit on error
+set -e
+
 # This is a poorman's dockit function
 # do distro setup like dockit would before admin_setup
 distro_setup() {
@@ -485,7 +488,7 @@ build_qemu_all() {
 qemu_common() {
 	NAME=$1
 
-	worktree_common qemu https://github.com/qemu/qemu.git $NAME
+	worktree_common qemu https://github.com/qemu/qemu.git $NAME || true
 	mkdir -p build/$NAME
 	mkdir -p build/$NAME-install
 	cd build/$NAME
