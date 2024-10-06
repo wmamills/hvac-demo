@@ -48,13 +48,13 @@ The first IVSHMEM instance has 1M shared memory and bi-directional interrupts.
 The second IVSHMEM instance gives access to the other sides "DDR" memory.  This
 is currently set to 1G to allow testing on smaller host machines but has been
 tested at 4G in size as well.  The Driver side does not really need the second 
-instance as it does not need access to the driver side memory but it is present
+instance as it does not need access to the device side memory but it is present
 only to keep things symmetrical.
 
 **Note: IVSHMEM2 will be made optional in future work.**
 When the kernel side is taught how to constrain its memory usage to only the
-shared memory area IVSHMEM2 will not be needed.  IVSHMEM1 will be made larger
-for most use cases in this mode.
+shared memory area, then IVSHMEM2 will not be needed.
+IVSHMEM1 will be made larger for most use cases in this mode.
 
 Demo2b can be run in a number of combinations.  The device side can run the
 Linux kernel directly or can run Xen with Linux running as Dom0.  The driver
