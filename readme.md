@@ -78,8 +78,8 @@ After building you can run the demos using commands like this:
 
 ### Building in a Container
 
-Make sure you [install docker](Docker install cheat-sheat) and that you can run
-it.
+Make sure you install docker and that you can run it.
+See the "Docker install cheat-sheet" below.
 
 The following command will start the container:
 
@@ -115,8 +115,8 @@ Bill uses it often.
 
 Clone that repo somewhere and create a symlink to the dockit file in your ~/bin
 or ~/.local/bin directory and make sure that the one you used is in your path.
-As with the other docker based methods you will need to
-[install docker](Docker install cheat-sheat).
+As with the other docker based methods you will need to install docker.
+See the "Docker install cheat-sheet" below.
 
 To build everything use this command:
 
