@@ -93,6 +93,8 @@ Download rootfs from:
 $ wget https://people.linaro.org/~gustavo.romero/ivshmem/rootfs.qcow2
 ```
 
+Note: user and password for this rootfs image is `root` and `abc123`
+
 Build a zephyr.elf image for cortex-m3 from:
 `https://github.com/gromero/zephyr/tree/uio_ivshmem`
 
