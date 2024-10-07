@@ -1,0 +1,15 @@
+NUM_QEMU=2
+
+# The first qemu is only for device model, there is no software and no ssh
+# but give it a name anyway
+QEMU_SSH_NAME[0]=cortex-m
+QEMU_BOOT_SCRIPT[0]="demo3.d/scripts/run-A.sh"
+QEMU_BOOT_ARG[0]=""
+
+# The second qemu is the real device
+QEMU_SSH_NAME[1]=cortex-a
+QEMU_BOOT_SCRIPT[1]="demo3.d/scripts/run-B.sh"
+QEMU_BOOT_ARG[1]=""
+
+CLEANUP_SCRIPT="demo3.d/scripts/cleanup.sh"
+SETUP_SCRIPT="demo3.d/scripts/setup.sh"
