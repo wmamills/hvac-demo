@@ -15,4 +15,4 @@ for NAME in demo3; do
 done
 
 # ivshmem-server detaches itself, just run it
-$IVSHMEM_SERVER -S shm.sock -p shm.pid -l 1M -n 1
+$IVSHMEM_SERVER -S shm.sock -p shm.pid -l 4M -n 16
