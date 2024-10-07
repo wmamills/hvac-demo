@@ -405,7 +405,7 @@ linux_upstream_inner() {
 	TAG="v6.11"
 	COMMIT=""
 	CONFIG="defconfig virtio-msg.config"
-	EXTRA_CONFIG_FILES=""mixins/linux/virtio-msg.config""
+	EXTRA_CONFIG_FILES="mixins/linux/virtio-msg.config"
 	linux_common linux-upstream
 }
 
