@@ -157,7 +157,7 @@ build_clean_src() {
 	rm -rf xen-orko xen-upstream xen-virtio-msg
 	rm -rf qemu-i2c qemu-ivshmem-flat qemu-msg
 	rm -rf qemu-msg-arm64 qemu-upstream-arm64
-	rm -rf linux-upstream linux-virtio-msg
+	rm -rf linux-upstream linux-virtio-msg linux-ivshmem-uio
 	rm -rf xen-vhost-frontend vhost-device
 	rm -rf u-boot devmem2
 	rm -rf zephyr-top
@@ -421,6 +421,15 @@ build_linux_upstream() {
 	pwd
 	ln -fs linux-upstream-Image build/Image
 	ln -fs linux-upstream-modules.tar.gz build/modules.tar.gz
+}
+
+build_linux_ivshmem_uio() {
+	URL=https://github.com/gromero/linux.git
+	BRANCH="uio_ivshmem"
+	COMMIT="28f3f88ee261245a0fd47d5c9a0705369f141403"
+	CONFIG="defconfig"
+	EXTRA_CONFIG="uio_ivshmem.config"
+	linux_common linux-ivshmem-uio
 }
 
 build_linux() {
