@@ -421,6 +421,15 @@ build_linux_upstream() {
 	ln -fs linux-upstream-modules.tar.gz build/modules.tar.gz
 }
 
+build_linux_ivshmem_uio() {
+	URL=https://github.com/gromero/linux.git
+	BRANCH="uio_ivshmem"
+	COMMIT="28f3f88ee261245a0fd47d5c9a0705369f141403"
+	CONFIG="defconfig"
+	EXTRA_CONFIG="uio_ivshmem.config"
+	linux_common linux-ivshmem-uio
+}
+
 build_linux() {
 	(build_linux_virtio_msg)
 	(build_linux_upstream)
