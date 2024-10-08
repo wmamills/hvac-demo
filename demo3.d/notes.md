@@ -126,6 +126,6 @@ Timer with period zero, disabling
 $ ./qemu-system-arm -cpu cortex-m3 -machine mps2-an385 -nographic -net none \
 -chardev stdio,id=con,mux=on -serial chardev:con -mon chardev=con,mode=readline \
 -chardev socket,path=/tmp/ivshmem_socket,id=ivf \
--device ivshmem-flat,x-irq-qompath='/machine/armv7m/nvic/unnamed-gpio-in[0]',chardev=ivfshmem-maxsize=4194304 \
+-device ivshmem-flat,x-irq-qompath='/machine/armv7m/nvic/unnamed-gpio-in[0]',chardev=ivf,shmem-maxsize=4194304 \
 -kernel ~/zephyr_qemu_an385_ivshmem.elf
 ```
