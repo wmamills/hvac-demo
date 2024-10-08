@@ -15,8 +15,8 @@ rm -f shm.sock
 if [ -r $LOGS/net.pcap ]; then
     tcpdump -r $LOGS/net.pcap
 fi
-grep "^\*\*\*\*\* TEST" $LOGS/qemu1-log.txt
-grep "^\*\*\*\*\* TEST" $LOGS/qemu2-log.txt
+grep "^\*\*\*\*\* TEST" $LOGS/cortex-m-log.txt
+grep "^\*\*\*\*\* TEST" $LOGS/cortex-a-log.txt
 
 # startup debug support
 #echo "**** QEMU1 logs"
