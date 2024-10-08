@@ -10,6 +10,7 @@
 /qemu-*/
 /xen-vhost-frontend/
 /vhost-device/
+/zephyr-top/
 qemu-ram
 net.pcap
 queue-linux-user-d*
