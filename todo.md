@@ -18,3 +18,4 @@
 * make container run work on arm64
 * make build run on arm64
 * fix kernel oops in xen for virtio-pci devices (is not fatal but is ugly)
+* forward ports from host to container
