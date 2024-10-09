@@ -180,9 +180,9 @@ build_clean_src_all() {
 #	true for a new clone
 #	false otherwise
 worktree_common() {
-	REF_NAME=$1
-	REF_URL=$2
-	NAME=$3
+	local REF_NAME=$1
+	local REF_URL=$2
+	local NAME=$3
 
 	if [ ! -d $REF_NAME.git ]; then
 		git clone --bare $REF_URL
@@ -593,6 +593,41 @@ build_qemu_ivshmem_flat() {
 	TARGETS="aarch64-softmmu"
 	EXTRA_CONFIG=""
 	qemu_common qemu-ivshmem-flat
+}
+
+zephyr_common() {
+	NAME=$1; shift
+
+	mkdir -p zephyr-top
+	cd zephyr-top
+	worktree_common zephyr \
+		https://github.com/zephyrproject-rtos/zephyr.git \
+		$NAME || true
+	rm -rf .west
+	rm -f zephyr
+	ln -s $NAME zephyr
+	(cd $NAME; west init -l)
+	west update
+	west build -p always -b $BOARD $APP $EXTRA_CONFIG
+	cp build/zephyr/zephyr.elf ../build/$NAME-symbols.elf
+	arm-none-eabi-strip -o ../build/$NAME.elf ../build/$NAME-symbols.elf
+}
+
+build_zephyr_m3_hello() {
+	NAME=zephyr-m3-hello
+
+	echo "****** Build Zephyr v3.7 QEMU M3 (stellaris lm3*) hello world"
+	URL=https://github.com/zephyrproject-rtos/zephyr.git
+	COMMIT=""
+	TAG="v3.7.0"
+	BOARD="qemu_cortex_m3"
+	APP="zephyr/samples/hello_world"
+	EXTRA_CONFIG=""
+	zephyr_common $NAME
+}
+
+build_zephyr() {
+	(build_zephyr_m3_hello)
 }
 
 disk_common_buildroot() {
