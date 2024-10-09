@@ -81,7 +81,7 @@ admin_setup() {
 	dpkg --add-architecture arm64
 	apt-get update -qq
 	# for xen (basic) and kernel build
-	apt-get install -yqq build-essential git bison flex wget curl \
+	apt-get install -yqq build-essential git bison flex wget curl pv \
 	    bc libssl-dev libncurses-dev kmod python3 python3-setuptools iasl
 	# for cross-build
 	apt-get install -yqq gcc-aarch64-linux-gnu uuid-dev:arm64 libzstd-dev:arm64 \
@@ -140,6 +140,7 @@ build_all() {
 	(build_qemu_cross)
 	(build_devmem2)
 	(build_u_boot)
+	(build_zephyr)
 	(build_disk)
 }
 
@@ -159,6 +160,7 @@ build_clean_src() {
 	rm -rf linux-upstream linux-virtio-msg
 	rm -rf xen-vhost-frontend vhost-device
 	rm -rf u-boot devmem2
+	rm -rf zephyr-top
 	build_clean
 }
 
@@ -180,9 +182,9 @@ build_clean_src_all() {
 #	true for a new clone
 #	false otherwise
 worktree_common() {
-	REF_NAME=$1
-	REF_URL=$2
-	NAME=$3
+	local REF_NAME=$1
+	local REF_URL=$2
+	local NAME=$3
 
 	if [ ! -d $REF_NAME.git ]; then
 		git clone --bare $REF_URL
@@ -593,6 +595,107 @@ build_qemu_ivshmem_flat() {
 	TARGETS="aarch64-softmmu"
 	EXTRA_CONFIG=""
 	qemu_common qemu-ivshmem-flat
+}
+
+ZEPHYR_SDK_VERSION=v0.16.8
+ZEPHYR_VERSION=v3.7.0
+
+ZEPHYR_SDK_API_FOLDER=https://api.github.com/repos/zephyrproject-rtos/sdk-ng/releases
+ZEPHYR_SDK_VER_SELECT="tags/$ZEPHYR_SDK_VERSION"
+ZEPHYR_SDK_SETUP_TAR=zephyr-sdk-.*linux-$(uname -m).tar.xz
+
+
+zephyr_setup_inner() {
+	mkdir -p ~/opt/zephyr
+	cd ~/opt/zephyr
+
+	# Create a new virtual environment
+	python3 -m venv ~/opt/zephyr/venv
+	source ~/opt/zephyr/venv/bin/activate
+
+	if false; then
+	echo  " Build for Zephyr OS "
+	apt update
+	apt-get install -y make curl
+	sudo apt-get install -y git cmake ninja-build gperf
+	sudo apt-get install -y ccache dfu-util device-tree-compiler wget pv
+	sudo apt-get install -y python3-dev python3-setuptools python3-tk python3-wheel xz-utils \
+		file
+	sudo apt-get install -y make gcc gcc-multilib g++-multilib libsdl2-dev
+	sudo apt-get install -y libc6-dev-i386 gperf g++ python3-ply python3-yaml \
+		device-tree-compiler ncurses-dev uglifyjs -qq
+	fi
+
+	pip3 install pyelftools
+	pip3 install west cmake
+
+	ZEPHYR_SDK_DOWNLOAD_URL=$(curl -s \
+		${ZEPHYR_SDK_API_FOLDER}/${ZEPHYR_SDK_VER_SELECT} | \
+		grep -e "browser_download_url.*${ZEPHYR_SDK_SETUP_TAR}"| \
+		cut -d : -f 2,3 | tr -d \")
+	ZEPHYR_SDK_TAR=$(basename  $ZEPHYR_SDK_DOWNLOAD_URL)
+	ZEPHYR_SDK_SETUP_DIR=$(echo $ZEPHYR_SDK_TAR | cut -d_ -f1)
+
+	wget $ZEPHYR_SDK_DOWNLOAD_URL --dot-style=giga
+	echo "Extracting $ZEPHYR_SDK_TAR"
+	pv $ZEPHYR_SDK_TAR -i 3 -ptebr -f | tar xJ
+	rm -rf $ZEPHYR_SDK_TAR
+	echo "Installing $ZEPHYR_SDK_SETUP_DIR/setup.sh"
+	yes | ./$ZEPHYR_SDK_SETUP_DIR/setup.sh
+	echo "export ZEPHYR_TOOLCHAIN_VARIANT=zephyr" >.env
+	echo "export TOOLCHAIN_HOME=~/opt/zephyr/$ZEPHYR_SDK_SETUP_DIR" >>.env
+
+	touch ~/opt/zephyr/done
+}
+
+zephyr_setup() {
+	if [ ! -e ~/opt/zephyr/done ]; then
+		(zephyr_setup_inner)
+	fi
+
+	source ~/opt/zephyr/venv/bin/activate
+	source ~/opt/zephyr/.env
+	PATH=$TOOLCHAIN_HOME/arm-zephyr-eabi/bin:$PATH
+}
+
+zephyr_common() {
+	NAME=$1; shift
+
+	zephyr_setup
+
+	mkdir -p zephyr-top
+	cd zephyr-top
+	worktree_common zephyr \
+		https://github.com/zephyrproject-rtos/zephyr.git \
+		$NAME || true
+	rm -rf .west
+	rm -f zephyr
+	ln -s $NAME zephyr
+	pip3 install -r ./zephyr/scripts/requirements.txt
+	# west zephyr-export
+	# source zephyr/zephyr-env.sh
+	(cd $NAME; west init -l)
+	west update
+	west build -p always -b $BOARD $APP $EXTRA_CONFIG
+	cp build/zephyr/zephyr.elf ../build/$NAME-symbols.elf
+	arm-zephyr-eabi-strip -o ../build/$NAME.elf ../build/$NAME-symbols.elf
+}
+
+build_zephyr_m3_hello() {
+	NAME=zephyr-m3-hello
+
+	echo "****** Build Zephyr v3.7 QEMU M3 (stellaris lm3*) hello world"
+	URL=https://github.com/zephyrproject-rtos/zephyr.git
+	COMMIT=""
+	TAG="v3.7.0"
+	BOARD="qemu_cortex_m3"
+	APP="zephyr/samples/hello_world"
+	EXTRA_CONFIG=""
+	zephyr_common $NAME
+}
+
+build_zephyr() {
+	(build_zephyr_m3_hello)
 }
 
 disk_common_buildroot() {
