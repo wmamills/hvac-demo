@@ -8,8 +8,7 @@ MY_DIR=$(dirname $ME_ABS)
 #set -x
 
 QEMU="$IMAGES/qemu-ivshmem-flat-install/bin/qemu-system-aarch64"
-ZEPHYR="$IMAGES/zephyr-mps2-m3-ivshmem.elf"
-#ZEPHYR="$IMAGES/zephyr-mps2-m3-hello.elf"
+ZEPHYR="$IMAGES/zephyr-mps2-m3-uio.elf"
 
 IVFLAT_IRQ=x-irq-qompath='/machine/armv7m/nvic/unnamed-gpio-in[0]'
 IVFLAT_SIZE="ivshmem-maxsize=4194304"
