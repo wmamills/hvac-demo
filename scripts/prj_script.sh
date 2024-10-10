@@ -139,6 +139,7 @@ build_all() {
 	(build_qemu)
 	(build_qemu_cross)
 	(build_devmem2)
+	(build_uio_ivshmem_test)
 	(build_u_boot)
 	(build_zephyr)
 	(build_disk)
@@ -468,6 +469,13 @@ build_devmem2() {
 	fi
 	mkdir -p ../build/
 	aarch64-linux-gnu-gcc devmem2.c -o ../build/devmem2
+}
+
+build_uio_ivshmem_test() {
+	echo "****** Build uio_ivshmem_test for arm64"
+	mkdir -p build/
+	aarch64-linux-gnu-gcc demo3.d/src/uio_ivshmem_test.c \
+		-o build/uio_ivshmem_test
 }
 
 # all native build qemus
