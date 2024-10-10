@@ -468,6 +468,12 @@ build_devmem2() {
 	aarch64-linux-gnu-gcc devmem2.c -o ../build/devmem2
 }
 
+build_uio_ivshmem_test() {
+	mkdir -p build/
+	aarch64-linux-gnu-gcc demo3.d/src/uio_ivshmem_test.c \
+		-o build/uio_ivshmem_test
+}
+
 # all native build qemus
 build_qemu() {
 	(build_qemu_i2c)

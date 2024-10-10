@@ -32,11 +32,11 @@ int main(int argc, char **argv)
 
 		mmr = mmr_section;
 		for (int i = 0; i < 4 /* There are 4 mmrs */; ++i) {
-			printf("mmr%d: %d %0x\n", i, *(mmr+i), *(mmr+i));	
+			printf("mmr%d: %d %0x\n", i, *(mmr+i), *(mmr+i));
 		}
 
                 shm = shmem_section;
-		/* 
+		/*
 		 * Save our peer ID taken from IVPOSITION register to shm[0] so
 		 * the Zephyr peer knows which peer it should notify back.
 		 */
@@ -46,11 +46,11 @@ int main(int argc, char **argv)
 	/* Notify peer given in argv[2] by writting its peer ID to the DOORBELL register */
 	*(mmr + 3) = atoi(argv[2]) << 16;
 
-	/* 
+	/*
 	 * Wait notification. read() will block until Zephyr finishes writting
 	 * the whole shmem region with value 0xb5b5b5b5.
 	 */
- 	n = read(fd, (uint8_t *)&buf, 4);	
+	n = read(fd, (uint8_t *)&buf, 4);
 
 	/*
 	printf("n = %d\n", n);
@@ -64,7 +64,6 @@ int main(int argc, char **argv)
 			printf("Data mismatch at %d: %x\n", i, *(shm +i));
 			exit(1)	;
 		}
-		
 	}
 
 	printf("Data ok. %d byte(s) checked.\n", i * 4);
