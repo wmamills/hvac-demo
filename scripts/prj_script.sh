@@ -816,7 +816,8 @@ build_disk_demo2b() {
 build_disk_debian_mixins() {
 	debian_mixins_common debian \
 		demo1.d/mixins/debian \
-		demo2b.d/mixins/debian
+		demo2b.d/mixins/debian \
+		demo3.d/mixins/debian
 
 }
 
@@ -849,6 +850,7 @@ upload build/xen-vhost-frontend /root/xen-vhost-frontend
 upload build/xen-upstream.deb /root/xen-upstream.deb
 upload build/xen-virtio-msg.deb /root/xen-virtio-msg.deb
 upload build/devmem2 /root/devmem2
+upload build/uio_ivshmem_test /root/uio_ivshmem_test
 upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
