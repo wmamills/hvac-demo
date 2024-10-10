@@ -15,12 +15,8 @@ sleep 2
 QEMU=$IMAGES/qemu-ivshmem-flat-install/bin/qemu-system-aarch64
 KERNEL=$IMAGES/linux-ivshmem-uio-Image
 
-#DISK=${IMAGES}/${NAME}-disk.qcow2
-#ROOT="/dev/vda1"
-
-# use the demo image for now, it is NOT a partitioned image
-DISK=$IMAGES/../demo3.d/rootfs.qcow2
-ROOT="/dev/vda"
+DISK=${IMAGES}/${NAME}-disk.qcow2
+ROOT="/dev/vda2"
 
 ${QEMU} \
 	-machine virt,gic_version=3,iommu=smmuv3 \
