@@ -2,7 +2,6 @@
 
 * Add demo for ivshmem-flat
 * Add demo for kernel using ivshmem directly (no qemu proxy)
-* Move all git cloned source to source/ directory
 * Add test mode to multi-qemu
     * record return code from each qemu instance and the host process
     * add timeout for the qemu's to exit, kill and declare failure in timeout

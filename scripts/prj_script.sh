@@ -148,26 +148,20 @@ build_all() {
 build_clean() {
 	rm -rf build
 	for d in xen-orko xen-upstream xen-virtio-msg; do
-		if [ -d $d ]; then
-			(cd $d; git clean -fdX)
+		if [ -d src/$d ]; then
+			(cd src/$d; git clean -fdX)
 		fi
 	done
 }
 
 build_clean_src() {
-	rm -rf xen-orko xen-upstream xen-virtio-msg
-	rm -rf qemu-i2c qemu-ivshmem-flat qemu-msg
-	rm -rf qemu-msg-arm64 qemu-upstream-arm64
-	rm -rf linux-upstream linux-virtio-msg linux-ivshmem-uio
-	rm -rf xen-vhost-frontend vhost-device
-	rm -rf u-boot devmem2
-	rm -rf zephyr-top
+	rm -rf src
 	build_clean
 }
 
 build_clean_src_all() {
 	build_clean_src
-	rm -rf linux.git xen.git qemu.git
+	rm -rf src-ref
 }
 
 # Common part of qemu builds
@@ -185,33 +179,37 @@ build_clean_src_all() {
 worktree_common() {
 	local REF_NAME=$1
 	local REF_URL=$2
-	local NAME=$3
+	local FULLNAME=$3
+	local NAME=$(basename $FULLNAME)
+	local ORIG_DIR=$PWD
 
-	if [ ! -d $REF_NAME.git ]; then
-		git clone --bare $REF_URL
+	if [ ! -d src-ref/$REF_NAME.git ]; then
+		mkdir -p src-ref
+		(cd src-ref; git clone --bare $REF_URL $REF_NAME.git)
 	fi
-	if [ ! -d $NAME ]; then
-		cd $REF_NAME.git
+	if [ ! -d src/$FULLNAME ]; then
+		mkdir -p src/$FULLNAME
+		cd src-ref/$REF_NAME.git
 		git remote rm $NAME || true
 		git remote add $NAME $URL
 		git fetch $NAME
 		git worktree prune
 		if [ -n "$BRANCH" ]; then
-			git worktree add ../$NAME $NAME/$BRANCH
+			git worktree add ../../src/$FULLNAME $NAME/$BRANCH
 		elif [ -n "$TAG" ]; then
-			git worktree add ../$NAME $TAG
+			git worktree add ../../src/$FULLNAME $TAG
 		else
 			echo "for $NAME, must define BRANCH or TAG"
 		fi
-		cd ../$NAME
-		sed -i -e 's#^gitdir: /prj/#gitdir: ../#' .git
+		cd ../../src/$FULLNAME
+		sed -i -e 's#^gitdir: /prj/#gitdir: ../../#' .git
 		if [ -n "$COMMIT" ]; then
 			git reset --hard $COMMIT
 		fi
 		if [ -n "$PATCH" ]; then
 			git apply $PATCH
 		fi
-		cd ..
+		cd $ORIG_DIR
 		true
 	else
 		false
@@ -234,11 +232,11 @@ xen_common() {
 	if worktree_common xen https://github.com/xen-project/xen.git $NAME; then
 		# new clone, adjust the defconfig
 		if [ -n "$EXTRA_CONFIG" ]; then
-			CF=$NAME/xen/arch/arm/configs/arm64_defconfig
+			CF=src/$NAME/xen/arch/arm/configs/arm64_defconfig
 			echo -e "$EXTRA_CONFIG" >>$CF
 		fi
 	fi
-	cd $NAME
+	cd src/$NAME
 
 	git clean -fdX
 	./configure --libdir=/usr/lib \
@@ -252,11 +250,11 @@ xen_common() {
 	fi
 
 	# symlink for run command
-	ln -fs ../$NAME/dist/install/boot/xen ../build/$NAME
+	ln -fs ../src/$NAME/dist/install/boot/xen ../../build/$NAME
 
 	# symlink to deb package for install
 	XEN_DEB=$(cd dist; ls -1 xen-*.deb)
-	ln -fs ../$NAME/dist/$XEN_DEB ../build/$NAME.deb
+	ln -fs ../src/$NAME/dist/$XEN_DEB ../../build/$NAME.deb
 }
 
 build_xen_upstream() {
@@ -305,7 +303,8 @@ build_rust() {
 build_xen_vhost_frontend() {
 	echo "****** Build xen-vhost-frontend"
 	mkdir -p build
-	if [ ! -d xen-vhost-frontend ]; then
+	if [ ! -d src/xen-vhost-frontend ]; then
+		mkdir -p src; cd src
 		git clone https://github.com/vireshk/xen-vhost-frontend
 		cd xen-vhost-frontend
 		git checkout virtio-msg
@@ -319,28 +318,33 @@ build_xen_vhost_frontend() {
 '{ git = "https://github.com/epilys/xen-sys.git", rev = "e711d67ff3a77df88a92f1f1b45bfd6ec59b3190" }#'\
 		    Cargo.toml
 	else
-		cd xen-vhost-frontend
+		cd src/xen-vhost-frontend
 	fi
 	. ~/.cargo/env
 	cargo build --release --all-features \
 		--target aarch64-unknown-linux-gnu
-	ln -fs ../xen-vhost-frontend/target/aarch64-unknown-linux-gnu/release/xen-vhost-frontend ../build/
+	ln -fs \
+	  ../src/xen-vhost-frontend/target/aarch64-unknown-linux-gnu/release/xen-vhost-frontend \
+	  ../../build/
 }
 
 build_vhost_device() {
 	echo "****** Build vhost-device"
 	mkdir -p build
-	if [ ! -d vhost-device ]; then
+	if [ ! -d src/vhost-device ]; then
+		mkdir -p src; cd src
 		git clone https://github.com/rust-vmm/vhost-device
 		cd vhost-device
 		#git reset --hard 079d9024be604135ca2016e2bc63e55c013bea39
 	else
-		cd vhost-device
+		cd src/vhost-device
 	fi
 	. ~/.cargo/env
 	cargo build --bin vhost-device-i2c --release --all-features \
 		--target aarch64-unknown-linux-gnu
-	ln -fs ../vhost-device/target/aarch64-unknown-linux-gnu/release/vhost-device-i2c ../build/
+	ln -fs \
+	  ../src/vhost-device/target/aarch64-unknown-linux-gnu/release/vhost-device-i2c \
+	  ../../build/
 }
 
 # CONFIG is base config and optionally more but all are already in the upstream tree
@@ -355,13 +359,13 @@ linux_common() {
 
 	for f in $EXTRA_CONFIG; do
 		echo "adding config file $f"
-		cp mixins/linux/$f $NAME/arch/arm64/configs/.
+		cp mixins/linux/$f src/$NAME/arch/arm64/configs/.
 	done
-	cd $NAME
+	cd src/$NAME
 
 	export ARCH=arm64
 	export CROSS_COMPILE=aarch64-linux-gnu-
-	export KBUILD_BASE="$(cd ../build; pwd)/${NAME}"
+	export KBUILD_BASE="$(cd ../../build; pwd)/${NAME}"
 	export KBUILD_OUTPUT=${KBUILD_BASE}-build
 	export INSTALL_PATH_BASE=${KBUILD_BASE}-install
 	export INSTALL_PATH=$INSTALL_PATH_BASE/boot
@@ -372,9 +376,9 @@ linux_common() {
 	make $CONFIG $EXTRA_CONFIG
 	make -j10 Image modules dtbs
 
-	rm -rf ../build/${NAME}-install
-	mkdir -p ../build/${NAME}-install/boot
-	mkdir -p ../build/${NAME}-install/lib/modules
+	rm -rf ../../build/${NAME}-install
+	mkdir -p ../../build/${NAME}-install/boot
+	mkdir -p ../../build/${NAME}-install/lib/modules
 	KREL=$(make --no-print-directory kernelrelease)
 	echo "KREL=$KREL"
 	fakeroot make INSTALL_MOD_STRIP=1 install modules_install
@@ -385,11 +389,11 @@ linux_common() {
 	  fakeroot tar czvf modules-$KREL.tar.gz lib/modules/$KREL lib/firmware)
 
 	# symlink for run command
-	LINUX=$(cd ../build/${NAME}-install/boot; ls -1 vmlinuz-*)
-	MODULES=$(cd ../build/${NAME}-install; ls -1 modules-*.tar.gz)
+	LINUX=$(cd ../../build/${NAME}-install/boot; ls -1 vmlinuz-*)
+	MODULES=$(cd ../../build/${NAME}-install; ls -1 modules-*.tar.gz)
 	echo "Symlinking $NAME to $LINUX"
-	ln -fs  ${NAME}-install/boot/$LINUX ../build/$NAME-Image
-	ln -fs  ${NAME}-install/$MODULES ../build/$NAME-modules.tar.gz
+	ln -fs  ${NAME}-install/boot/$LINUX ../../build/$NAME-Image
+	ln -fs  ${NAME}-install/$MODULES ../../build/$NAME-modules.tar.gz
 }
 
 build_linux_virtio_msg() {
@@ -435,41 +439,44 @@ build_linux_ivshmem_uio() {
 
 build_linux() {
 	(build_linux_virtio_msg)
+	(build_linux_ivshmem_uio)
 	(build_linux_upstream)
 	(build_linux_ivshmem_uio)
 }
 
 build_u_boot() {
 	echo "****** Build U-boot (EL2)"
-	if [ ! -d u-boot ]; then
+	if [ ! -d src/u-boot ]; then
+		mkdir -p src; cd src
 		git clone https://github.com/u-boot/u-boot.git
 		cd u-boot
 		git checkout v2024.07
 	else
-		cd u-boot
+		cd src/u-boot
 	fi
-	mkdir -p ../build/u-boot-el2
+	mkdir -p ../../build/u-boot-el2
 	export ARCH=arm64
 	export CROSS_COMPILE=aarch64-linux-gnu-
-	export KBUILD_OUTPUT="$(cd ../build/u-boot-el2; pwd)"
+	export KBUILD_OUTPUT="$(cd ../../build/u-boot-el2; pwd)"
 
 	make qemu_arm64_defconfig
 	make -j10
 
 	# symlink for run command
-	ln -fs  u-boot-el2/u-boot.bin ../build/u-boot-el2.bin
+	ln -fs  u-boot-el2/u-boot.bin ../../build/u-boot-el2.bin
 }
 
 build_devmem2() {
 	echo "****** Build devmem2 for arm64"
-	if [ ! -d devmem2 ]; then
+	if [ ! -d src/devmem2 ]; then
+		mkdir -p src; cd src
 		git clone https://github.com/radii/devmem2.git
 		cd devmem2
 	else
-		cd devmem2
+		cd src/devmem2
 	fi
-	mkdir -p ../build/
-	aarch64-linux-gnu-gcc devmem2.c -o ../build/devmem2
+	mkdir -p ../../build/
+	aarch64-linux-gnu-gcc devmem2.c -o ../../build/devmem2
 }
 
 build_uio_ivshmem_test() {
@@ -514,7 +521,7 @@ qemu_common() {
 	mkdir -p build/$NAME
 	mkdir -p build/$NAME-install
 	cd build/$NAME
-	../../$NAME/configure \
+	../../src/$NAME/configure \
 		$EXTRA_CONFIG \
 		--target-list="$TARGETS" \
 		--prefix="$(cd ../$NAME-install; pwd)" \
@@ -681,11 +688,13 @@ zephyr_common() {
 
 	zephyr_setup
 
-	mkdir -p zephyr-top
-	cd zephyr-top
-	worktree_common zephyr \
+	if worktree_common zephyr \
 		https://github.com/zephyrproject-rtos/zephyr.git \
-		$NAME || true
+		zephyr-top/$NAME; then
+		# add extra ../ to gitdir
+		(cd src/zephyr-top/$NAME; sed -i -e 's#^gitdir: ../#gitdir: ../../#' .git)
+	fi
+	cd src/zephyr-top
 	rm -rf .west
 	rm -f zephyr
 	ln -s $NAME zephyr
@@ -695,8 +704,8 @@ zephyr_common() {
 	(cd $NAME; west init -l)
 	west update
 	west build -p always -b $BOARD $APP $EXTRA_CONFIG
-	cp build/zephyr/zephyr.elf ../build/$NAME-symbols.elf
-	arm-zephyr-eabi-strip -o ../build/$NAME.elf ../build/$NAME-symbols.elf
+	cp build/zephyr/zephyr.elf ../../build/$NAME-symbols.elf
+	arm-zephyr-eabi-strip -o ../../build/$NAME.elf ../../build/$NAME-symbols.elf
 }
 
 build_zephyr_mps2_m3_uio() {
