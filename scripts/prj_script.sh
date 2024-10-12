@@ -690,6 +690,19 @@ zephyr_common() {
 	arm-zephyr-eabi-strip -o ../build/$NAME.elf ../build/$NAME-symbols.elf
 }
 
+build_zephyr_mps2_m3_uio() {
+	NAME=zephyr-mps2-m3-uio
+
+	echo "****** Build Zephyr MSP2 M3 (an385) w/ ivshmem_flat test app"
+	URL=https://github.com/gromero/zephyr
+	COMMIT=""
+	BRANCH="uio_ivshmem"
+	BOARD="mps2_an385"
+	APP="zephyr/samples/uio_ivshmem"
+	EXTRA_CONFIG=""
+	zephyr_common $NAME
+}
+
 build_zephyr_m3_hello() {
 	NAME=zephyr-m3-hello
 
@@ -704,6 +717,7 @@ build_zephyr_m3_hello() {
 }
 
 build_zephyr() {
+	(build_zephyr_mps2_m3_uio)
 	(build_zephyr_m3_hello)
 }
 
