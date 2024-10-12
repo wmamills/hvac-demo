@@ -340,18 +340,20 @@ build_vhost_device() {
 	ln -fs ../vhost-device/target/aarch64-unknown-linux-gnu/release/vhost-device-i2c ../build/
 }
 
+# CONFIG is base config and optionally more but all are already in the upstream tree
+# EXTRA_CONFIG are copied from mixins/linux and added to the command line
 linux_common() {
 	NAME=$1
 
 	echo "****** Build $NAME"
-	if worktree_common linux \
+	worktree_common linux \
 		https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
-		$NAME; then
-		for f in $EXTRA_CONFIG_FILES; do
-			echo "adding config file $f"
-			cp $f $NAME/arch/arm64/configs/.
-		done
-	fi
+		$NAME || true
+
+	for f in $EXTRA_CONFIG; do
+		echo "adding config file $f"
+		cp mixins/linux/$f $NAME/arch/arm64/configs/.
+	done
 	cd $NAME
 
 	export ARCH=arm64
@@ -364,7 +366,7 @@ linux_common() {
 	export INSTALL_MOD_PATH=$INSTALL_PATH_BASE
 	mkdir -p $KBUILD_OUTPUT
 
-	make $CONFIG
+	make $CONFIG $EXTRA_CONFIG
 	make -j10 Image modules dtbs
 
 	rm -rf ../build/${NAME}-install
@@ -395,7 +397,7 @@ build_linux_virtio_msg() {
 	# The branch above has an altered defconfig that has everything needed
 	# VIRTIO_MMIO must remain OFF for this version to work
 	CONFIG="defconfig"
-	EXTRA_CONFIG_FILES=""
+	EXTRA_CONFIG=""
 	linux_common linux-virtio-msg
 }
 
@@ -404,8 +406,8 @@ linux_upstream_inner() {
 	BRANCH=""
 	TAG="v6.11"
 	COMMIT=""
-	CONFIG="defconfig virtio-msg.config"
-	EXTRA_CONFIG_FILES="mixins/linux/virtio-msg.config"
+	CONFIG="defconfig xen.config"
+	EXTRA_CONFIG="vfio.config extra.config xen-extra.config"
 	linux_common linux-upstream
 }
 
