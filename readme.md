@@ -14,12 +14,12 @@ Currently there are a few demos here but there will be more over time.
 | demo2a     | dual QEMU with Linux user-space connection                |
 | demo2b     | dual QEMU machines connected via two ivshmem pcie devices |
 | demo2b-xen | as demo2b but uses Xen on both sides as well              |
+| [demo3](demo3.readme.md)  | dual QEMU using ivshmem-flat and uio       |
 
 Upcoming demos:
 
 | Name       | Description                                               |
 |------------|-----------------------------------------------------------|
-| demo3      | dual QEMU using ivshmem-flat and uio                      |
 | demo4      | dual QEMU with direct kernel virtio-msg                   |
 
 We will also add the capability to run the demos without building everything
