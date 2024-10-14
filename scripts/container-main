@@ -1,5 +1,89 @@
 #!/bin/bash
 
+THIS_SCRIPT=$0
+NAME=hvac-demo
+
 ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
-$MY_DIR/prj_script.sh container-main "$@"
+
+# This is a poorman's dockit function
+# do distro setup like dockit would before admin_setup
+distro_setup() {
+	if [ -e /root/distro_setup.done ]; then
+		return
+	fi
+
+	apt-get -qq update
+	apt-get install -qqy sudo
+	if id $MY_UID >/dev/null 2>&1; then
+		OLD_USER=$(id -nu $MY_UID)
+		echo "Removing user $OLD_USER, as it conflicts with user $MY_USER $MY_UID:$MY_GID"
+		userdel $OLD_USER
+	fi
+	groupadd --gid $MY_GID $MY_USER
+	useradd  --uid $MY_UID --gid $MY_GID --shell /bin/bash -mN $MY_USER
+	groupadd --system sudo_np
+	usermod -a -G sudo_np $MY_USER
+	mkdir -p /etc/sudoers.d/
+	echo "%sudo_np ALL=(ALL:ALL) NOPASSWD:ALL" >/etc/sudoers.d/sudo_np
+
+	echo "done" >/root/distro_setup.done
+}
+
+# part of poorman's dockit
+# This is suppose to be better than "su"
+userjmp() {
+    setpriv --reuid=$MY_UID --regid=$MY_GID --init-groups --reset-env "$@"
+}
+
+do_once() {
+	NAME=$1; shift
+	if [ ! -e ~/.done/$NAME.done ]; then
+		"$@"
+		mkdir -p ~/.done
+		echo "done" >~/.done/$NAME.done
+	fi
+}
+
+# part of poorman's dockit
+container_main() {
+	if [ "$EUID" -ne 0 ]; then
+		echo "Error: container-main must be run as root"
+		exit 2
+	fi
+	if [ ! -d /prj ]; then
+		echo "Error: project directory not mounted at /prj"
+		exit 2
+	fi
+
+	cd /prj
+	MY_UID=$(stat --format="%u" /prj)
+	MY_GID=$(stat --format="%g" /prj)
+	MY_USER="me"
+
+	do_once distro_setup distro_setup
+	do_once admin_setup $MY_DIR/prj_script.sh admin_setup
+	userjmp $THIS_SCRIPT do_once prj_setup $MY_DIR/prj_script.sh prj_setup
+
+	CMD=$1; shift
+	case $CMD in
+	build)
+		userjmp $MY_DIR/prj_script.sh prj_build "$@"
+		;;
+	shell|"")
+		userjmp /bin/bash -l
+		;;
+	*)
+		echo "unknown command $CMD"
+		exit 2
+	esac
+}
+
+case $1 in
+do_once)
+	"$@"
+	;;
+*)
+	container_main "$@"
+	;;
+esac

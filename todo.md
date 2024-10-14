@@ -7,7 +7,7 @@
     * add timeout for the qemu's to exit, kill and declare failure in timeout
     * parse logs to detect pass/fail
 * add Makefile at top for easy understanding
-    * break build_* functions out of prj_script.sh into scripts/build/*
+    X break build_* functions out of prj_script.sh into scripts/build/*
     * Makefile will check dependencies and then run the scripts
 * enable images, saved-images and maybe-fetch
 * build a container

@@ -1,0 +1,85 @@
+#!/bin/bash
+
+MY_DIR=$(cd $(dirname $0); pwd)
+. $MY_DIR/../build_common.sh
+
+# Common part of qemu builds
+# Argumenets
+# * name
+# ENV
+# * URL
+# * COMMIT
+# * BRANCH
+# * EXTRA_CONFIG
+xen_common() {
+	NAME=$1
+
+	mkdir -p build
+
+	if worktree_common xen https://github.com/xen-project/xen.git $NAME; then
+		# new clone, adjust the defconfig
+		if [ -n "$EXTRA_CONFIG" ]; then
+			CF=src/$NAME/xen/arch/arm/configs/arm64_defconfig
+			echo -e "$EXTRA_CONFIG" >>$CF
+		fi
+	fi
+	cd src/$NAME
+
+	git clean -fdX
+	./configure --libdir=/usr/lib \
+	    --build=x86_64-unknown-linux-gnu --host=aarch64-linux-gnu \
+	    --disable-docs --disable-golang --disable-ocamltools \
+	    --with-system-qemu=/opt/qemu/bin/qemu-system-i386
+	if ! make -j9 debball \
+		CROSS_COMPILE=aarch64-linux-gnu- \
+		XEN_TARGET_ARCH=arm64; then
+		return
+	fi
+
+	# symlink for run command
+	ln -fs ../src/$NAME/dist/install/boot/xen ../../build/$NAME
+
+	# symlink to deb package for install
+	XEN_DEB=$(cd dist; ls -1 xen-*.deb)
+	ln -fs ../src/$NAME/dist/$XEN_DEB ../../build/$NAME.deb
+}
+
+build_xen_upstream() {
+	URL=https://github.com/xen-project/xen.git
+	TAG=RELEASE-4.19.0
+	BRANCH=""
+	COMMIT=""
+	EXTRA_CONFIG=""\
+"CONFIG_IOREQ_SERVER=y\n"\
+"CONFIG_EXPERT=y\n"\
+"CONFIG_TESTS=y\n"
+	xen_common xen-upstream
+}
+
+build_xen_virtio_msg() {
+	URL=https://github.com/edgarigl/xen.git
+	BRANCH=edgar/virtio-msg
+	COMMIT=""
+	EXTRA_CONFIG=""\
+"CONFIG_IOREQ_SERVER=y\n"\
+"CONFIG_EXPERT=y\n"\
+"CONFIG_TESTS=y\n"
+	xen_common xen-virtio-msg
+}
+
+build_xen_orko() {
+	URL=https://github.com/vireshk/xen
+	BRANCH=master
+	COMMIT="35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406"
+	EXTRA_CONFIG=""
+	xen_common xen-orko
+}
+
+# fallback target to build all xen versions
+build_xen() {
+	(build_xen_upstream)
+	(build_xen_virtio_msg)
+	(build_xen_orko)
+}
+
+main "$@"

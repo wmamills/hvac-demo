@@ -1,0 +1,142 @@
+#!/bin/bash
+
+MY_DIR=$(cd $(dirname $0); pwd)
+. $MY_DIR/../build_common.sh
+
+# all native build qemus
+build_qemu_host() {
+	(build_qemu_i2c)
+	(build_qemu_msg)
+	(build_qemu_ivshmem_flat)
+}
+
+# all cross build qemus
+build_qemu_cross() {
+	(build_qemu_upstream_arm64)
+	(build_qemu_msg_arm64)
+}
+
+# build all qemus
+build_qemu() {
+	(build_qemu_host)
+	(build_qemu_cross)
+}
+
+# Common part of qemu builds
+# Argumenets
+# * name
+# ENV
+# * URL
+# * COMMIT
+# * BRANCH
+# * EXTRA_CONFIG
+# * TARGETS
+qemu_common() {
+	NAME=$1
+
+	worktree_common qemu https://github.com/qemu/qemu.git $NAME || true
+	mkdir -p build/$NAME
+	mkdir -p build/$NAME-install
+	cd build/$NAME
+	../../src/$NAME/configure \
+		$EXTRA_CONFIG \
+		--target-list="$TARGETS" \
+		--prefix="$(cd ../$NAME-install; pwd)" \
+		--enable-fdt --enable-slirp --enable-strip \
+		--disable-docs \
+		--disable-gtk --disable-opengl --disable-sdl \
+		--disable-dbus-display --disable-virglrenderer \
+		--disable-vte --disable-brlapi \
+		--disable-alsa --disable-jack --disable-oss --disable-pa
+	make -j10 && make install
+}
+
+build_qemu_i2c() {
+	echo "****** Build qemu w/ virtio-i2c (host side for system emulation)"
+	URL=https://github.com/vireshk/qemu
+	COMMIT=b7890a2c3d6949e8f462bb3630d5b48ecae8239f
+	BRANCH=master
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG=""
+	qemu_common qemu-i2c
+}
+
+qemu_common_cross() {
+	NAME=$1
+
+	# first remove any existing version in case it has changed
+	# also do this if we don't want any xen support
+	# we pass --disable-xen in this case but just to make sure ...
+	sudo apt-get purge -y xen-upstream:arm64 || true
+
+	if [ -n "$XEN_DEB" ]; then
+		if [ -f build/$XEN_DEB ]; then
+			# we install the arm64 deb file to get the arm64 libraries
+			sudo apt-get install -y ./build/$XEN_DEB
+		else
+			echo "Build $XEN_DEB first"
+			exit 2
+		fi
+	fi
+
+	if qemu_common $NAME; then
+		# make a tar file for easy install
+		fakeroot tar cvzf ../$NAME.tar.gz -C ../${NAME}-install .
+	else
+		false
+	fi
+}
+
+build_qemu_upstream_arm64() {
+	echo "****** Build qemu xen arm64 (target side for device model)"
+	XEN_DEB=xen-upstream.deb
+
+	# use the same as virtio-msg
+	URL=https://github.com/qemu/qemu.git
+	COMMIT=""
+	TAG="v9.1.0"
+	PATCH=""
+
+	# build for kvm and xen
+	TARGETS="aarch64-softmmu,i386-softmmu"
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-werror --enable-xen"
+	qemu_common_cross qemu-upstream-arm64
+}
+
+build_qemu_msg_arm64() {
+	echo "****** Build qemu virtio-msg arm64 (target side)"
+	XEN_DEB=xen-virtio-msg.deb
+
+	# use the same as virtio-msg
+	URL=https://github.com/edgarigl/qemu.git
+	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
+	BRANCH="edgar/virtio-msg"
+	PATCH=""
+
+	# build for kvm and xen
+	TARGETS="aarch64-softmmu,i386-softmmu"
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-werror --enable-xen"
+	qemu_common_cross qemu-msg-arm64
+}
+
+build_qemu_msg() {
+	echo "****** Build qemu w/ virtio-msg (host side for system emulation)"
+	URL=https://github.com/edgarigl/qemu.git
+	COMMIT="84777d3bf17e4d2229593291398f095e3073b9cb"
+	BRANCH="edgar/virtio-msg"
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG=""
+	qemu_common qemu-msg
+}
+
+build_qemu_ivshmem_flat() {
+	echo "****** Build qemu w/ ivshmem-flat (host side for system emulation)"
+	URL=https://github.com/gromero/qemu.git
+	COMMIT=""
+	BRANCH="ivshmem_rebased_on_v9_0_2"
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG=""
+	qemu_common qemu-ivshmem-flat
+}
+
+main "$@"

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+MY_DIR=$(cd $(dirname $0); pwd)
+. $MY_DIR/../build_common.sh
+
+build_util() {
+	(build_devmem2)
+	(build_uio_ivshmem_test)
+}
+
+build_devmem2() {
+	echo "****** Build devmem2 for arm64"
+	if [ ! -d src/devmem2 ]; then
+		mkdir -p src; cd src
+		git clone https://github.com/radii/devmem2.git
+		cd devmem2
+	else
+		cd src/devmem2
+	fi
+	mkdir -p ../../build/
+	aarch64-linux-gnu-gcc devmem2.c -o ../../build/devmem2
+}
+
+build_uio_ivshmem_test() {
+	echo "****** Build uio_ivshmem_test for arm64"
+	mkdir -p build/
+	aarch64-linux-gnu-gcc demo3.d/src/uio_ivshmem_test.c \
+		-o build/uio_ivshmem_test
+}
+
+main "$@"

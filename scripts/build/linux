@@ -1,0 +1,103 @@
+#!/bin/bash
+
+MY_DIR=$(cd $(dirname $0); pwd)
+. $MY_DIR/../build_common.sh
+
+# CONFIG is base config and optionally more but all are already in the upstream tree
+# EXTRA_CONFIG are copied from mixins/linux and added to the command line
+linux_common() {
+	NAME=$1
+
+	echo "****** Build $NAME"
+	worktree_common linux \
+		https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
+		$NAME || true
+
+	for f in $EXTRA_CONFIG; do
+		echo "adding config file $f"
+		cp mixins/linux/$f src/$NAME/arch/arm64/configs/.
+	done
+	cd src/$NAME
+
+	export ARCH=arm64
+	export CROSS_COMPILE=aarch64-linux-gnu-
+	export KBUILD_BASE="$(cd ../../build; pwd)/${NAME}"
+	export KBUILD_OUTPUT=${KBUILD_BASE}-build
+	export INSTALL_PATH_BASE=${KBUILD_BASE}-install
+	export INSTALL_PATH=$INSTALL_PATH_BASE/boot
+	export INSTALL_DTBS_PATH=$INSTALL_PATH/dtb
+	export INSTALL_MOD_PATH=$INSTALL_PATH_BASE
+	mkdir -p $KBUILD_OUTPUT
+
+	make $CONFIG $EXTRA_CONFIG
+	make -j10 Image modules dtbs
+
+	rm -rf ../../build/${NAME}-install
+	mkdir -p ../../build/${NAME}-install/boot
+	mkdir -p ../../build/${NAME}-install/lib/modules
+	KREL=$(make --no-print-directory kernelrelease)
+	echo "KREL=$KREL"
+	fakeroot make INSTALL_MOD_STRIP=1 install modules_install
+	fakeroot make dtbs_install || true
+	#fakeroot make firmware_install || true
+	(cd $INSTALL_PATH_BASE;
+	  mkdir -p lib/firmware;
+	  fakeroot tar czvf modules-$KREL.tar.gz lib/modules/$KREL lib/firmware)
+
+	# symlink for run command
+	LINUX=$(cd ../../build/${NAME}-install/boot; ls -1 vmlinuz-*)
+	MODULES=$(cd ../../build/${NAME}-install; ls -1 modules-*.tar.gz)
+	echo "Symlinking $NAME to $LINUX"
+	ln -fs  ${NAME}-install/boot/$LINUX ../../build/$NAME-Image
+	ln -fs  ${NAME}-install/$MODULES ../../build/$NAME-modules.tar.gz
+}
+
+build_linux_virtio_msg() {
+	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+	BRANCH=virtio/msg
+	COMMIT="1e5e683a3d1aa8b584f279edd144b4b1d5aad45c"
+
+	# The branch above has an altered defconfig that has everything needed
+	# VIRTIO_MMIO must remain OFF for this version to work
+	CONFIG="defconfig"
+	EXTRA_CONFIG=""
+	linux_common linux-virtio-msg
+}
+
+linux_upstream_inner() {
+	URL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+	BRANCH=""
+	TAG="v6.11"
+	COMMIT=""
+	CONFIG="defconfig xen.config"
+	EXTRA_CONFIG="vfio.config extra.config xen-extra.config"
+	linux_common linux-upstream
+}
+
+build_linux_upstream() {
+	(linux_upstream_inner)
+
+	# make the default linux-virtio-msg
+	echo "Default linux is linux-upstream"
+	pwd
+	ln -fs linux-upstream-Image build/Image
+	ln -fs linux-upstream-modules.tar.gz build/modules.tar.gz
+}
+
+build_linux_ivshmem_uio() {
+	URL=https://github.com/gromero/linux.git
+	BRANCH="uio_ivshmem"
+	COMMIT="28f3f88ee261245a0fd47d5c9a0705369f141403"
+	CONFIG="defconfig"
+	EXTRA_CONFIG="uio_ivshmem.config"
+	linux_common linux-ivshmem-uio
+}
+
+build_linux() {
+	(build_linux_virtio_msg)
+	(build_linux_ivshmem_uio)
+	(build_linux_upstream)
+	(build_linux_ivshmem_uio)
+}
+
+main "$@"
