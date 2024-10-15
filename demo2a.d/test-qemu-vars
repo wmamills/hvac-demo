@@ -2,12 +2,12 @@ NUM_QEMU=2
 
 # The first qemu is only for device model, there is no software and no ssh
 # but give it a name anyway
-QEMU_SSH_NAME[0]=qemu1
+QEMU_SSH_NAME[0]=device-model
 QEMU_BOOT_SCRIPT[0]="demo2a.d/scripts/run-A.sh"
 QEMU_BOOT_ARG[0]=""
 
 # The second qemu is the real device
-QEMU_SSH_NAME[1]=qemu2
+QEMU_SSH_NAME[1]=driver-side
 QEMU_BOOT_SCRIPT[1]="demo2a.d/scripts/run-B.sh"
 QEMU_BOOT_ARG[1]=""
 

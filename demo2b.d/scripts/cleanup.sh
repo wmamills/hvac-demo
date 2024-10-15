@@ -15,12 +15,5 @@ rm -f shm.sock
 if [ -r $LOGS/net.pcap ]; then
     tcpdump -r $LOGS/net.pcap
 fi
-grep "^\*\*\*\*\* TEST" $LOGS/qemu1-log.txt
-grep "^\*\*\*\*\* TEST" $LOGS/qemu2-log.txt
-
-# startup debug support
-#echo "**** QEMU1 logs"
-#cat $LOGS/qemu1-log.txt
-#echo "**** QEMU2 logs"
-#cat $LOGS/qemu2-log.txt
-#echo ; echo "**** end QEMU logs"
+grep "^\*\*\*\*\* TEST" $LOGS/device-side-log.txt
+grep "^\*\*\*\*\* TEST" $LOGS/driver-side-log.txt

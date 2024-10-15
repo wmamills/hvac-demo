@@ -17,10 +17,3 @@ if [ -r $LOGS/net.pcap ]; then
 fi
 grep "^\*\*\*\*\* TEST" $LOGS/cortex-m-log.txt
 grep "^\*\*\*\*\* TEST" $LOGS/cortex-a-log.txt
-
-# startup debug support
-#echo "**** QEMU1 logs"
-#cat $LOGS/qemu1-log.txt
-#echo "**** QEMU2 logs"
-#cat $LOGS/qemu2-log.txt
-#echo ; echo "**** end QEMU logs"
