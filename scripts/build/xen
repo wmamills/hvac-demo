@@ -79,7 +79,9 @@ build_xen_orko() {
 build_xen() {
 	(build_xen_upstream)
 	(build_xen_virtio_msg)
-	(build_xen_orko)
+
+	# don't build this by default, we no longer need it
+	# (build_xen_orko)
 }
 
 main "$@"
