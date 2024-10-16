@@ -52,16 +52,28 @@ linux_common() {
 	ln -fs  ${NAME}-install/$MODULES ../../build/$NAME-modules.tar.gz
 }
 
-build_linux_virtio_msg() {
-	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-	BRANCH=virtio/msg
-	COMMIT="1e5e683a3d1aa8b584f279edd144b4b1d5aad45c"
+linux_virtio_common() {
+	URL=https://github.com/wmamills/linux-openamp-staging.git
+	COMMIT=""
 
-	# The branch above has an altered defconfig that has everything needed
-	# VIRTIO_MMIO must remain OFF for this version to work
-	CONFIG="defconfig"
-	EXTRA_CONFIG=""
+	# The branch above has extra *.config files
+	CONFIG="defconfig xen.config"
+	EXTRA_CONFIG="\
+		extra.config virtio.config vfio.config \
+		qemu-xen.config uio.config trim.config"
+}
+
+build_linux_virtio_msg() {
+	linux_virtio_common
+	BRANCH=virtio-msg
 	linux_common linux-virtio-msg
+}
+
+# this one should go away when the message formats align
+build_linux_virtio_msg_v1() {
+	linux_virtio_common
+	BRANCH=virtio-msg-v1
+	linux_common linux-virtio-msg-v1
 }
 
 linux_upstream_inner() {
@@ -97,6 +109,7 @@ build_linux_ivshmem_uio() {
 
 build_linux() {
 	(build_linux_virtio_msg)
+	(build_linux_virtio_msg_v1)
 	(build_linux_upstream)
 	(build_linux_ivshmem_uio)
 }
