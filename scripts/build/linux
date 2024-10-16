@@ -53,13 +53,12 @@ linux_common() {
 }
 
 build_linux_virtio_msg() {
-	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-	BRANCH=virtio/msg
-	COMMIT="1e5e683a3d1aa8b584f279edd144b4b1d5aad45c"
+	URL=https://github.com/wmamills/linux-openamp-staging.git
+	BRANCH=virtio-msg
+	COMMIT=""
 
-	# The branch above has an altered defconfig that has everything needed
-	# VIRTIO_MMIO must remain OFF for this version to work
-	CONFIG="defconfig"
+	# The branch above has extra *.config files
+	CONFIG="defconfig qemu-xen.config virtio-msg-mmio.config virt.config trim.config"
 	EXTRA_CONFIG=""
 	linux_common linux-virtio-msg
 }
