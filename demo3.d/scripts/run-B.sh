@@ -13,7 +13,7 @@ sleep 2
 #set -x
 
 QEMU=$IMAGES/qemu-ivshmem-flat-install/bin/qemu-system-aarch64
-KERNEL=$IMAGES/linux-ivshmem-uio-Image
+KERNEL=$IMAGES/linux-virtio-msg-Image
 
 DISK=${IMAGES}/${NAME}-disk.qcow2
 ROOT="/dev/vda2"
