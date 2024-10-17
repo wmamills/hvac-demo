@@ -6,9 +6,12 @@ set -e
 
 fail() {
 	echo "***** TEST FAILED, " "$@"
+	exit 2
 }
 
 chmod +x uio_ivshmem_test || fail "can't make uio_ivshmem_test executable"
+
+modprobe uio_ivshmem || fail "can't modprobe uio_ivshmem"
 
 test -c /dev/uio0 || fail no uio0 device
 test -e /sys/class/uio/uio0/maps/map0/name || fail no sysfs for map0
