@@ -58,7 +58,7 @@ build_linux_virtio_msg() {
 	COMMIT=""
 
 	# The branch above has extra *.config files
-	CONFIG="defconfig qemu-xen.config virtio-msg-mmio.config virt.config trim.config"
+	CONFIG="defconfig qemu-xen.config virtio-msg.config virt.config trim.config"
 	EXTRA_CONFIG="uio_ivshmem.config"
 	linux_common linux-virtio-msg
 }

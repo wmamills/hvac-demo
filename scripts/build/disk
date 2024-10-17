@@ -47,8 +47,20 @@ buildroot_mixins_common() {
 	TOP=$PWD
 	rm -rf build/mixins/$NAME || true
 	mkdir -p build/mixins/$NAME
-	for DIR in mixins/minimal "$@"; do
-		cp -a $DIR/. build/mixins/$NAME
+	for ITEM in mixins/minimal "$@"; do
+		if [ -d $ITEM ]; then
+			cp -a $ITEM/. build/mixins/$NAME
+		else
+			case $ITEM in
+			*.tar.gz)
+				tar xzf $ITEM -C build/mixins/$NAME
+				;;
+			*)
+				echo "Don't know how to handle $ITEM"
+				exit 2
+				;;
+			esac
+		fi
 	done
 	(cd build/mixins/$NAME; find . | fakeroot cpio -H newc -o 2>/dev/null |
 		gzip >$TOP/build/mixins-$NAME.cpio.gz)
@@ -75,7 +87,8 @@ debian_mixins_common() {
 }
 
 build_disk_demo1_guest() {
-	buildroot_mixins_common demo1 demo1.d/mixins/qemu1-guest
+	buildroot_mixins_common demo1 demo1.d/mixins/qemu1-guest \
+		build/linux-virtio-msg-modules.tar.gz
 }
 
 build_disk_demo2a() {
