@@ -94,7 +94,6 @@ build_linux_ivshmem_uio() {
 
 build_linux() {
 	(build_linux_virtio_msg)
-	(build_linux_ivshmem_uio)
 	(build_linux_upstream)
 	(build_linux_ivshmem_uio)
 }
