@@ -8,7 +8,7 @@ set -x
 
 ifconfig -a
 
-# In xen dom0, eth0 is the only nic and the one we want
+# In xen domU, eth0 is the only nic and the one we want
 ifconfig eth0 up
 
 # The virtio-msg device model running in qemu1 is using qemu user mode
