@@ -146,8 +146,8 @@ EOF
 }
 
 build_disk() {
-	(build_disk_debian)
 	(build_disk_demo2a)
+	(build_disk_debian)
 }
 
 main "$@"
