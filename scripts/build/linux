@@ -58,7 +58,7 @@ build_linux_virtio_msg() {
 	COMMIT=""
 
 	# The branch above has extra *.config files
-	CONFIG="defconfig qemu-xen.config virtio-msg.config virt.config trim.config"
+	CONFIG="defconfig qemu-xen.config virtio-msg.config trim.config"
 	EXTRA_CONFIG="uio_ivshmem.config"
 	linux_common linux-virtio-msg
 }
@@ -68,7 +68,7 @@ linux_upstream_inner() {
 	BRANCH=""
 	TAG="v6.11"
 	COMMIT=""
-	CONFIG="defconfig virt.config xen.config"
+	CONFIG="defconfig xen.config"
 	EXTRA_CONFIG="vfio.config extra.config xen-extra.config trim.config"
 	linux_common linux-upstream
 }
@@ -87,7 +87,7 @@ build_linux_ivshmem_uio() {
 	URL=https://github.com/gromero/linux.git
 	BRANCH="uio_ivshmem"
 	COMMIT="28f3f88ee261245a0fd47d5c9a0705369f141403"
-	CONFIG="defconfig virt.config"
+	CONFIG="defconfig"
 	EXTRA_CONFIG="uio_ivshmem.config trim.config"
 	linux_common linux-ivshmem-uio
 }
