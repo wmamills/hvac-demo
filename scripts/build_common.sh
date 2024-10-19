@@ -26,7 +26,7 @@ worktree_common() {
 		mkdir -p src-ref
 		(cd src-ref; git clone --bare $REF_URL $REF_NAME.git)
 	fi
-	if [ ! -d src/$FULLNAME ]; then
+	if [ ! -e src/$FULLNAME/.git ]; then
 		mkdir -p src/$FULLNAME
 		cd src-ref/$REF_NAME.git
 		git remote rm $NAME || true
