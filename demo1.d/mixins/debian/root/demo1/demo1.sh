@@ -4,6 +4,8 @@ MY_DIR=$(dirname $0)
 
 set -e
 
+test -c /dev/i2c-0
+
 $MY_DIR/install-demo1.sh
 
 # once per dom0 boot
