@@ -101,11 +101,18 @@ build_disk_demo2b() {
 		build/linux-upstream-modules.tar.gz
 }
 
+build_disk_demo4() {
+	cp build/devmem2 demo4.d/mixins/minimal/root
+	buildroot_mixins_common demo4 demo4.d/mixins/minimal \
+		build/linux-virtio-msg-modules.tar.gz
+}
+
 build_disk_debian_mixins() {
 	debian_mixins_common debian \
 		demo1.d/mixins/debian \
 		demo2b.d/mixins/debian \
-		demo3.d/mixins/debian
+		demo3.d/mixins/debian \
+		demo4.d/mixins/debian \
 
 }
 
@@ -151,6 +158,7 @@ EOF
 
 build_disk() {
 	(build_disk_demo2a)
+	(build_disk_demo4)
 	(build_disk_debian)
 }
 
