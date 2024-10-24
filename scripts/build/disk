@@ -156,6 +156,7 @@ EOF
 
 build_disk() {
 	(build_disk_demo2a)
+	(build_disk_demo4)
 	(build_disk_debian)
 }
 
