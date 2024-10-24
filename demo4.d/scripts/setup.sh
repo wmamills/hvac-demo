@@ -8,7 +8,7 @@ MY_DIR=$(dirname $ME_ABS)
 #set -x
 
 # was demo4-A demo4-B
-for NAME in ""; do
+for NAME in demo4-A; do
 	if [ ! -e $IMAGES/${NAME}-disk.qcow2 ]; then
 		echo "make a copy of the debian disk image for $NAME"
 		cp $IMAGES/disk.qcow2 $IMAGES/${NAME}-disk.qcow2
@@ -16,4 +16,4 @@ for NAME in ""; do
 done
 
 # ivshmem-server detaches itself, just run it
-$IVSHMEM_SERVER -S shm.sock -p shm.pid -l 4M -n 16
+$IVSHMEM_SERVER -S shm.sock -p shm.pid -l 4M -n 2

@@ -102,6 +102,7 @@ build_disk_demo2b() {
 }
 
 build_disk_demo4() {
+	cp build/devmem2 demo4.d/mixins/minimal/root
 	buildroot_mixins_common demo4 demo4.d/mixins/minimal \
 		build/linux-virtio-msg-modules.tar.gz
 }

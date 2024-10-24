@@ -12,7 +12,6 @@ sleep 2
 
 #set -x
 
-QEMU=$IMAGES/qemu-ivshmem-flat-install/bin/qemu-system-aarch64
 KERNEL=$IMAGES/linux-virtio-msg-Image
 INITRD=$IMAGES/demo4-rootfs.cpio.gz
 

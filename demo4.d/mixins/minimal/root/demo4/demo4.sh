@@ -24,22 +24,70 @@ one_test() {
 	# this is destructive but busybox dmesg does not have the fancy options
 	dmesg -c >dmesg-test-$NUM.log
 
-	grep "virtio_msg_ivshmem .* IRQ fired" \
-		dmesg-test-$NUM.log  >/dev/null || \
-		fail "IRQ did not fire (test $NUM)"
-	grep "virtio_msg_ivshmem .* Data ok." \
-		dmesg-test-$NUM.log  >/dev/null || \
-		fail "Data check did not pass (test $NUM)"
 	grep "virtio_msg_ivshmem .* probe successful" \
 		dmesg-test-$NUM.log  >/dev/null || \
 		fail "module probe did not work (test $NUM)"
 	grep "virtio_msg_ivshmem .* device removed" \
 		dmesg-test-$NUM.log  >/dev/null || \
 		fail "device was not removed (test $NUM)"
+	grep "virtio_msg_ivshmem .* IRQ fired" \
+		dmesg-test-$NUM.log  >/dev/null || \
+		fail "IRQ did not fire (test $NUM)"
+	grep "virtio_msg_ivshmem .* RX MSG: " \
+		dmesg-test-$NUM.log  >/dev/null || \
+		fail "IRQ did not fire (test $NUM)"
+}
+
+# use the first word of the last 16 bytes of the shared 1M memory
+# anything not READY is not ready, the memory will start as 0s
+READY=0x42
+NOT_READY=0x24
+READY_ADDR=0x800003FFF0
+
+mark_ready() {
+	chmod +x ./devmem2
+	./devmem2 $READY_ADDR w $READY
+}
+
+mark_not_ready() {
+	chmod +x ./devmem2
+	./devmem2 $READY_ADDR w $NOT_READY
+}
+
+read_ready() {
+	./devmem2 $READY_ADDR w | tail -n 1 | sed -e 's/^.*: //'
+}
+
+wait_ready() {
+	TIMEOUT=${1:-300}
+	for  i in $(seq $TIMEOUT); do
+		VAL=$(read_ready)
+		if [  "$VAL" == "$READY" ]; then
+			true
+			return
+		elif [  "$VAL" == "$NOT_READY" ]; then
+			echo -n "*"
+		else
+			echo -n "."
+		fi
+		sleep 1
+	done
+	false
+}
+
+wait_ready_seq() {
+	echo "Wait for other qemu to be ready"
+	wait_ready
+	echo; echo "Now wait a bit more"
+	sleep 5
+	echo "OK"
 }
 
 # save the boot log as the tests will read and clear dmesg
 dmesg -c >dmesg-boot.log
+
+# wait for the other side to be ready
+wait_ready_seq
 
 for i in $(seq 3); do
 	one_test $i
