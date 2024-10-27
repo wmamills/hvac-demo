@@ -18,24 +18,33 @@ one_test() {
 	# wait for things to happen
 	sleep 1
 
+	# this is destructive but busybox dmesg does not have the fancy options
+	dmesg -c >dmesg-test-$NUM-start.log
+
+	grep "virtio_msg_ivshmem .* probe successful" \
+		dmesg-test-$NUM-start.log  >/dev/null || \
+		fail "module probe did not work (test $NUM)"
+
+	grep "virtio_msg_ivshmem .* IRQ fired" \
+		dmesg-test-$NUM-start.log  >/dev/null || \
+		fail "IRQ did not fire (test $NUM)"
+	grep "virtio_msg_ivshmem .* RX MSG: " \
+		dmesg-test-$NUM-start.log  >/dev/null || \
+		fail "IRQ did not fire (test $NUM)"
+
+	ifconfig -a
+	sh -i
+
 	rmmod virtio_msg_ivshmem \
 		|| fail "can't remove module virtio-msg-ivshmem (test $NUM)"
 
-	# this is destructive but busybox dmesg does not have the fancy options
-	dmesg -c >dmesg-test-$NUM.log
 
-	grep "virtio_msg_ivshmem .* probe successful" \
-		dmesg-test-$NUM.log  >/dev/null || \
-		fail "module probe did not work (test $NUM)"
+	# this is destructive but busybox dmesg does not have the fancy options
+	dmesg -c >dmesg-test-$NUM-end.log
+
 	grep "virtio_msg_ivshmem .* device removed" \
 		dmesg-test-$NUM.log  >/dev/null || \
 		fail "device was not removed (test $NUM)"
-	grep "virtio_msg_ivshmem .* IRQ fired" \
-		dmesg-test-$NUM.log  >/dev/null || \
-		fail "IRQ did not fire (test $NUM)"
-	grep "virtio_msg_ivshmem .* RX MSG: " \
-		dmesg-test-$NUM.log  >/dev/null || \
-		fail "IRQ did not fire (test $NUM)"
 }
 
 # use the first word of the last 16 bytes of the shared 1M memory
