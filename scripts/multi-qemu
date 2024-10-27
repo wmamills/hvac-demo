@@ -305,6 +305,7 @@ main() {
     if ! tmux has -t$SESS >/dev/null 2>&1; then
         cleanup
         echo "LOGS=$LOGS"
+        ln -sfT $(basename $LOGS) $(dirname $LOGS)/latest
         cat $TOTALS
     fi
 }
