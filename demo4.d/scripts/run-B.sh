@@ -22,6 +22,8 @@ ${QEMU} \
 	-machine virt,gic_version=3 \
 	-machine virtualization=true \
 	-cpu cortex-a57 -machine type=virt -m 1G -smp 2 \
+	-object memory-backend-file,id=vm1_mem,size=1G,mem-path=./qemu-xen-vm1-ram,share=on \
+	-machine memory-backend=vm1_mem \
 	-nographic \
 	-gdb tcp::2102,server,nowait \
 	-device virtio-net-pci,netdev=net0,romfile= \
