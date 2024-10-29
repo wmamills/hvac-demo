@@ -19,7 +19,7 @@ INITRD=$IMAGES/demo4-rootfs.cpio.gz
 #ROOT="/dev/vda2"
 
 ${QEMU} \
-	-machine virt,gic_version=3,iommu=smmuv3 \
+	-machine virt,gic_version=3 \
 	-machine virtualization=true \
 	-cpu cortex-a57 -machine type=virt -m 1G -smp 2 \
 	-nographic \
