@@ -25,6 +25,7 @@ ${QEMU} \
 	-object memory-backend-file,id=vm1_mem,size=1G,mem-path=./qemu-xen-vm1-ram,share=on \
 	-machine memory-backend=vm1_mem \
 	-nographic \
+	-gdb tcp::2102,server,nowait \
 	-device virtio-net-pci,netdev=net0,romfile= \
 	-device ivshmem-doorbell,chardev=ivsh \
 	-chardev socket,path=shm.sock,id=ivsh \
