@@ -23,6 +23,7 @@ ${QEMU} \
 	-machine virtualization=true \
 	-cpu cortex-a57 -machine type=virt -m 1G -smp 2 \
 	-nographic \
+	-gdb tcp::2102,server,nowait \
 	-device virtio-net-pci,netdev=net0,romfile= \
 	-device ivshmem-doorbell,chardev=ivsh \
 	-chardev socket,path=shm.sock,id=ivsh \

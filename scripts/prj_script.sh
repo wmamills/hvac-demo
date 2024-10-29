@@ -14,7 +14,7 @@ admin_setup() {
 	# for cross-build
 	apt-get install -yqq gcc-aarch64-linux-gnu uuid-dev:arm64 libzstd-dev:arm64 \
 	    libncurses-dev:arm64 libyajl-dev:arm64 zlib1g-dev:arm64 \
-	    libfdt-dev:arm64 libpython3-dev:arm64
+	    libfdt-dev:arm64 libpython3-dev:arm64 gdb-multiarch
 	# qemu build support
 	apt-get install -yqq python3-pip python3-venv ninja-build libglib2.0-dev \
 	    libpixman-1-dev libslirp-dev
@@ -28,7 +28,7 @@ admin_setup() {
 	chmod +r /boot/*
 
 	# for demos and because we are not savages forced to use vi
-	apt-get install -yqq tmux tcpdump device-tree-compiler nano
+	apt-get install -yqq tmux tcpdump device-tree-compiler nano net-tools
 }
 
 prj_setup() {
