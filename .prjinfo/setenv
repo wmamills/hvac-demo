@@ -1,2 +1,3 @@
 # config settings for prjtool utilities like dockit
 : ${DOCKIT_DISTRO:=debian:12}
+DOCKIT_EXTRA_ARGS=( -p 2201:2201 -p 2202:2202 -p 2222:2222 -p 2224:2224 -v/home/bill/w/proj/hvac/linux-virtio-msg:/linux-virtio-msg)
