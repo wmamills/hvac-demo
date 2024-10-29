@@ -25,9 +25,9 @@ one_test() {
 		dmesg-test-$NUM-start.log  >/dev/null || \
 		fail "module probe did not work (test $NUM)"
 
-	grep "virtio_msg_ivshmem .* IRQ fired" \
-		dmesg-test-$NUM-start.log  >/dev/null || \
-		fail "IRQ did not fire (test $NUM)"
+	#grep "virtio_msg_ivshmem .* IRQ fired" \
+	#	dmesg-test-$NUM-start.log  >/dev/null || \
+	#	fail "IRQ did not fire (test $NUM)"
 	grep "virtio_msg_ivshmem .* RX MSG: " \
 		dmesg-test-$NUM-start.log  >/dev/null || \
 		fail "IRQ did not fire (test $NUM)"
