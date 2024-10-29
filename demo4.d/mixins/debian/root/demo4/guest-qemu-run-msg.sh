@@ -16,8 +16,10 @@ ${QEMU} ${MACHINE} -m 1G             \
         -object memory-backend-file,id=mem,size=1G,mem-path=${MEMFILE},share=on \
         -serial mon:stdio -display none                         \
 	-device virtio-msg-bus-ivshmem,dev=${DEV_DOORBELL},remote-vmid=${R_VMID},memdev=mem,mem-offset=0x40000000,reset-queues=true \
-        -device virtio-net-device,mq=on,netdev=net0,iommu_platform=off          \
-        -netdev user,id=net0                                                    \
+        -device virtio-rng-device,iommu_platform=on \
         "$@"
+
+#        -device virtio-net-device,mq=on,netdev=net0,iommu_platform=on          \
+#        -netdev user,id=net0                                                    \
 
 exit 0
