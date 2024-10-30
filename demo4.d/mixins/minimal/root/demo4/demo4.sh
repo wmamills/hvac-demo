@@ -1,12 +1,47 @@
 #/bin/bash
 
 MY_DIR=$(dirname $0)
+ETH=eth1
 
 set -e
 
 fail() {
 	echo "***** TEST FAILED, " "$@"
 	exit 2
+}
+
+test_rng() {
+	dd if=/dev/hwrng of=data.bin bs=512 count=1 || \
+		fail "can't read hwrng"
+
+	od -x data.bin
+}
+
+test_net() {
+	ifconfig -a
+	ifconfig $ETH up || \
+		fail "can't bring $ETH up"
+	ifconfig $ETH inet 10.0.2.15 || \
+		fail "can't assign IP to $ETH"
+	ping -c 3 10.0.2.2 || \
+		fail "can't ping host via $ETH"
+}
+
+test_dev_type() {
+	case $1 in
+	"0x0001")
+		test_net
+		;;
+	"0x0004")
+		test_rng
+		;;
+	"")
+		fail "virtio1 does not have a device type"
+		;;
+	*)
+		fail "virtio1 has unknown device type $1"
+		;;
+	esac
 }
 
 one_test() {
@@ -32,13 +67,11 @@ one_test() {
 		dmesg-test-$NUM-start.log  >/dev/null || \
 		fail "IRQ did not fire (test $NUM)"
 
-	cat /sys/bus/virtio/devices/virtio1/device | grep 0x0004 || \
-		fail "virtio1 is not virtio-rng"
+	test -f /sys/bus/virtio/devices/virtio1/device || \
+		fail "virtio1 not found"
 
-	dd if=/dev/hwrng of=data.bin bs=512 count=1 || \
-		fail "can't read hwrng"
-
-	od -x data.bin
+	DEVICE=$(cat /sys/bus/virtio/devices/virtio1/device)
+	test_dev_type $DEVICE
 
 	# this is destructive but busybox dmesg does not have the fancy options
 	dmesg -c >dmesg-test-$NUM-xfer.log
