@@ -16,7 +16,7 @@ one_test() {
 		|| fail "can't install module virtio-msg-ivshmem (test $NUM)"
 
 	# wait for things to happen
-	sleep 1
+	sleep 2
 
 	# this is destructive but busybox dmesg does not have the fancy options
 	dmesg -c >dmesg-test-$NUM-start.log
@@ -32,18 +32,25 @@ one_test() {
 		dmesg-test-$NUM-start.log  >/dev/null || \
 		fail "IRQ did not fire (test $NUM)"
 
-	ifconfig -a
-	sh -i
+	cat /sys/bus/virtio/devices/virtio1/device | grep 0x0004 || \
+		fail "virtio1 is not virtio-rng"
+
+	dd if=/dev/hwrng of=data.bin bs=512 count=1 || \
+		fail "can't read hwrng"
+
+	od -x data.bin
+
+	# this is destructive but busybox dmesg does not have the fancy options
+	dmesg -c >dmesg-test-$NUM-xfer.log
 
 	rmmod virtio_msg_ivshmem \
 		|| fail "can't remove module virtio-msg-ivshmem (test $NUM)"
-
 
 	# this is destructive but busybox dmesg does not have the fancy options
 	dmesg -c >dmesg-test-$NUM-end.log
 
 	grep "virtio_msg_ivshmem .* device removed" \
-		dmesg-test-$NUM.log  >/dev/null || \
+		dmesg-test-$NUM-end.log  >/dev/null || \
 		fail "device was not removed (test $NUM)"
 }
 
