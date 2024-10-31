@@ -111,7 +111,9 @@ build_linux() {
 	(build_linux_virtio_msg)
 	(build_linux_virtio_msg_v1)
 	(build_linux_upstream)
-	(build_linux_ivshmem_uio)
+
+	# we use virtio_msg for this now
+	# (build_linux_ivshmem_uio)
 }
 
 main "$@"
