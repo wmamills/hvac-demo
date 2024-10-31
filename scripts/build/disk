@@ -97,7 +97,8 @@ build_disk_demo2a() {
 
 build_disk_demo2b() {
 	buildroot_mixins_common demo2b-kvm demo2b.d/mixins/qemu2-guest{,-kvm}
-	buildroot_mixins_common demo2b-xen demo2b.d/mixins/qemu2-guest
+	buildroot_mixins_common demo2b-xen demo2b.d/mixins/qemu2-guest \
+		build/linux-upstream-modules.tar.gz
 }
 
 build_disk_debian_mixins() {

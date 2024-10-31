@@ -6,6 +6,9 @@ set -e
 # this script is short, echo each step
 set -x
 
+# xen config uses virtio-mmio which is now a module
+modprobe virtio-mmio
+
 ifconfig -a
 
 # In xen domU, eth0 is the only nic and the one we want
