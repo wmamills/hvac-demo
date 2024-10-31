@@ -88,7 +88,7 @@ debian_mixins_common() {
 
 build_disk_demo1_guest() {
 	buildroot_mixins_common demo1 demo1.d/mixins/qemu1-guest \
-		build/linux-virtio-msg-modules.tar.gz
+		build/linux-virtio-msg-v1-modules.tar.gz
 }
 
 build_disk_demo2a() {
@@ -151,6 +151,7 @@ upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
 upload build/linux-virtio-msg-Image /root/linux-virtio-msg-Image
+upload build/linux-virtio-msg-v1-Image /root/linux-virtio-msg-v1-Image
 upload build/linux-upstream-Image /root/linux-upstream-Image
 EOF
 }

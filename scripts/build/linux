@@ -65,6 +65,19 @@ build_linux_virtio_msg() {
 	linux_common linux-virtio-msg
 }
 
+build_linux_virtio_msg_v1() {
+	URL=https://github.com/wmamills/linux-openamp-staging.git
+	BRANCH=virtio-msg-v1
+	COMMIT=""
+
+	# The branch above has extra *.config files
+	CONFIG="defconfig xen.config"
+	EXTRA_CONFIG="\
+		extra.config virtio.config vfio.config \
+		qemu-xen.config uio.config trim.config"\
+	linux_common linux-virtio-msg-v1
+}
+
 linux_upstream_inner() {
 	URL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 	BRANCH=""
@@ -98,6 +111,7 @@ build_linux_ivshmem_uio() {
 
 build_linux() {
 	(build_linux_virtio_msg)
+	(build_linux_virtio_msg_v1)
 	(build_linux_upstream)
 
 	# we use virtio_msg for this now
