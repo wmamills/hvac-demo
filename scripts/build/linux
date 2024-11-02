@@ -65,14 +65,16 @@ linux_virtio_common() {
 
 build_linux_virtio_msg() {
 	linux_virtio_common
-	BRANCH=virtio-msg
+	BRANCH=""
+	TAG="hvac-demo4-v1"
 	linux_common linux-virtio-msg
 }
 
 # this one should go away when the message formats align
 build_linux_virtio_msg_v1() {
 	linux_virtio_common
-	BRANCH=virtio-msg-v1
+	BRANCH=""
+	TAG="hvac-demo1-v1"
 	linux_common linux-virtio-msg-v1
 }
 
