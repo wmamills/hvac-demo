@@ -19,7 +19,7 @@ ${IMAGES}/qemu-i2c-install/bin/qemu-system-aarch64 \
   -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::8022-:22 \
   -drive file=${IMAGES}/demo1-disk.qcow2,id=hd0,if=none,format=qcow2 \
   -device virtio-scsi-pci -device scsi-hd,drive=hd0 \
-  -display none -m 8192 -smp 8 -kernel ${IMAGES}/xen-upstream \
-  -append "dom0_mem=5G,max:5G dom0_max_vcpus=7 loglvl=all guest_loglvl=all" \
+  -display none -m 1024 -smp 2 -kernel ${IMAGES}/xen-upstream \
+  -append "dom0_mem=512M,max:512M dom0_max_vcpus=1 loglvl=all guest_loglvl=all" \
   -device guest-loader,addr=0x49000000,kernel=${IMAGES}/linux-upstream-Image,bootargs="$BOOTARGS" \
   -device ds1338,address=0x20
