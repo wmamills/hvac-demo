@@ -21,3 +21,9 @@ BASE=linux-virtio-msg
 mksymdir drivers uio virtio
 mksymdir include linux uapi
 mksymdir arch/arm64 configs
+
+LINK_BASE=$DEMO_BASE/../qemu-virtio-msg
+BASE=qemu-virtio-msg
+mksymdir hw virtio vfio i2c
+mksymdir include/hw virtio vfio i2c
+mksymdir include qemu
