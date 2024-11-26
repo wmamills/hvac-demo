@@ -11,7 +11,7 @@ ORIG_PWD=$PWD
 # U = in use images
 U=images
 S=saved-images
-MARKER=debian-12-arm64/boot.tar.gz
+MARKER=.gitattributes
 
 check_saved_images_submodule() {
     # make sure we have git lfs
