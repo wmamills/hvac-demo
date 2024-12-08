@@ -13,6 +13,13 @@ U=images
 S=saved-images
 MARKER=.gitattributes
 
+#set -x
+
+error() {
+    echo "error: " "$@"
+    exit 2
+}
+
 check_saved_images_submodule() {
     # make sure we have git lfs
     if ! git lfs status >/dev/null; then
@@ -36,8 +43,8 @@ check_saved_images_submodule() {
     fi
 }
 
-# see if we have the image file
-check_image() {
+# we are extracting, prep the template file
+check_template() {
     if ! test -r $S/$1; then
         # no, maybe we need to fetch the submodule
         check_saved_images_submodule
@@ -51,17 +58,47 @@ check_image() {
     (cd $S; git lfs pull --include $1)
 }
 
-do_one_file() {
+# we are saving, check that target exists, the template exists if it should
+# and replace any symlink with real content
+check_save_target() {
+    TEST=$1
+    check_saved_images_submodule
+
+    # if the mode is not "save-new", then the template file should exist
+    if [ ! -r $TEMPLATE -a "$MODE" != "save_new" ]; then
+        echo "Template File $TEMPLATE does not exist and MODE=$MODE"
+        return 1
+    fi
+
+    # check that the target exists
+    if [ ! -e $TARGET ]; then
+        echo "Target $TARGET does not exist"
+        return 1
+    # if the $TARGET is a symlink, replace its contents
+    elif [ -L $TARGET ]; then
+        LINK=$(readlink $TARGET)
+        rm -rf images/../$TARGET
+        cp -a $LINK $TARGET
+        return 0
+    elif [ "$MODE" == "save_all" ]; then
+        echo "Skipping $TARGET as it is already saved"
+        return 1
+    else
+        return 0
+    fi
+}
+
+restore_one_template() {
     DIR=$U/$(dirname $1)
     FILE=$(basename $1)
     SP="                 "
 
     case $1 in
-    */asis.*)
+    */asis.*|asis.*)
         # copy as is but strip the asis. marker
         TARGET=$DIR/${FILE#asis.}
         if ! test -r $TARGET; then
-            check_image $1
+            check_template $1
             echo "copy $1 $SP"
             mkdir -p $DIR
             cp $S/$1 $TARGET
@@ -71,7 +108,7 @@ do_one_file() {
         # The target is a directory for this case
         TARGET=$U/${1%.tar.gz}
         if ! test -d $TARGET; then
-            check_image $1
+            check_template $1
             echo "extract $1 $SP"
             mkdir -p $DIR
             tar xzf $S/$1 -C $DIR
@@ -81,7 +118,7 @@ do_one_file() {
         # keep compressed, just copy
         TARGET=$U/$1
         if ! test -r $TARGET; then
-            check_image $1
+            check_template $1
             echo "copy $1 $SP"
             mkdir -p $DIR
             cp $S/$1 $TARGET
@@ -91,7 +128,7 @@ do_one_file() {
         # decompress
         TARGET=$U/${1%.bz2}
         if ! test -r $TARGET; then
-            check_image $1
+            check_template $1
             echo "decompress $1 $SP"
             mkdir -p $DIR
             bzcat $S/$1 >$TARGET
@@ -101,7 +138,7 @@ do_one_file() {
         # decompress
         TARGET=$U/${1%.gz}
         if ! test -r $TARGET; then
-            check_image $1
+            check_template $1
             echo "decompress $1 $SP"
             mkdir -p $DIR
             zcat $S/$1 >$TARGET
@@ -111,11 +148,76 @@ do_one_file() {
         # everything else is just a copy
         TARGET=$U/$1
         if ! test -r $TARGET; then
-            check_image $1
+            check_template $1
             echo "copy $1 $SP"
             mkdir -p $DIR
             cp $S/$1 $U/$1
         fi
+        ;;
+    esac
+}
+
+save_copy() {
+    if check_save_target -f ; then
+        echo "Save $TARGET as is to $TEMPLATE $SP"
+        mkdir -p $S/$DIR
+        cp $TARGET $TEMPLATE
+    fi
+}
+
+save_one_template() {
+    DIR=$(dirname $1)
+    FILE=$(basename $1)
+    SP="                 "
+
+    case $1 in
+    */asis.*|asis.*)
+        # copy as is but strip the asis. marker
+        TARGET=$U/$DIR/${FILE#asis.}
+        TEMPLATE=$S/$1
+        save_copy
+        ;;
+    *.tar.gz)
+        # The target is a directory for this case
+        TARGET=$U/${1%.tar.gz}
+        TEMPLATE=$S/$1
+        if check_save_target -d ; then
+            echo "archive $TARGET to $TEMPLATE $SP"
+            mkdir -p $S/$DIR
+            tar czf $TEMPLATE -C $(dirname $TARGET) $(basename $TARGET)
+        fi
+        ;;
+    *.cpio.gz)
+        # keep compressed, just copy
+        TARGET=$U/$1
+        TEMPLATE=$S/$1
+        save_copy
+        ;;
+    *.bz2)
+        # compress
+        TARGET=$U/${1%.bz2}
+        TEMPLATE=$S/$1
+        if check_save_target -f ; then
+            echo "compress $TARGET to $TEMPLATE $SP"
+            mkdir -p $S/$DIR
+            bzip2 -zkc $TARGET >$TEMPLATE
+        fi
+        ;;
+    *.gz)
+        # compress
+        TARGET=$U/${1%.gz}
+        TEMPLATE=$S/$1
+        if check_save_target -f ; then
+            echo "compress $TARGET to $TEMPLATE $SP"
+            mkdir -p $S/$DIR
+            gzip -kc $TARGET >$TEMPLATE
+        fi
+        ;;
+    *)
+        # everything else is just a copy
+        TARGET=$U/$1
+        TEMPLATE=$S/$1
+        save_copy
         ;;
     esac
 }
@@ -129,11 +231,12 @@ find_template() {
     for check in just_copy asis tar.gz cpio.gz bz2 gz; do
         case $check in
         just_copy)
-            # copy as is but strip the asis. marker
+            # just copy the file
             TEMPLATE=$DIR/${FILE}
             ;;
         asis)
             # copy as is but strip the asis. marker
+            # this form allows *.tar.* files to be copied as is
             TEMPLATE=$DIR/asis.${FILE}
             ;;
         *)
@@ -151,45 +254,120 @@ find_template() {
     return 1
 }
 
-# we have one arg that is not all
-# it maybe a saved image template (xxx/hd.img.bz2)
+# we have one arg that is not "all" and we are in template mode
+# it may be a saved image template (xxx/hd.img.bz2)
 # it may be a dir in saved-images (xxx)
-# it maybe the desired target (xxx/hd.img)
-# it may be a desired target dir (xxx when saved-images has xxx.tar.gz)
-do_one_something() {
+do_one_template() {
     if [ -d $S/$1 ]; then
         for f in $(cd $S/$1; find * -type f); do
-            do_one_file $1/$f
+            restore_one_template $1/$f
         done
     elif [ -f $S/$1 ]; then
-        do_one_file $1
+        restore_one_template $1
     else
-        if find_template $1; then
-            do_one_file $TEMPLATE
-        elif [ -e $U/$1 ]; then
-            # it does not exist in saved-images but does in images
-            return 0
-        else
-            echo "Can't find $1"
-            return 1
-        fi
+        echo "No template called $1"
+        return 1
     fi
 }
 
-do_all() {
+# we have one arg that is not "all" and we are in image mode
+# it may be the desired target (xxx/hd.img)
+# it may be a desired target dir (xxx when saved-images has xxx.tar.gz)
+do_one_image() {
+    if find_template $1; then
+        restore_one_template $TEMPLATE
+    elif [ -e $U/$1 ]; then
+        # it does not exist in saved-images but does in images
+        return 0
+    else
+        echo "No template for image $1 and no file present"
+        return 1
+    fi
+}
+
+do_one_save() {
+    save_one_template $1
+}
+
+do_one_save_new() {
+    save_one_template $1
+}
+
+# we have one arg that is not "all"
+# it may be a template or an image name, try both
+do_one_either() {
+    if do_one_template $1; then
+        return
+    else
+        do_one_image $1
+    fi
+}
+
+do_template_all() {
     check_saved_images_submodule all
     for f in $(cd $S; find * -type f); do
-        do_one_file $f
+        case $f in
+        .git*|README.md)
+            true
+            ;;
+        *)
+            do_one_template $f
+            ;;
+        esac
     done
 }
 
+do_save_all() {
+    MODE="save_all"
+    check_saved_images_submodule
+    for f in $(cd $S; find * -type f); do
+        case $f in
+        .git*|README.md)
+            true
+            ;;
+        *)
+            save_one_template $f
+            ;;
+        esac
+    done
+}
+
+# alias these
+do_either_all() {
+    do_template_all
+}
+
+do_image_all() {
+    do_template_all
+}
+
+do_save_new_all() {
+    do_save_all
+}
+
 cd $BASE_DIR
+
+MODE="either"
+
+case $1 in
+--template|--image|--save|--save-new)
+    MODE=${1#--}
+    MODE=${MODE//-/_}
+    shift
+    ;;
+--*)
+    echo "Unknown option $1"
+    exit 2
+esac
+
 case $1 in
 all)
-    do_all
+    do_${MODE}_all
     ;;
 *)
     check_saved_images_submodule
-    do_one_something $1
+    for f in "$@"; do
+        do_one_${MODE} $f
+    done
     ;;
 esac
