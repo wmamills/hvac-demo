@@ -76,7 +76,7 @@ check_save_target() {
         return 1
     # if the $TARGET is a symlink, replace its contents
     elif [ -L $TARGET ]; then
-        LINK=$(readlink $TARGET)
+        LINK=$(dirname $TARGET)/$(readlink $TARGET)
         rm -rf images/../$TARGET
         cp -a $LINK $TARGET
         return 0
