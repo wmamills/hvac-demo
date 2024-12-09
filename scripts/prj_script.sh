@@ -80,12 +80,12 @@ prj_build() {
 
 build_all() {
 	for item in rust util xen qemu linux u_boot zephyr disk; do
-		$MY_DIR/build/$item
+		$MY_DIR/build/$item --build
 	done
 }
 
 build_clean() {
-	rm -rf build
+	rm -rf build images
 	for d in xen-orko xen-upstream xen-virtio-msg; do
 		if [ -d src/$d ]; then
 			(cd src/$d; git clean -fdX)

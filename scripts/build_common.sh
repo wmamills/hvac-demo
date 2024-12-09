@@ -56,6 +56,27 @@ worktree_common() {
 }
 
 main() {
+	BASE_DIR=$(cd $MY_DIR/../.. ; pwd)
+	FETCH=$BASE_DIR/scripts/maybe-fetch
+
+	# are we in build mode or fetch mode?
+	MODE=fetch
+
+	case $1 in
+	--fetch)
+		MODE=fetch
+		shift
+		;;
+	--build)
+		MODE=build
+		shift
+		;;
+	--*)
+		echo "Bad option $1"
+		exit 2
+		;;
+	esac
+
 	SCRIPT=$(basename $0)
 	CMD=${1//-/_}
 	if [ -z "$CMD" ]; then
