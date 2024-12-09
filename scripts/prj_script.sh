@@ -80,7 +80,7 @@ prj_build() {
 
 build_all() {
 	for item in rust util xen qemu linux u_boot zephyr disk; do
-		$MY_DIR/build/$item
+		$MY_DIR/build/$item --build
 	done
 }
 

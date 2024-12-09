@@ -3,30 +3,51 @@
 MY_DIR=$(cd $(dirname $0); pwd)
 . $MY_DIR/../build_common.sh
 
-disk_common_buildroot() {
+vars_common_buildroot() {
 	ORIG_CPIO=virtio_msg_rootfs.cpio
 	URL_CPIO_BASE=http://people.linaro.org/~manos.pitsidianakis
-	if [ ! -r build/disk/$ORIG_CPIO ]; then
+}
+
+build_disk_common_buildroot() {
+	vars_common_buildroot
+	if [ ! -r build/disk/$ORIG_CPIO.gz ]; then
 		echo "****** Fetch original buildroot rootfs cpio image"
 		mkdir -p build/disk
-		(cd build/disk; wget $URL_CPIO_BASE/$ORIG_CPIO)
+		(cd build/disk; rm -f $ORIG_CPIO; wget $URL_CPIO_BASE/$ORIG_CPIO)
 		# source is not compressed for some reason
 		gzip <build/disk/$ORIG_CPIO >build/disk/$ORIG_CPIO.gz
+		mkdir -p images/disk
+		ln -fs ../../build/disk/$ORIG_CPIO.gz images/disk/$ORIG_CPIO.gz
 	fi
 }
 
-disk_common_debian() {
+fetch_disk_common_buildroot() {
+	vars_common_buildroot
+	$FETCH --image disk/$ORIG_CPIO.gz
+}
+
+do_disk_common_buildroot() {
+	${MODE}_disk_common_buildroot
+}
+
+vars_disk_common_debian() {
 	# make sure we have a copy of the upstream disk image
 	ORIG_DISK=debian-12-nocloud-arm64.qcow2
 	URL_BASE=https://cloud.debian.org/images/cloud/bookworm/latest
+	BIG_DISK=debian-12-arm64-big.qcow2
+}
+
+build_disk_common_debian() {
+	vars_disk_common_debian
 	if [ ! -r build/disk/$ORIG_DISK ]; then
 		echo "****** Fetch original debian disk image"
 		mkdir -p build/disk
 		(cd build/disk; wget $URL_BASE/$ORIG_DISK)
+		mkdir -p images/disk
+		ln -fs ../../build/disk/$ORIG_DISK images/disk/$ORIG_DISK
 	fi
 
 	# now make a copy of the template and expand it
-	BIG_DISK=debian-12-arm64-big.qcow2
 	if [ ! -r build/disk/$BIG_DISK ]; then
 		# side effect /dev/sda15 -> /dev/sda1 & /dev/sda1 -> /dev/sda2
 		echo "****** resize debian disk image"
@@ -34,12 +55,23 @@ disk_common_debian() {
 		virt-resize --expand /dev/sda1 \
 			build/disk/$ORIG_DISK \
 			build/disk/debian-12-arm64-big.qcow2
+		mkdir -p images/disk
+		ln -fs ../../build/disk/$BIG_DISK images/disk/$BIG_DISK
 	fi
+}
+
+fetch_disk_common_debian() {
+	vars_disk_common_debian
+	$FETCH --image disk/$BIG_DISK
+}
+
+do_disk_common_debian() {
+	${MODE}_disk_common_debian
 }
 
 buildroot_mixins_common() {
 	NAME=$1; shift
-	disk_common_buildroot
+	do_disk_common_buildroot
 
 	echo "****** Create composite cpio.gz image for $NAME"
 
@@ -66,7 +98,7 @@ buildroot_mixins_common() {
 		gzip >$TOP/build/mixins-$NAME.cpio.gz)
 
 	# build the composite even if not everyone will use it
-	cat build/disk/$ORIG_CPIO.gz \
+	cat images/disk/$ORIG_CPIO.gz \
 		build/mixins-$NAME.cpio.gz \
 		>build/$NAME-rootfs.cpio.gz
 }
@@ -87,8 +119,9 @@ debian_mixins_common() {
 }
 
 build_disk_demo1_guest() {
+	$FETCH --image target/aarch64/linux-virtio-msg-v1-modules.tar.gz
 	buildroot_mixins_common demo1 demo1.d/mixins/qemu1-guest \
-		build/linux-virtio-msg-v1-modules.tar.gz
+		images/target/aarch64/linux-virtio-msg-v1-modules.tar.gz
 }
 
 build_disk_demo2a() {
@@ -96,15 +129,18 @@ build_disk_demo2a() {
 }
 
 build_disk_demo2b() {
+	$FETCH --image target/aarch64/linux-upstream-modules.tar.gz
 	buildroot_mixins_common demo2b-kvm demo2b.d/mixins/qemu2-guest{,-kvm}
 	buildroot_mixins_common demo2b-xen demo2b.d/mixins/qemu2-guest \
-		build/linux-upstream-modules.tar.gz
+		images/target/aarch64/linux-upstream-modules.tar.gz
 }
 
 build_disk_demo4() {
-	cp build/devmem2 demo4.d/mixins/minimal/root
+	$FETCH --image target/aarch64/debian-12/devmem2
+	$FETCH --image target/aarch64/linux-virtio-msg-modules.tar.gz
+	cp images/target/aarch64/debian-12/devmem2 demo4.d/mixins/minimal/root
 	buildroot_mixins_common demo4 demo4.d/mixins/minimal \
-		build/linux-virtio-msg-modules.tar.gz
+		images/target/aarch64/linux-virtio-msg-modules.tar.gz
 }
 
 build_disk_debian_mixins() {
@@ -117,42 +153,65 @@ build_disk_debian_mixins() {
 }
 
 build_disk_debian() {
-	disk_common_debian
-	disk_common_buildroot
+	do_disk_common_debian
+	do_disk_common_buildroot
 	(build_disk_demo1_guest)
 	(build_disk_demo2b)
 	(build_disk_debian_mixins)
 
-	echo "****** Modify a disk image copy for debian based demos"
+	echo "****** Get components to be added to debian disk"
 	rm -f build/demo*-disk.qcow2
 	rm -f build/disk.qcow2
 
 	# now make a copy of the (expanded) template
-	cp build/disk/$BIG_DISK build/disk.qcow2
+	cp images/disk/$BIG_DISK build/disk.qcow2
 
-	# collect the stuff we need to add
+	# fetch anything not already built
+	for f in \
+		linux-upstream-modules.tar.gz \
+		linux-virtio-msg-modules.tar.gz \
+		linux-upstream-Image \
+		linux-virtio-msg-Image \
+		linux-virtio-msg-v1-Image ; do
+		$FETCH --image target/aarch64/$f
+	done
+
+	for f in \
+		qemu-upstream-arm64.tar.gz \
+		qemu-msg-arm64.tar.gz \
+		vhost-device-i2c \
+		xen-vhost-frontend \
+		xen-upstream.deb \
+		xen-virtio-msg.deb \
+		devmem2	\
+		uio_ivshmem_test; do
+		$FETCH --image target/aarch64/debian-12/$f
+	done
+
+	# add them to the disk
+	echo "****** Modify a disk image copy for debian based demos"
 	guestfish --rw -a build/disk.qcow2 <<EOF
 run
 mount /dev/sda2 /
 mkdir /opt/qemu-upstream
 mkdir /opt/qemu-msg
-tar-in build/linux-upstream-modules.tar.gz / compress:gzip
-tar-in build/linux-virtio-msg-modules.tar.gz / compress:gzip
-tar-in build/qemu-upstream-arm64.tar.gz /opt/qemu-upstream compress:gzip
-tar-in build/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
+tar-in images/target/aarch64/linux-upstream-modules.tar.gz / compress:gzip
+tar-in images/target/aarch64/linux-virtio-msg-modules.tar.gz / compress:gzip
+tar-in images/target/aarch64/debian-12/qemu-upstream-arm64.tar.gz /opt/qemu-upstream compress:gzip
+tar-in images/target/aarch64/debian-12/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
 tar-in build/mixins-debian.tar.gz / compress:gzip
-upload build/vhost-device-i2c /root/vhost-device-i2c
-upload build/xen-vhost-frontend /root/xen-vhost-frontend
-upload build/xen-upstream.deb /root/xen-upstream.deb
-upload build/xen-virtio-msg.deb /root/xen-virtio-msg.deb
-upload build/devmem2 /root/devmem2
-upload build/uio_ivshmem_test /root/uio_ivshmem_test
+upload images/target/aarch64/debian-12/vhost-device-i2c /root/vhost-device-i2c
+upload images/target/aarch64/debian-12/xen-vhost-frontend /root/xen-vhost-frontend
+upload images/target/aarch64/debian-12/xen-upstream.deb /root/xen-upstream.deb
+upload images/target/aarch64/debian-12/xen-virtio-msg.deb /root/xen-virtio-msg.deb
+upload images/target/aarch64/debian-12/devmem2 /root/devmem2
+upload images/target/aarch64/debian-12/uio_ivshmem_test /root/uio_ivshmem_test
 upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
-upload build/linux-virtio-msg-Image /root/linux-virtio-msg-Image
-upload build/linux-virtio-msg-v1-Image /root/linux-virtio-msg-v1-Image
-upload build/linux-upstream-Image /root/linux-upstream-Image
+upload images/target/aarch64/linux-virtio-msg-Image /root/linux-virtio-msg-Image
+upload images/target/aarch64/linux-virtio-msg-v1-Image /root/linux-virtio-msg-v1-Image
+upload images/target/aarch64/linux-upstream-Image /root/linux-upstream-Image
 EOF
 }
 
