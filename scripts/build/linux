@@ -48,8 +48,11 @@ linux_common() {
 	LINUX=$(cd ../../build/${NAME}-install/boot; ls -1 vmlinuz-*)
 	MODULES=$(cd ../../build/${NAME}-install; ls -1 modules-*.tar.gz)
 	echo "Symlinking $NAME to $LINUX"
-	ln -fs  ${NAME}-install/boot/$LINUX ../../build/$NAME-Image
-	ln -fs  ${NAME}-install/$MODULES ../../build/$NAME-modules.tar.gz
+	mkdir -p $BASE_DIR/images/target/aarch64
+	ln -fs  ../../../build/${NAME}-install/boot/$LINUX \
+		$BASE_DIR/images/target/aarch64/$NAME-Image
+	ln -fs  ../../../build/${NAME}-install/$MODULES    \
+		$BASE_DIR/images/target/aarch64/$NAME-modules.tar.gz
 }
 
 linux_virtio_common() {
@@ -78,7 +81,7 @@ build_linux_virtio_msg_v1() {
 	linux_common linux-virtio-msg-v1
 }
 
-linux_upstream_inner() {
+build_linux_upstream() {
 	URL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 	BRANCH=""
 	TAG="v6.11"
@@ -88,16 +91,6 @@ linux_upstream_inner() {
 		extra.config virtio.config vfio.config \
 		qemu-xen.config uio.config trim.config"
 	linux_common linux-upstream
-}
-
-build_linux_upstream() {
-	(linux_upstream_inner)
-
-	# make the default linux-virtio-msg
-	echo "Default linux is linux-upstream"
-	pwd
-	ln -fs linux-upstream-Image build/Image
-	ln -fs linux-upstream-modules.tar.gz build/modules.tar.gz
 }
 
 build_linux_ivshmem_uio() {
