@@ -7,10 +7,13 @@ MY_DIR=$(dirname $ME_ABS)
 
 #set -x
 
+# all zephyr apps fetch as part of the zephyr dir
+$FETCH --image zephyr $KERNEL2 $QEMU_DIR
+
 for NAME in demo3; do
-	if [ ! -e $IMAGES/${NAME}-disk.qcow2 ]; then
+	if [ ! -e ${BUILD}/${NAME}-disk.qcow2 ]; then
 		echo "make a copy of the debian disk image for $NAME"
-		cp $IMAGES/disk.qcow2 $IMAGES/${NAME}-disk.qcow2
+		cp ${BUILD}/disk.qcow2 ${BUILD}/${NAME}-disk.qcow2
 	fi
 done
 

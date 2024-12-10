@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# if we are not run under multi-qemu, just fake this stuff out
-: ${BASE_DIR:=.}
-: ${LOGS:=.}
-: ${TMPDIR:=.}
+# include the common variable settings
+ME_ABS=$(readlink -f $0)
+MY_DIR=$(dirname $ME_ABS)
+. $MY_DIR/common-vars.sh
 
 rm -f ./queue-linux-user-d*
 rm -f ./qemu-ram
 
-$BASE_DIR/build/qemu-msg-install/bin/qemu-system-aarch64 \
+${QEMU} \
      -M x-virtio-msg -m 2G -cpu cortex-a72 \
      -object memory-backend-file,id=mem,size=2G,mem-path=./qemu-ram,share=on \
      -machine memory-backend=mem \

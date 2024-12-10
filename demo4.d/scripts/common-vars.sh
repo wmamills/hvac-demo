@@ -14,12 +14,11 @@ HOST_ARCH=$(uname -m )
 
 QEMU_DIR=host/${HOST_ARCH}/qemu-msg
 QEMU=$IMAGES/$QEMU_DIR/bin/qemu-system-aarch64
+IVSHMEM_SERVER=$IMAGES/$QEMU_DIR/bin/ivshmem-server
+
 KERNEL1=target/aarch64/linux-upstream-Image
 KERNEL2=target/aarch64/linux-virtio-msg-Image
-DTB=$TEST_DIR/dts/xen.dtb
-ROOTFS=disk/virtio_msg_rootfs.cpio.gz
-XEN=target/aarch64/xen-virtio-msg
-IVSHMEM_SERVER=$IMAGES/$QEMU_DIR/bin/ivshmem-server
+INITRD2=demo4-rootfs.cpio.gz
 
 QEMU_BASE=(
 -machine virt,gic_version=3,iommu=smmuv3

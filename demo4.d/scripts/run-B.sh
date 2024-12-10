@@ -12,11 +12,6 @@ sleep 2
 
 #set -x
 
-INITRD=$BUILD/demo4-rootfs.cpio.gz
-
-#DISK=${IMAGES}/${NAME}-B-disk.qcow2
-#ROOT="/dev/vda2"
-
 ${QEMU} \
 	-machine virt,gic_version=3 \
 	-machine virtualization=true \
@@ -30,7 +25,7 @@ ${QEMU} \
 	-chardev socket,path=shm.sock,id=ivsh \
 	-netdev type=user,id=net0,hostfwd=tcp::2224-:22,hostfwd=tcp::2225-10.0.2.16:22 \
 	-kernel "${IMAGES}/${KERNEL2}" \
-	-initrd "${INITRD}" \
+	-initrd "${BUILD}/${INITRD2}" \
 	-append "root=$ROOT console=ttyAMA0 earlycon autorun=./$NAME/${NAME}.sh"
 
 	#-drive file=$DISK,id=hd0,if=none,format=qcow2 \
