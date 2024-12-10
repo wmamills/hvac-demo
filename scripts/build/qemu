@@ -48,7 +48,14 @@ qemu_common() {
 		--disable-dbus-display --disable-virglrenderer \
 		--disable-vte --disable-brlapi \
 		--disable-alsa --disable-jack --disable-oss --disable-pa
-	make -j10 && make install
+	if make -j10 && make install; then
+		for f in ivshmem-server ivshmem-client ; do
+			cp contrib/$f/$f ../$NAME-install/bin
+		done
+	else
+		false
+	fi
+}
 }
 
 build_qemu_i2c() {
