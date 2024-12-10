@@ -9,7 +9,8 @@ MY_NAME=$(basename $0)
 MY_DIR=$(dirname $ME_ABS)
 ME=$MY_DIR/$MY_NAME
 export BASE_DIR=$(dirname $MY_DIR)
-export IMAGES=$BASE_DIR/build
+export IMAGES=$BASE_DIR/images
+export BUILD=$BASE_DIR/build
 
 MODE=demo
 

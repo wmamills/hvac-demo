@@ -12,12 +12,6 @@ sleep 2
 
 #set -x
 
-KERNEL=$IMAGES/linux-virtio-msg-Image
-INITRD=$IMAGES/demo4-rootfs.cpio.gz
-
-#DISK=${IMAGES}/${NAME}-B-disk.qcow2
-#ROOT="/dev/vda2"
-
 ${QEMU} \
 	-machine virt,gic_version=3 \
 	-machine virtualization=true \
@@ -30,8 +24,8 @@ ${QEMU} \
 	-device ivshmem-doorbell,chardev=ivsh \
 	-chardev socket,path=shm.sock,id=ivsh \
 	-netdev type=user,id=net0,hostfwd=tcp::2224-:22,hostfwd=tcp::2225-10.0.2.16:22 \
-	-kernel "${KERNEL}" \
-	-initrd "${INITRD}" \
+	-kernel "${IMAGES}/${KERNEL2}" \
+	-initrd "${BUILD}/${INITRD2}" \
 	-append "root=$ROOT console=ttyAMA0 earlycon autorun=./$NAME/${NAME}.sh"
 
 	#-drive file=$DISK,id=hd0,if=none,format=qcow2 \

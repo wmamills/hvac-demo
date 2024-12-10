@@ -7,11 +7,13 @@ MY_DIR=$(dirname $ME_ABS)
 
 #set -x
 
+$FETCH --image $KERNEL1 $KERNEL2 $QEMU_DIR
+
 # was demo4-A demo4-B
 for NAME in demo4-A; do
-	if [ ! -e $IMAGES/${NAME}-disk.qcow2 ]; then
+	if [ ! -e ${BUILD}/${NAME}-disk.qcow2 ]; then
 		echo "make a copy of the debian disk image for $NAME"
-		cp $IMAGES/disk.qcow2 $IMAGES/${NAME}-disk.qcow2
+		cp ${BUILD}/disk.qcow2 $BUILD/${NAME}-disk.qcow2
 	fi
 done
 

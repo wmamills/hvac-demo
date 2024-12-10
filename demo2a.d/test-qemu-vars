@@ -12,3 +12,4 @@ QEMU_BOOT_SCRIPT[1]="demo2a.d/scripts/run-B.sh"
 QEMU_BOOT_ARG[1]=""
 
 CLEANUP_SCRIPT="demo2a.d/scripts/cleanup.sh"
+SETUP_SCRIPT="demo2a.d/scripts/setup.sh"
