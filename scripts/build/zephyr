@@ -86,6 +86,10 @@ zephyr_common() {
 	west build -p always -b $BOARD $APP $EXTRA_CONFIG
 	cp build/zephyr/zephyr.elf ../../build/$NAME-symbols.elf
 	arm-zephyr-eabi-strip -o ../../build/$NAME.elf ../../build/$NAME-symbols.elf
+	mkdir -p $BASE_DIR/images/zephyr
+	ln -fs ../../build/$NAME.elf $BASE_DIR/images/zephyr/$NAME.elf
+	ln -fs ../../build/$NAME-symbols.elf \
+		$BASE_DIR/images/zephyr/$NAME-symbols.elf
 }
 
 build_zephyr_mps2_m3_uio() {

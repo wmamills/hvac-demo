@@ -22,7 +22,9 @@ build_u_boot() {
 	make -j10
 
 	# symlink for run command
-	ln -fs  u-boot-el2/u-boot.bin ../../build/u-boot-el2.bin
+	mkdir -p images/target/aarch64
+	ln -fs  ../../../build/u-boot-el2/u-boot.bin \
+		$BASE_DIR/images/target/aarch64/u-boot-el2.bin
 }
 
 main "$@"
