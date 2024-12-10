@@ -56,6 +56,15 @@ qemu_common() {
 		false
 	fi
 }
+
+qemu_common_host() {
+	NAME=$1
+	HOST_ARCH=$(uname -m)
+	rm -rf images/host/$HOST_ARCH/$NAME
+	if qemu_common $NAME; then
+		mkdir -p $BASE_DIR/images/host/$HOST_ARCH
+		ln -s ../../../build/${NAME}-install $BASE_DIR/images/host/$HOST_ARCH/$NAME
+	fi
 }
 
 build_qemu_i2c() {
@@ -65,7 +74,7 @@ build_qemu_i2c() {
 	BRANCH=master
 	TARGETS="aarch64-softmmu"
 	EXTRA_CONFIG=""
-	qemu_common qemu-i2c
+	qemu_common_host qemu-i2c
 }
 
 qemu_common_cross() {
@@ -76,10 +85,12 @@ qemu_common_cross() {
 	# we pass --disable-xen in this case but just to make sure ...
 	sudo apt-get purge -y xen-upstream:arm64 || true
 
+	XEN_PATH=target/aarch64/debian-12/$XEN_DEB
 	if [ -n "$XEN_DEB" ]; then
-		if [ -f build/$XEN_DEB ]; then
+		$FETCH $XEN_PATH
+		if [ -f images/$XEN_PATH ]; then
 			# we install the arm64 deb file to get the arm64 libraries
-			sudo apt-get install -y ./build/$XEN_DEB
+			sudo apt-get install -y ./images/$XEN_PATH
 		else
 			echo "Build ${XEN_DEB%.deb} first"
 			exit 2
@@ -89,6 +100,9 @@ qemu_common_cross() {
 	if qemu_common $NAME; then
 		# make a tar file for easy install
 		fakeroot tar cvzf ../$NAME.tar.gz -C ../${NAME}-install .
+		mkdir -p $BASE_DIR//images/target/aarch64/debian-12
+		ln -fs ../../../../build/$NAME.tar.gz \
+			$BASE_DIR/images/target/aarch64/debian-12/$NAME.tar.gz
 	else
 		false
 	fi
@@ -146,7 +160,7 @@ build_qemu_msg() {
 
 	TARGETS="aarch64-softmmu"
 	EXTRA_CONFIG=""
-	qemu_common qemu-msg
+	qemu_common_host qemu-msg
 }
 
 build_qemu_ivshmem_flat() {
@@ -156,7 +170,7 @@ build_qemu_ivshmem_flat() {
 	BRANCH="ivshmem_rebased_on_v9_0_2"
 	TARGETS="aarch64-softmmu"
 	EXTRA_CONFIG=""
-	qemu_common qemu-ivshmem-flat
+	qemu_common_host qemu-ivshmem-flat
 }
 
 main "$@"
