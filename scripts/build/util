@@ -19,6 +19,9 @@ build_devmem2() {
 	fi
 	mkdir -p ../../build/
 	aarch64-linux-gnu-gcc devmem2.c -o ../../build/devmem2
+	mkdir -p images/target/aarch64/debian-12
+	ln -fs ../../../../build/devmem2 \
+		$BASE_DIR/images/target/aarch64/debian-12/devmem2
 }
 
 build_uio_ivshmem_test() {
@@ -26,6 +29,9 @@ build_uio_ivshmem_test() {
 	mkdir -p build/
 	aarch64-linux-gnu-gcc demo3.d/src/uio_ivshmem_test.c \
 		-o build/uio_ivshmem_test
+	mkdir -p images/target/aarch64/debian-12
+	ln -fs ../../../../build/uio_ivshmem_test \
+		$BASE_DIR/images/target/aarch64/debian-12/uio_ivshmem_test
 }
 
 main "$@"

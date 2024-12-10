@@ -37,11 +37,14 @@ xen_common() {
 	fi
 
 	# symlink for run command
-	ln -fs ../src/$NAME/dist/install/boot/xen ../../build/$NAME
+	mkdir -p $BASE_DIR/images/target/aarch64/debian-12
+	ln -fs ../../../src/$NAME/dist/install/boot/xen \
+		$BASE_DIR/images/target/aarch64/$NAME
 
 	# symlink to deb package for install
 	XEN_DEB=$(cd dist; ls -1 xen-*.deb)
-	ln -fs ../src/$NAME/dist/$XEN_DEB ../../build/$NAME.deb
+	ln -fs ../../../../src/$NAME/dist/$XEN_DEB \
+		$BASE_DIR/images/target/aarch64/debian-12/$NAME.deb
 }
 
 build_xen_upstream() {
