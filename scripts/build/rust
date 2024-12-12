@@ -13,9 +13,10 @@ build_xen_vhost_frontend() {
 	mkdir -p build
 	if [ ! -d src/xen-vhost-frontend ]; then
 		mkdir -p src; cd src
-		git clone https://github.com/vireshk/xen-vhost-frontend
+		#git clone https://github.com/vireshk/xen-vhost-frontend
+		git clone https://github.com/wmamills/xen-vhost-frontend
 		cd xen-vhost-frontend
-		git checkout virtio-msg
+		git checkout virtio-msg-v1
 		#git reset --hard de22910cf2d8ff088d7d560b73d93f9121c832cf
 
 		# Xen 4.19 support pending in PR #1
