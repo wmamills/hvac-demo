@@ -84,8 +84,30 @@ zephyr_common() {
 	(cd $NAME; west init -l)
 	west update
 	west build -p always -b $BOARD $APP $EXTRA_CONFIG
-	cp build/zephyr/zephyr.elf ../../build/$NAME-symbols.elf
-	arm-zephyr-eabi-strip -o ../../build/$NAME.elf ../../build/$NAME-symbols.elf
+
+	# handle the image dir symlink
+	if [ ! -L $BASE_DIR/images/zephyr ]; then
+		# not a symlink, we have stuff to do
+
+		# fetch existing images, (as we might not build them all)
+		$FETCH --image zephyr
+
+		# now move the dir to build
+		if [ -d $BASE_DIR/images/zephyr ]; then
+			mkdir -p $BASE_DIR/build
+			mv $BASE_DIR/images/zephyr $BASE_DIR/build/zephyr
+		else
+			# something went wrong, at least make an empty dir
+			mkdir -p $BASE_DIR/build/zephyr
+		fi
+		rm -rf $BASE_DIR/images/zephyr
+		ln -fs ../build/zephyr $BASE_DIR/images/zephyr
+	fi
+
+	mkdir -p $BASE_DIR/build/zephyr
+	cp build/zephyr/zephyr.elf $BASE_DIR/build/zephyr/$NAME-symbols.elf
+	arm-zephyr-eabi-strip -o   $BASE_DIR/build/zephyr/$NAME.elf \
+		$BASE_DIR/build/zephyr/$NAME-symbols.elf
 }
 
 build_zephyr_mps2_m3_uio() {
