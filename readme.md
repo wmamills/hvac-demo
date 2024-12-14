@@ -25,7 +25,7 @@ Upcoming demos:
 We will also add the capability to run the demos without building everything
 yourself and we will have a container image ready to run or rebuild everything.
 
-## Building the demos
+## Running or Building the demos
 
 Currently this work assumes:
 
@@ -35,19 +35,33 @@ Currently this work assumes:
 * You are building in Debian 12 (bookworm) directly or via a container as
 described below
 
-* The current version of rustc at the time this page was written was 1.81.0
+* The current versions of rustc when these demos were tested ranged from 1.80.0
+to 1.83.0.
 
 Demos that use Xen or QEMU on the target uses a Debian 12 based rootfs so we
 do all cross compilation for userspace on Debian 12 so the libraries match.
 
-### Building on a Debian 12 machine
+### Cloning the source
+
+When you clone the hvac-demo source, DO NOT clone sub-modules, the sub-modules
+are handled by the demo and build scripts as needed.
+
+Use:
+```
+git clone git@github.com:wmamills/hvac-demo.git
+cd hvac-demo
+```
+
+### Running or Building on a Debian 12 machine
 
 If you are already on a Debian 12 x86_64 machine, you can do the build and
 run the demos directly.  However, please understand that many packages will be
 added to your machine.  You may wish to follow the docker instructions below
 if you do not want that.
 
-To do setup, use:
+Clone the hvac-demo source as described above.
+
+Do setup, use:
 
 ```
 ./setup
@@ -57,7 +71,22 @@ The setup script will use sudo to do the admin_setup and then setup the current
 user for rust development.  The admin_setup will install all the needed
 packages. The `setup` step only needs to be run once per machine.
 
-To build everything use:
+To run the demos, at least the disks need to be built.  Use:
+
+```
+./Build disk
+```
+
+After the disks are built, you can run the demos using commands like this:
+
+```
+./demo1
+```
+
+The demo scripts will fetch any needed images from the save-images sub-module
+as needed.  You do not need to do anything to saved-images yourself.
+
+To rebuild everything instead of using saved-images:
 
 ```
 ./Build all
@@ -70,16 +99,13 @@ happens, the source will be used as-is.
 You can run individual builds steps by replacing `all` with the individual steps
 to run.  See the section on build steps below for more information.
 
-After building you can run the demos using commands like this:
 
-```
-./demo1
-```
-
-### Building in a Container
+### Running or Building in a Container
 
 Make sure you install docker and that you can run it.
 See the "Docker install cheat-sheet" below.
+
+Clone the hvac-demo source as described above.
 
 The following command will start the container:
 
@@ -91,7 +117,7 @@ docker run -it --name hvac-demo -v$PWD:/prj debian:12 \
 `container-main` will run the distro setup and create your user and give you sudo
 access.  It will then run the admin_setup, switch to your user and run the
 prj_setup.  After that it will give you a shell where you can follow the
-instructions above for building.
+instructions above for running or building.
 
 To reuse a container after exit, use:
 ```
@@ -118,6 +144,20 @@ or ~/.local/bin directory and make sure that the one you used is in your path.
 As with the other docker based methods, you will need to install docker.
 See the "Docker install cheat-sheet" below.
 
+Clone the hvac-demo source as described above.
+
+Before running any demo scripts, the disk must be built, use:
+
+```
+dockit build disk
+```
+
+To run a demo script, use:
+
+```
+dockit icmd ./demo1
+```
+
 To build everything use this command:
 
 ```
@@ -127,11 +167,6 @@ dockit build
 To do just one step use (xen as an example below):
 ```
 dockit build xen
-```
-
-To run a demo script after building, use:
-```
-dockit icmd ./demo1
 ```
 
 To get a shell in the container, use:
@@ -189,13 +224,14 @@ the reference clones, currently linux.git, qemu.git, and xen.git.
 
 Due to the current state of the demos, multiple versions of `linux`, `qemu`,
 `qemu-cross`, and `xen` are built.  You can build the individual version by
-finding the build function name in `prj_script.sh`.  Any function in that script
+finding the build function name in `prj_script.sh` and in the builds scripts.
+Any function in those scripts
 that starts with `build_` can be used as a build step.  The build step names
 can use dashes or underscores as all dashes will be converted to underscores by
 the script.
 
 ```
-grep ^build_ scripts/prj_script.sh
+grep ^build_ scripts/prj_script.sh scripts/build/*
 ```
 
 Note: because the xen builds are done in-tree, the xen build steps clean all
