@@ -129,6 +129,7 @@ build_disk_demo2a() {
 }
 
 build_disk_demo2b() {
+	echo "****** Get components needed for demo2b"
 	$FETCH --image target/aarch64/linux-upstream-modules.tar.gz
 	buildroot_mixins_common demo2b-kvm demo2b.d/mixins/qemu2-guest{,-kvm}
 	buildroot_mixins_common demo2b-xen demo2b.d/mixins/qemu2-guest \
@@ -136,6 +137,7 @@ build_disk_demo2b() {
 }
 
 build_disk_demo4() {
+	echo "****** Get components needed for demo4"
 	$FETCH --image target/aarch64/debian-12/devmem2
 	$FETCH --image target/aarch64/linux-virtio-msg-modules.tar.gz
 	cp images/target/aarch64/debian-12/devmem2 demo4.d/mixins/minimal/root
