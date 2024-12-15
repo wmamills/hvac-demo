@@ -59,6 +59,10 @@ main() {
 	BASE_DIR=$(cd $MY_DIR/../.. ; pwd)
 	FETCH=$BASE_DIR/scripts/maybe-fetch
 
+	# The demos will call the build from their own test dir so make sure
+	# we start in the base dir
+	cd $BASE_DIR
+
 	# are we in build mode or fetch mode?
 	MODE=fetch
 
