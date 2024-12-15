@@ -71,20 +71,16 @@ The setup script will use sudo to do the admin_setup and then setup the current
 user for rust development.  The admin_setup will install all the needed
 packages. The `setup` step only needs to be run once per machine.
 
-To run the demos, at least the disks need to be built.  Use:
 
-```
-./Build disk
-```
-
-After the disks are built, you can run the demos using commands like this:
+You can run the demos using commands like this:
 
 ```
 ./demo1
 ```
 
 The demo scripts will fetch any needed images from the save-images sub-module
-as needed.  You do not need to do anything to saved-images yourself.
+and build the final disk images as needed.
+You do not need to do anything to saved-images yourself.
 
 To rebuild everything instead of using saved-images:
 
@@ -146,17 +142,15 @@ See the "Docker install cheat-sheet" below.
 
 Clone the hvac-demo source as described above.
 
-Before running any demo scripts, the disk must be built, use:
-
-```
-dockit build disk
-```
-
 To run a demo script, use:
 
 ```
 dockit icmd ./demo1
 ```
+
+The first time you use dockit it will construct the conatiner for you.
+The first time you run a given demo it will fetch any missing images and build
+any missing final disk images.
 
 To build everything use this command:
 
