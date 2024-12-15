@@ -16,7 +16,6 @@ if [ "$MODE" == "U_BOOT" ]; then
     echo booti 0x47000000 - 0x44000000
 fi
 
-#set -x
 OPT_MODE_NAME="QEMU_$MODE[@]"
 
 ${QEMU} \
@@ -26,29 +25,3 @@ ${QEMU} \
 	-netdev type=user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::2223-10.0.2.16:22 \
 	-device ivshmem-plain,memdev=vm1_mem \
 	"$@"
-
-exit 0
-
-#	-device ivshmem-doorbell,memdev=hostmem \
-#	-object memory-backend-file,size=1M,share=on,mem-path=/dev/shm/ivshmem,id=hostmem \
-
-#	-device virtio-net-device,netdev=net0 \
-#	-device virtio-net-pci,netdev=net0,romfile="" \
-#	-device loader,file=${ROOTFS},addr=0x50000000 \
-#	-device loader,file=${KERNEL},addr=0x60000000 \
-#	-device loader,file=${ROOTFS},addr=0x70000000 \
-
-# Coverage
-# -d nochain -etrace elog -etrace-flags exec -accel tcg,thread=single
-
-#	-bios ${UBOOT} \
-#	-device loader,file=${XEN},force-raw=on,addr=0x42000000 \
-#	-device loader,file=${KERNEL},addr=0x47000000 \
-#	-device loader,file=${DTB},addr=0x44000000 \
-
-#	-kernel ${KERNEL} \
-#	-initrd ${ROOTFS} \
-#	-append "rdinit=/sbin/init console=ttyAMA0,115200n8 earlyprintk=serial,ttyAMA0" \
-
-#	-d int,guest_errors,exec -D log \
-#

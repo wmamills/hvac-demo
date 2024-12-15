@@ -11,7 +11,6 @@ ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
-#set -x
 OPT_MODE_NAME="QEMU_$MODE[@]"
 
 ${QEMU} \

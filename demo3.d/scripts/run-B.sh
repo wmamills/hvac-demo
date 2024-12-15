@@ -10,8 +10,6 @@ MY_DIR=$(dirname $ME_ABS)
 echo "Waiting for cortex-m to start first (so it gets VMID 0)"
 sleep 2
 
-#set -x
-
 ROOT="/dev/vda2"
 
 ${QEMU} \

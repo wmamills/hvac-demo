@@ -1,24 +1,18 @@
 # to be sourced, not run
 
-# if we are run by multi-qemu these should be set already
-# if not set some defaults
-: ${TEST_DIR:=$(cd $MY_DIR/.. ; pwd)}
-: ${BASE_DIR:=$(cd $MY_DIR/../.. ; pwd)}}
-: ${LOGS:=$BASE_DIR/logs}
-: ${TMPDIR:=.}
-: ${IMAGES:=$BASE_DIR/images}
-: ${BUILD:=$BASE_DIR/build}
-
-FETCH=$BASE_DIR/scripts/maybe-fetch
-HOST_ARCH=$(uname -m )
+# include the demo common settings and functions
+. $MY_DIR/../../scripts/demo-common.sh
 
 QEMU_DIR=host/${HOST_ARCH}/qemu-msg
 QEMU=$IMAGES/$QEMU_DIR/bin/qemu-system-aarch64
 IVSHMEM_SERVER=$IMAGES/$QEMU_DIR/bin/ivshmem-server
 
 KERNEL1=target/aarch64/linux-upstream-Image
+DISK1=demo4-A
 KERNEL2=target/aarch64/linux-virtio-msg-Image
 INITRD2=demo4-rootfs.cpio.gz
+
+DISK_TARGETS[$INITRD2]=disk_demo4
 
 QEMU_BASE=(
 -machine virt,gic_version=3,iommu=smmuv3

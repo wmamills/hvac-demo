@@ -5,15 +5,5 @@ ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
-# cleam up the memory files
-rm -f ./qemu-xen-vm?-ram
-
-kill $(cat shm.pid)
-rm -f shm.pid
-rm -f shm.sock
-
-if [ -r $LOGS/net.pcap ]; then
-    tcpdump -r $LOGS/net.pcap
-fi
-grep "^\*\*\*\*\* TEST" $LOGS/cortex-m-log.txt
-grep "^\*\*\*\*\* TEST" $LOGS/cortex-a-log.txt
+common_cleanup
+print_results cortex-m cortex-a
