@@ -5,6 +5,5 @@ ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
-#set -x
-
 $FETCH --image $QEMU_DIR $KERNEL
+$CHK_BUILD $ROOTFS

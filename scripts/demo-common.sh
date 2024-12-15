@@ -54,12 +54,15 @@ copy_debian_disk() {
 
 common_cleanup() {
 	# clean up the memory files
+	rm -f ./qemu-xen-vm?-ram ./qemu-vm?-ram ./qemu-ram* || true
 	rm -f ./qemu-xen-vm?-ram ./qemu-vm?-ram || true
 
 	# kill and cleanup any shared memory server
 	for f in shm*.pid; do
-		kill $(cat shm.pid) || true
-		rm -f shm.pid || true
+		if [ -e $f ]; then
+			kill $(cat shm.pid) || true
+			rm -f shm.pid || true
+		fi
 	done
 	rm -f shm*.sock || true
 }

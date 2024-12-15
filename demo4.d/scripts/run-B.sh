@@ -10,8 +10,6 @@ MY_DIR=$(dirname $ME_ABS)
 echo "Waiting for device side to start first (so it gets VMID 0)"
 sleep 2
 
-#set -x
-
 ${QEMU} \
 	-machine virt,gic_version=3 \
 	-machine virtualization=true \

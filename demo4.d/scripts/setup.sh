@@ -5,8 +5,6 @@ ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
-#set -x
-
 $FETCH --image $KERNEL1 $KERNEL2 $QEMU_DIR
 $CHK_BUILD $INITRD2
 copy_debian_disk demo4-A
