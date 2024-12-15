@@ -151,6 +151,7 @@ kill_qemu() {
 ###### Windows and main
 
 cleanup() {
+    echo "** clean-up"
     MY_TMPDIR=$(dirname $TMPDIR)
     if [ -e $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER ]; then
         echo "cleaning our private tmp dir"
@@ -162,7 +163,20 @@ cleanup() {
 
     if [ -n "$CLEANUP_SCRIPT" ]; then
         echo "running $CLEANUP_SCRIPT"
-        $BASE_DIR/$CLEANUP_SCRIPT
+        if ! $BASE_DIR/$CLEANUP_SCRIPT; then
+            echo "$BASE_DIR/$CLEANUP_SCRIPT failed"
+        fi
+    fi
+
+    # debug help for error exit of qemu
+    for (( i = 0; i < $NUM_QEMU; i++ )); do
+        qemu_debug_help $i
+    done
+
+    echo "LOGS=$LOGS"
+    ln -sfT $(basename $LOGS) $(dirname $LOGS)/latest
+    if [ -r $TOTALS ]; then
+        cat $TOTALS
     fi
 }
 
@@ -190,10 +204,13 @@ do_host_demo() {
     tmux kill-win
 }
 
+# for test mode, each qemu exit does nothing and the host pane is expected to
+# take action
 qemu_done_test() {
     true
 }
 
+# for demo mode, any qemu exit kills the whole tmux session
 qemu_done_demo() {
     tmux kill-win
 }
@@ -210,9 +227,24 @@ do_qemu() {
 
     QEMU_TMUX=no $BASE_DIR/${QEMU_BOOT_SCRIPT[$IDX]} ${QEMU_BOOT_ARG[$IDX]} \
         "${SUB_ARGS[@]}"
+    echo $? >$LOGS/$NAME-rc.txt
 
     #echo "QEMU finsihed"; bash
     qemu_done_$MODE
+}
+
+qemu_debug_help() {
+    IDX=${1:-0}; shift 1
+
+    NAME=${QEMU_SSH_NAME[$IDX]}
+
+    if [ -e $LOGS/$NAME-rc.txt ]; then
+        RC=$(cat $LOGS/$NAME-rc.txt)
+        if [ $RC -ne 0 ]; then
+            echo "****** Error exit from $NAME, tail of $LOGS/$NAME-log.txt"
+            tail -n 25 $LOGS/$NAME-log.txt
+        fi
+    fi
 }
 
 mk_env() {
@@ -297,7 +329,11 @@ main() {
 
     if [ -n "$SETUP_SCRIPT" ]; then
         echo "running $SETUP_SCRIPT"
-        $BASE_DIR/$SETUP_SCRIPT
+        if ! $BASE_DIR/$SETUP_SCRIPT; then
+            echo "$BASE_DIR/$SETUP_SCRIPT script failed"
+            cleanup
+            exit 2
+        fi
     fi
 
     start_tmux_$MODE
@@ -305,9 +341,6 @@ main() {
     # if finished or killed (but not detached)
     if ! tmux has -t$SESS >/dev/null 2>&1; then
         cleanup
-        echo "LOGS=$LOGS"
-        ln -sfT $(basename $LOGS) $(dirname $LOGS)/latest
-        cat $TOTALS
     fi
 }
 
