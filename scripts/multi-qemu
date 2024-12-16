@@ -275,6 +275,10 @@ TESTS=( ${TESTS[@]} )
 SUB_ARGS=( ${SUB_ARGS[@]} )
 
 EOF
+
+    if [ -n "$DEBUG" ]; then
+        echo "DEBUG=\"$DEBUG\"" >>$ENV_FILE
+    fi
 }
 
 start_tmux_demo() {
