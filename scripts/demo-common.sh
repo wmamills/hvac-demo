@@ -1,5 +1,10 @@
 # to be sourced, not run
 
+# turn on command tracing if the DEBUG environment is set
+if [ -n "$DEBUG" ]; then
+	set -x
+fi
+
 # if we are run by multi-qemu these should be set already
 # if not set some defaults
 : ${TEST_DIR:=$(cd $MY_DIR/.. ; pwd)}
