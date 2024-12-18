@@ -14,7 +14,7 @@ fi
 : ${IMAGES:=$BASE_DIR/images}
 : ${BUILD:=$BASE_DIR/build}
 
-FETCH=$BASE_DIR/scripts/maybe-fetch
+FETCH=my_fetch
 CHK_BUILD=check_build_disk
 HOST_ARCH=$(uname -m )
 
@@ -28,7 +28,18 @@ error() {
 	exit 2
 }
 
+check_distro() {
+	$BASE_DIR/scripts/prj_script.sh check_distro run || exit 2
+}
+
+my_fetch() {
+	check_distro
+	$BASE_DIR/scripts/maybe-fetch "$@"
+}
+
 check_build_disk() {
+	check_distro
+
 	for f in $@; do
 		if [ ! -e ${BUILD}/${f} ]; then
 			BUILD_TARGET=${DISK_TARGETS[$f]}
@@ -48,6 +59,8 @@ check_build_disk() {
 }
 
 copy_debian_disk() {
+	check_distro
+
 	check_build_disk disk.qcow2
 	for NAME in $@; do
 		if [ ! -e ${BUILD}/${NAME}-disk.qcow2 ]; then

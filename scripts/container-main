@@ -6,6 +6,10 @@ NAME=hvac-demo
 ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
 
+check_distro() {
+	$MY_DIR/prj_script.sh check_distro $1 || exit 2
+}
+
 # This is a poorman's dockit function
 # do distro setup like dockit would before admin_setup
 distro_setup() {
@@ -13,6 +17,7 @@ distro_setup() {
 		return
 	fi
 
+	check_distro run
 	apt-get -qq update
 	apt-get install -qqy sudo
 	if id $MY_UID >/dev/null 2>&1; then
