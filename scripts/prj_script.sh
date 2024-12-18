@@ -5,7 +5,90 @@ MY_DIR=$(cd $(dirname $0); pwd)
 # exit on error
 set -e
 
+error() {
+	echo "ERROR: " "$@"
+	exit 2
+}
+
+first_word() {
+	echo $1
+}
+
+get_distro_type() {
+	HOST_ARCH=$(uname -m )
+
+	if [ -f /etc/os-release ]; then
+		. /etc/os-release
+		TYPE=${ID_LIKE:-$ID}
+		TYPE=$(first_word $TYPE)
+		VERSION_MAJOR=${VERSION_ID%%.*}
+	else
+		TYPE="unknown"
+		VERSION_MAJOR=0
+	fi
+}
+
+check_distro_run() {
+	get_distro_type
+
+	case $HOST_ARCH in
+	x86_64)
+		true
+		;;
+	*)
+		error "Host architecture $HOST_ARCH not supported for demo runs"
+		;;
+	esac
+
+	case ${ID}-${VERSION_CODENAME} in
+	debian-bookworm)
+		true
+		;;
+	*)
+		error "Distro $ID $VERSION_CODENAME, not supported for demo runs"
+		;;
+	esac
+}
+
+check_distro_build() {
+	get_distro_type
+
+	case $HOST_ARCH in
+	x86_64)
+		true
+		;;
+	*)
+		error "Host architecture $HOST_ARCH not supported for building"
+		;;
+	esac
+
+	case ${ID}-${VERSION_CODENAME} in
+	debian-bookworm)
+		true
+		;;
+	*)
+		error "Distro $ID $VERSION_CODENAME, not supported for building"
+		;;
+	esac
+}
+
+check_distro() {
+	case "$1" in
+	"run")
+		check_distro_run
+		;;
+	""|"build")
+		check_distro_build
+		;;
+	*)
+		error "Unknown check_distro type $1"
+		;;
+	esac
+}
+
 admin_setup() {
+	check_distro build
+
 	dpkg --add-architecture arm64
 	apt-get update -qq
 	# for xen (basic) and kernel build
@@ -40,6 +123,8 @@ prj_setup() {
 }
 
 prj_build() {
+	check_distro build
+
 	items=("$@")
 	if [ -z "${items[0]}" ]; then
 		items=( "all" )
@@ -106,7 +191,7 @@ build_clean_src_all() {
 CMD=${1//-/_}; shift
 
 case $CMD in
-admin_setup|prj_setup|prj_build)
+admin_setup|prj_setup|prj_build|check_distro)
 	$CMD "$@"
 	;;
 build_*)
