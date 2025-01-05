@@ -14,6 +14,7 @@ build_qemu_host() {
 build_qemu_cross() {
 	(build_qemu_upstream_arm64)
 	(build_qemu_msg_arm64)
+	(build_qemu_ffa_arm64)
 }
 
 # build all qemus
@@ -122,6 +123,22 @@ build_qemu_upstream_arm64() {
 	TARGETS="aarch64-softmmu,i386-softmmu"
 	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-werror --enable-xen"
 	qemu_common_cross qemu-upstream-arm64
+}
+
+build_qemu_ffa_arm64() {
+	echo "****** Build qemu w/ xen-ffa arm64 (target side for device model)"
+	XEN_DEB=xen-ffa.deb
+
+	# use the same as virtio-msg
+	URL=https://github.com/qemu/qemu.git
+	COMMIT=""
+	TAG="v9.1.0"
+	PATCH=""
+
+	# build for kvm and xen
+	TARGETS="aarch64-softmmu,i386-softmmu"
+	EXTRA_CONFIG="--cross-prefix=aarch64-linux-gnu- --disable-werror --enable-xen"
+	qemu_common_cross qemu-ffa-arm64
 }
 
 # use same version on target and host

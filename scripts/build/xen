@@ -70,21 +70,26 @@ build_xen_virtio_msg() {
 	xen_common xen-virtio-msg
 }
 
-build_xen_orko() {
-	URL=https://github.com/vireshk/xen
-	BRANCH=master
-	COMMIT="35f3afc42910c7cc6d7cd7083eb0bbdc7b4da406"
-	EXTRA_CONFIG=""
-	xen_common xen-orko
+build_xen_ffa() {
+	URL=https://gitlab.com/xen-project/people/bmarquis/xen-ffa-research/
+	BRANCH=ffa-virtio/vm-to-vm
+	COMMIT="2770c186f551d85bef4a4df311aa91c9d5083cd1"
+	EXTRA_CONFIG=""\
+"CONFIG_IOREQ_SERVER=y\n"\
+"CONFIG_EXPERT=y\n"\
+"CONFIG_TESTS=y\n"\
+"CONFIG_TEE=y\n"\
+"CONFIG_UNSUPPORTED=y\n"\
+"CONFIG_FFA=y\n"\
+"CONFIG_FFA_VM_TO_VM=y\n"
+	xen_common xen-ffa
 }
 
 # fallback target to build all xen versions
 build_xen() {
 	(build_xen_upstream)
 	(build_xen_virtio_msg)
-
-	# don't build this by default, we no longer need it
-	# (build_xen_orko)
+	(build_xen_ffa)
 }
 
 main "$@"
