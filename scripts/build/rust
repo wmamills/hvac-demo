@@ -15,12 +15,13 @@ build_xen_vhost_frontend() {
 	mkdir -p build
 	if [ ! -d src/xen-vhost-frontend ]; then
 		mkdir -p src; cd src
-		#git clone https://github.com/vireshk/xen-vhost-frontend
-		git clone https://github.com/wmamills/xen-vhost-frontend
+		git clone https://github.com/vireshk/xen-vhost-frontend
+		#git clone https://github.com/wmamills/xen-vhost-frontend
 		cd xen-vhost-frontend
-		git checkout virtio-msg-v1
-		#git reset --hard de22910cf2d8ff088d7d560b73d93f9121c832cf
+		git checkout virtio-msg
+		git reset --hard c2ceaeea8f7fa32c37447cc87d2b133783da6d94
 
+if false; then
 		# Xen 4.19 support pending in PR #1
 		# https://github.com/mathieupoirier/xen-sys/pull/1
 		# https://github.com/epilys/xen-sys/commits/feature/add-domctl-interface-version-features/
@@ -28,6 +29,7 @@ build_xen_vhost_frontend() {
 '{ git = "https://github.com/mathieupoirier/xen-sys" }#'\
 '{ git = "https://github.com/epilys/xen-sys.git", rev = "e711d67ff3a77df88a92f1f1b45bfd6ec59b3190" }#'\
 		    Cargo.toml
+fi
 	else
 		cd src/xen-vhost-frontend
 	fi
@@ -47,7 +49,7 @@ build_vhost_device() {
 		mkdir -p src; cd src
 		git clone https://github.com/rust-vmm/vhost-device
 		cd vhost-device
-		#git reset --hard 079d9024be604135ca2016e2bc63e55c013bea39
+		git reset --hard 079d9024be604135ca2016e2bc63e55c013bea39
 	else
 		cd src/vhost-device
 	fi

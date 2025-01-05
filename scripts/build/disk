@@ -119,9 +119,9 @@ debian_mixins_common() {
 }
 
 build_disk_demo1_guest() {
-	$FETCH --image target/aarch64/linux-virtio-msg-v1-modules.tar.gz
+	$FETCH --image target/aarch64/linux-virtio-msg-ffa-modules.tar.gz
 	buildroot_mixins_common demo1 demo1.d/mixins/qemu1-guest \
-		images/target/aarch64/linux-virtio-msg-v1-modules.tar.gz
+		images/target/aarch64/linux-virtio-msg-ffa-modules.tar.gz
 }
 
 build_disk_demo2a() {
@@ -168,23 +168,30 @@ build_disk_debian() {
 	# now make a copy of the (expanded) template
 	cp images/disk/$BIG_DISK build/disk.qcow2
 
-	# fetch anything not already built
+	# fetch anything not already built, OS generic
+	# we only need to fetch things that will go into the disk
+	# things that are directly booted will be fetched by the demo that uses
+	# them
 	for f in \
 		linux-upstream-modules.tar.gz \
 		linux-virtio-msg-modules.tar.gz \
+		linux-virtio-msg-ffa-modules.tar.gz \
 		linux-upstream-Image \
 		linux-virtio-msg-Image \
-		linux-virtio-msg-v1-Image ; do
+		linux-virtio-msg-ffa-Image ; do
 		$FETCH --image target/aarch64/$f
 	done
 
+	# fetch anything not already built, debian
 	for f in \
 		qemu-upstream-arm64.tar.gz \
 		qemu-msg-arm64.tar.gz \
+		qemu-ffa-arm64.tar.gz \
 		vhost-device-i2c \
 		xen-vhost-frontend \
 		xen-upstream.deb \
 		xen-virtio-msg.deb \
+		xen-ffa.deb \
 		devmem2	\
 		uio_ivshmem_test; do
 		$FETCH --image target/aarch64/debian-12/$f
@@ -197,22 +204,26 @@ run
 mount /dev/sda2 /
 mkdir /opt/qemu-upstream
 mkdir /opt/qemu-msg
+mkdir /opt/qemu-ffa
 tar-in images/target/aarch64/linux-upstream-modules.tar.gz / compress:gzip
 tar-in images/target/aarch64/linux-virtio-msg-modules.tar.gz / compress:gzip
+tar-in images/target/aarch64/linux-virtio-msg-ffa-modules.tar.gz / compress:gzip
 tar-in images/target/aarch64/debian-12/qemu-upstream-arm64.tar.gz /opt/qemu-upstream compress:gzip
 tar-in images/target/aarch64/debian-12/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
+tar-in images/target/aarch64/debian-12/qemu-ffa-arm64.tar.gz /opt/qemu-ffa compress:gzip
 tar-in build/mixins-debian.tar.gz / compress:gzip
 upload images/target/aarch64/debian-12/vhost-device-i2c /root/vhost-device-i2c
 upload images/target/aarch64/debian-12/xen-vhost-frontend /root/xen-vhost-frontend
 upload images/target/aarch64/debian-12/xen-upstream.deb /root/xen-upstream.deb
 upload images/target/aarch64/debian-12/xen-virtio-msg.deb /root/xen-virtio-msg.deb
+upload images/target/aarch64/debian-12/xen-ffa.deb /root/xen-ffa.deb
 upload images/target/aarch64/debian-12/devmem2 /root/devmem2
 upload images/target/aarch64/debian-12/uio_ivshmem_test /root/uio_ivshmem_test
 upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
 upload images/target/aarch64/linux-virtio-msg-Image /root/linux-virtio-msg-Image
-upload images/target/aarch64/linux-virtio-msg-v1-Image /root/linux-virtio-msg-v1-Image
+upload images/target/aarch64/linux-virtio-msg-ffa-Image /root/linux-virtio-msg-ffa-Image
 upload images/target/aarch64/linux-upstream-Image /root/linux-upstream-Image
 EOF
 }

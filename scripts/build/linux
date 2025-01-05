@@ -73,12 +73,20 @@ build_linux_virtio_msg() {
 	linux_common linux-virtio-msg
 }
 
-# this one should go away when the message formats align
-build_linux_virtio_msg_v1() {
+# this one should go away when demo4 is rebased
+build_linux_virtio_msg_ffa() {
 	linux_virtio_common
-	BRANCH=""
-	TAG="hvac-demo1-v1"
-	linux_common linux-virtio-msg-v1
+	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+	BRANCH="virtio/msg-xen"
+	# commit w/ viresh's initramfs
+	# COMMIT="023d0cfab7c7c6f523608e9f19c64b6456576729"
+	# commit w/ viresh's defconfig changes but no initramfs
+	COMMIT="486241d2eac48b618be17582910104af06e82a30"
+	CONFIG="defconfig"
+	EXTRA_CONFIG=""
+	# commit w/ viresh's code but zero defconfig changes
+	#COMMIT="8b6595f7443cb9779b83f8409453ce36c662996b"
+	linux_common linux-virtio-msg-ffa
 }
 
 build_linux_upstream() {
@@ -104,7 +112,7 @@ build_linux_ivshmem_uio() {
 
 build_linux() {
 	(build_linux_virtio_msg)
-	(build_linux_virtio_msg_v1)
+	(build_linux_virtio_msg_ffa)
 	(build_linux_upstream)
 
 	# we use virtio_msg for this now

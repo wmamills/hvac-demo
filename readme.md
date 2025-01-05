@@ -9,7 +9,7 @@ Currently there are a few demos here but there will be more over time.
 
 | Name       | Description                                               |
 |------------|-----------------------------------------------------------|
-| [demo1](demo1.readme.md)  | Early virtio-msg kernel prototype          |
+| [demo1](demo1.readme.md)  | virtio-msg-ffa kernel prototype with Xen   |
 | [demo2](demo2.readme.md)  | QEMU with virtio-msg-proxy                 |
 | demo2a     | dual QEMU with Linux user-space connection                |
 | demo2b     | dual QEMU machines connected via two ivshmem pcie devices |
