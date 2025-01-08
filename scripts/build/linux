@@ -83,6 +83,7 @@ build_linux_virtio_msg_ffa() {
 	# commit w/ viresh's defconfig changes but no initramfs
 	COMMIT="856f4e35eff8ab297eedf838ee70e14df814a63b"
 	CONFIG="defconfig"
+	#EXTRA_CONFIG="no-dma-ops.config"
 	EXTRA_CONFIG=""
 	# commit w/ viresh's code but zero defconfig changes
 	#COMMIT="eeb516b71fe41d7efbef8d8642234c7705eb2b7c"
