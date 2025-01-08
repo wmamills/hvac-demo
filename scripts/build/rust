@@ -49,7 +49,7 @@ build_vhost_device() {
 		mkdir -p src; cd src
 		git clone https://github.com/rust-vmm/vhost-device
 		cd vhost-device
-		#git reset --hard 079d9024be604135ca2016e2bc63e55c013bea39
+		git reset --hard 079d9024be604135ca2016e2bc63e55c013bea39
 	else
 		cd src/vhost-device
 	fi
