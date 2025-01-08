@@ -8,7 +8,7 @@ MY_DIR=$(dirname $ME_ABS)
 BOOTARGS="root=/dev/sda2 console=hvc0 earlyprintk=xen autorun=./demo1/demo1.sh"
 
 ${QEMU} \
-  -machine virt,virtualization=on -cpu cortex-a57 -serial mon:stdio \
+  -machine virt,virtualization=on,gic-version=3 -cpu cortex-a57 -serial mon:stdio \
   -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::8022-:22 \
   -drive file=${BUILD}/demo1-disk.qcow2,id=hd0,if=none,format=qcow2 \
   -device virtio-scsi-pci -device scsi-hd,drive=hd0 \
