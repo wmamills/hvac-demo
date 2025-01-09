@@ -44,6 +44,9 @@ check_distro_run() {
 	debian-bookworm)
 		true
 		;;
+	ubuntu-focal)
+		true
+		;;
 	*)
 		error "Distro $ID $VERSION_CODENAME, not supported for demo runs"
 		;;
@@ -66,6 +69,10 @@ check_distro_build() {
 	debian-bookworm)
 		true
 		;;
+	ubuntu-focal)
+		echo "Warning: Ubuntu 20.04 (focal) not supported for target user-space"
+		true
+		;;
 	*)
 		error "Distro $ID $VERSION_CODENAME, not supported for building"
 		;;
@@ -86,11 +93,55 @@ check_distro() {
 	esac
 }
 
+ubuntu_url() {
+	case $1 in
+	amd64|i386)
+		URL=http://archive.ubuntu.com/ubuntu/
+		;;
+	arm64|armhf|ppc64el|riscv64|s390x)
+		URL=http://ports.ubuntu.com/
+		;;
+	*)
+		echo Unknown Ubuntu ARCH $1
+		exit 2
+		;;
+	esac
+}
+
+setup_arch() {
+	NEW_ARCH=$1
+
+	case ${ID}-${VERSION_CODENAME} in
+	debian-bookworm)
+		true
+		;;
+	ubuntu-focal)
+		ubuntu_url $NEW_ARCH
+		# the default sources list does not have arch qualifiers
+		# don't use it
+		if [ -e /etc/apt/sources.list ]; then
+			mv /etc/apt/sources.list /etc/apt/sources.list.orig
+		fi
+		cat >/etc/apt/sources.list.d/setup-$NEW_ARCH.list <<EOF
+deb [arch=$NEW_ARCH] $URL ${VERSION_CODENAME} main multiverse universe
+deb [arch=$NEW_ARCH] $URL ${VERSION_CODENAME}-security main multiverse universe
+deb [arch=$NEW_ARCH] $URL ${VERSION_CODENAME}-backports main multiverse universe
+deb [arch=$NEW_ARCH] $URL ${VERSION_CODENAME}-updates main multiverse universe
+EOF
+		;;
+	esac
+
+	dpkg --add-architecture $NEW_ARCH
+}
+
 admin_setup() {
+	set -x
 	check_distro build
 
-	dpkg --add-architecture arm64
-	apt-get update -qq
+	setup_arch amd64
+	setup_arch arm64
+
+	apt-get update -qq || true
 	# for xen (basic) and kernel build
 	apt-get install -yqq build-essential git git-lfs bison flex wget curl pv \
 	    bc libssl-dev libncurses-dev kmod python3 python3-setuptools iasl
