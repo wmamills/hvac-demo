@@ -12,7 +12,7 @@ ${QEMU} \
   -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::8022-:22 \
   -drive file=${BUILD}/demo1-disk.qcow2,id=hd0,if=none,format=qcow2 \
   -device virtio-scsi-pci -device scsi-hd,drive=hd0 \
-  -display none -m 1024 -smp 2 -kernel ${IMAGES}/${XEN} \
-  -append "dom0_mem=512M,max:512M dom0_max_vcpus=1 loglvl=all guest_loglvl=all" \
+  -display none -m 1280 -smp 3 -kernel ${IMAGES}/${XEN} \
+  -append "dom0_mem=512M,max:512M dom0_max_vcpus=2 loglvl=all guest_loglvl=all" \
   -device guest-loader,addr=0x49000000,kernel=${IMAGES}/${KERNEL},bootargs="$BOOTARGS" \
   -device ds1338,address=0x20
