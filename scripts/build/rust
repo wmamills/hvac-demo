@@ -19,7 +19,7 @@ build_xen_vhost_frontend() {
 		#git clone https://github.com/wmamills/xen-vhost-frontend
 		cd xen-vhost-frontend
 		git checkout virtio-msg
-		git reset --hard 70d0822935900dd75c384a4cb89a73edd4d91ff9
+		git reset --hard c2ceaeea8f7fa32c37447cc87d2b133783da6d94
 
 if false; then
 		# Xen 4.19 support pending in PR #1
