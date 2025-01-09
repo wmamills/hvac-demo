@@ -79,14 +79,13 @@ build_linux_virtio_msg_ffa() {
 	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
 	BRANCH="virtio/msg-xen"
 	# commit w/ viresh's initramfs
-	# COMMIT="ee30c003667d1a0890e7a0c45595feccbda8c410"
+	# COMMIT="023d0cfab7c7c6f523608e9f19c64b6456576729"
 	# commit w/ viresh's defconfig changes but no initramfs
-	COMMIT="856f4e35eff8ab297eedf838ee70e14df814a63b"
+	COMMIT="486241d2eac48b618be17582910104af06e82a30"
 	CONFIG="defconfig"
-	#EXTRA_CONFIG="no-dma-ops.config"
 	EXTRA_CONFIG=""
 	# commit w/ viresh's code but zero defconfig changes
-	#COMMIT="eeb516b71fe41d7efbef8d8642234c7705eb2b7c"
+	#COMMIT="8b6595f7443cb9779b83f8409453ce36c662996b"
 	linux_common linux-virtio-msg-ffa
 }
 
