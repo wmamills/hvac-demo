@@ -24,6 +24,7 @@ get_distro_type() {
 		VERSION_MAJOR=${VERSION_ID%%.*}
 	else
 		TYPE="unknown"
+		ID="unknown"
 		VERSION_MAJOR=0
 	fi
 }
@@ -157,8 +158,17 @@ admin_setup() {
 	    libpixman-1-dev:arm64 libslirp-dev:arm64
 
 	# guestfish support, it also needs a readable kernel in /boot
-	apt-get install -yqq --no-install-recommends \
-		guestfish linux-image-amd64 guestfs-tools
+	# different between debian and ubuntu
+	case ${ID}-${VERSION_CODENAME} in
+	debian-*)
+		apt-get install -yqq --no-install-recommends \
+			guestfish linux-image-amd64 guestfs-tools
+		;;
+	ubuntu-*)
+		apt-get install -yqq --no-install-recommends \
+			libguestfs-tools linux-image-generic initramfs-tools
+		;;
+	esac
 	chmod +r /boot/*
 
 	# for demos and because we are not savages forced to use vi
