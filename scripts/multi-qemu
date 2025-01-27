@@ -46,7 +46,7 @@ QEMU_BOOT_ARG[0]="xen"
 CLEANUP_SCRIPT=""
 SETUP_SCRIPT=""
 
-SESSION_NAME=$MY_NAME
+SESSION_NAME=${MY_NAME}-${NOW}-${RANDOM}
 
 error() {
     echo "$@"
@@ -286,13 +286,12 @@ start_tmux_demo() {
     echo "" >$TOTALS
 
     tmux start-server
-    tmux new-session -d -s QEMU -n $QEMU_WIN_NAME -d "$ME subcmd host_$MODE"
-    SESS="QEMU"
-    tmux set -s -t $SESS mouse on
+    tmux new-session -d -s $SESSION_NAME -n $QEMU_WIN_NAME -d "$ME subcmd host_$MODE"
+    tmux set -s -t $SESSION_NAME mouse on
 
-    tmux set -w -t $SESS:$QEMU_WIN_NAME pane-border-status top
+    tmux set -w -t $SESSION_NAME:$QEMU_WIN_NAME pane-border-status top
 
-    tmux attach -t$SESS:$QEMU_WIN_NAME
+    tmux attach -t$SESSION_NAME:$QEMU_WIN_NAME
 }
 
 # main starts things up and then waits for tmux to finish or detach
@@ -343,7 +342,7 @@ main() {
     start_tmux_$MODE
 
     # if finished or killed (but not detached)
-    if ! tmux has -t$SESS >/dev/null 2>&1; then
+    if ! tmux has -t$SESSION_NAME >/dev/null 2>&1; then
         cleanup
     fi
 }
