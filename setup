@@ -2,8 +2,9 @@
 
 set -e
 
-ME_ABS=$(readlink -f $0)
-MY_DIR=$(dirname $ME_ABS)
+MY_DIR=$(dirname $0)
+cd $MY_DIR
+
 echo "will need sudo for admin_setup"
-sudo $MY_DIR/scripts/prj_script.sh admin_setup
-$MY_DIR/scripts/prj_script.sh prj_setup
+sudo ./scripts/prj_script.sh admin_setup
+./scripts/prj_script.sh prj_setup

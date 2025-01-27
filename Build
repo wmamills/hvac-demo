@@ -1,5 +1,6 @@
 #!/bin/bash
 
-ME_ABS=$(readlink -f $0)
-MY_DIR=$(dirname $ME_ABS)
-$MY_DIR/scripts/prj_script.sh prj_build "$@"
+MY_DIR=$(dirname $0)
+cd $MY_DIR
+
+./scripts/prj_script.sh prj_build "$@"
