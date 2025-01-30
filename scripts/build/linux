@@ -76,16 +76,18 @@ build_linux_virtio_msg() {
 # this one should go away when demo4 is rebased
 build_linux_virtio_msg_ffa() {
 	linux_virtio_common
-	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-	BRANCH="virtio/msg-xen"
+	#URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+	#BRANCH="virtio/msg-xen"
 	# commit w/ viresh's initramfs
 	# COMMIT="023d0cfab7c7c6f523608e9f19c64b6456576729"
 	# commit w/ viresh's defconfig changes but no initramfs
-	COMMIT="486241d2eac48b618be17582910104af06e82a30"
+	# COMMIT="486241d2eac48b618be17582910104af06e82a30"
+	# commit w/ viresh's code but zero defconfig changes
+	# COMMIT="8b6595f7443cb9779b83f8409453ce36c662996b"
+	BRANCH=""
+	TAG="hvac-demo1-v2.1"
 	CONFIG="defconfig"
 	EXTRA_CONFIG=""
-	# commit w/ viresh's code but zero defconfig changes
-	#COMMIT="8b6595f7443cb9779b83f8409453ce36c662996b"
 	linux_common linux-virtio-msg-ffa
 }
 
