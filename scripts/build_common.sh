@@ -36,6 +36,8 @@ worktree_common() {
 		if [ -n "$BRANCH" ]; then
 			git worktree add ../../src/$FULLNAME $NAME/$BRANCH
 		elif [ -n "$TAG" ]; then
+			# make sure we have the tag
+			git fetch $NAME +refs/tags/$TAG:refs/tags/$TAG
 			git worktree add ../../src/$FULLNAME $TAG
 		else
 			echo "for $NAME, must define BRANCH or TAG"
