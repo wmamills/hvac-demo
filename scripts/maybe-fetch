@@ -55,7 +55,8 @@ check_template() {
         fi
     fi
     # make sure we have the real lfs file, not just the reference
-    (cd $S; git lfs pull --include $1)
+    # (Delete any leading ./ otherwise it work work)
+    (cd $S; git lfs pull --include ${1/\.\//})
 }
 
 # we are saving, check that target exists, the template exists if it should
