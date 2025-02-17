@@ -32,7 +32,7 @@ check_distro_run() {
 	get_distro_type
 
 	case $HOST_ARCH in
-	x86_64)
+	x86_64|aarch64)
 		true
 		;;
 	*)
@@ -54,7 +54,7 @@ check_distro_build() {
 	get_distro_type
 
 	case $HOST_ARCH in
-	x86_64)
+	x86_64|aarch64)
 		true
 		;;
 	*)
@@ -68,6 +68,20 @@ check_distro_build() {
 		;;
 	*)
 		error "Distro $ID $VERSION_CODENAME, not supported for building"
+		;;
+	esac
+
+	case ${HOST_ARCH}-${ID}-${VERSION_CODENAME} in
+	x86_64-debian-bookworm)
+		KERNEL=linux-image-amd64
+		;;
+	aarch64-debian-bookworm)
+		KERNEL=linux-image-arm64
+		;;
+	*)
+		KERNEL=""
+		error "Internal error $HOST_ARCH $ID $VERSION_CODENAME" \
+			"not covered in kernel name case"
 		;;
 	esac
 }
@@ -107,7 +121,7 @@ admin_setup() {
 
 	# guestfish support, it also needs a readable kernel in /boot
 	apt-get install -yqq --no-install-recommends \
-		guestfish linux-image-amd64 guestfs-tools
+		guestfish $KERNEL guestfs-tools
 	chmod +r /boot/*
 
 	# for demos and because we are not savages forced to use vi
