@@ -13,42 +13,42 @@ export IMAGES=$BASE_DIR/images
 export BUILD=$BASE_DIR/build
 
 set_default_env() {
-MODE=demo
+    MODE=demo
 
-: ${NOW:=$(date +%Y-%m-%d-%H%M%S)}
-export NOW
-export LOGS=$BASE_DIR/logs/$NOW
-mkdir -p $LOGS
+    : ${NOW:=$(date +%Y-%m-%d-%H%M%S)}
+    export NOW
+    export LOGS=$BASE_DIR/logs/$NOW
+    mkdir -p $LOGS
 
-PID_FILE=$LOGS/qemu.pid
-LOG=$LOGS/test-log.txt
-TOTALS=$LOGS/totals.txt
+    PID_FILE=$LOGS/qemu.pid
+    LOG=$LOGS/test-log.txt
+    TOTALS=$LOGS/totals.txt
 
-TMP_MARKER=test-qemu-marker
+    TMP_MARKER=test-qemu-marker
 
-RUNS=2
-TRYS=2
+    RUNS=2
+    TRYS=2
 
-BOOT_WAIT=30
-SHUTDOWN_WAIT=30
-KILL_WAIT=10
+    BOOT_WAIT=30
+    SHUTDOWN_WAIT=30
+    KILL_WAIT=10
 
-TEST_WAIT=60
-SSH_FAIL_COUNT=5
-TRY_CONTINUE=true
+    TEST_WAIT=60
+    SSH_FAIL_COUNT=5
+    TRY_CONTINUE=true
 
-FILTER_TOTALS=true
+    FILTER_TOTALS=true
 
-NUM_QEMU=1
-QEMU_SSH_NAME[0]=qemu
-QEMU_BOOT_SCRIPT[0]="./demo1"
-QEMU_BOOT_ARG[0]="xen"
+    NUM_QEMU=1
+    QEMU_SSH_NAME[0]=qemu
+    QEMU_BOOT_SCRIPT[0]="./start-qemu.sh"
+    QEMU_BOOT_ARG[0]=""
 
-CLEANUP_SCRIPT=""
-SETUP_SCRIPT=""
+    CLEANUP_SCRIPT=""
+    SETUP_SCRIPT=""
 
-SESSION_NAME=${MY_NAME}-${NOW}-${RANDOM}
-TESTS=( )
+    SESSION_NAME=${MY_NAME}-${NOW}-${RANDOM}
+    TESTS=( )
 }
 
 error() {
