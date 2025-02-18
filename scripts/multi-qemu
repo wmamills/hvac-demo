@@ -295,13 +295,16 @@ start_tmux_demo() {
     touch $LOG
     echo "" >$TOTALS
 
-    tmux start-server
-    tmux new-session -d -s "$SESSION_NAME" -n "$QEMU_WIN_NAME" "$ME subcmd \"$ENV_FILE\" host_$MODE"
-    tmux set -s -t "$SESSION_NAME" mouse on
+    tmux -L multi-qemu -f /dev/null start-server
+    tmux -L multi-qemu new-session -d -s "$SESSION_NAME" -n "$QEMU_WIN_NAME" \
+        "$ME subcmd \"$ENV_FILE\" host_$MODE"
 
-    tmux set -w -t "$SESSION_NAME:$QEMU_WIN_NAME" pane-border-status top
+    tmux -L multi-qemu set -s -t "$SESSION_NAME" mouse on
+    tmux -L multi-qemu set -w -t "$SESSION_NAME:$QEMU_WIN_NAME" pane-border-status top
+    tmux -L multi-qemu attach -t "$SESSION_NAME:$QEMU_WIN_NAME"
 
-    tmux attach -t "$SESSION_NAME:$QEMU_WIN_NAME"
+    # Note: the tmux commands in tmux panes will find the right server via the
+    # TMUX environment variable it exports to them
 }
 
 # main starts things up and then waits for tmux to finish or detach
