@@ -12,6 +12,7 @@ export BASE_DIR=$(dirname $MY_DIR)
 export IMAGES=$BASE_DIR/images
 export BUILD=$BASE_DIR/build
 
+set_default_env() {
 MODE=demo
 
 : ${NOW:=$(date +%Y-%m-%d-%H%M%S)}
@@ -47,6 +48,8 @@ CLEANUP_SCRIPT=""
 SETUP_SCRIPT=""
 
 SESSION_NAME=${MY_NAME}-${NOW}-${RANDOM}
+TESTS=( )
+}
 
 error() {
     echo "$@"
@@ -182,7 +185,7 @@ cleanup() {
 
 start_qemus() {
     for (( i = 0; i < $NUM_QEMU; i++ )); do
-        tmux split-window -h "$ME subcmd qemu $i"
+        tmux split-window -h "$ME subcmd \"$ENV_FILE\" qemu $i"
     done
 
     # now put our host window small across the top,
@@ -248,8 +251,14 @@ qemu_debug_help() {
 }
 
 mk_env() {
-cat >$ENV_FILE <<EOF
+cat >"$ENV_FILE" <<EOF
 export TEST_DIR="$TEST_DIR"
+export NOW="$NOW"
+export LOGS="$LOGS"
+export LOG="$LOG"
+export TOTALS="$TOTALS"
+export PID_FILE="$PID_FILE"
+export MODE="$MODE"
 
 RUNS="$RUNS"
 TRYS="$TRYS"
@@ -264,6 +273,7 @@ QEMU_SSH_NAME="$QEMU_SSH_NAME"
 QEMU_BOOT_SCRIPT="$QEMU_BOOT_SCRIPT"
 QEMU_BOOT_ARG="$QEMU_BOOT_ARG"
 SESSION_NAME="$SESSION_NAME"
+QEMU_WIN_NAME="$QEMU_WIN_NAME"
 
 NUM_QEMU="$NUM_QEMU"
 QEMU_SSH_NAME=( ${QEMU_SSH_NAME[@]} )
@@ -277,7 +287,7 @@ SUB_ARGS=( ${SUB_ARGS[@]} )
 EOF
 
     if [ -n "$DEBUG" ]; then
-        echo "DEBUG=\"$DEBUG\"" >>$ENV_FILE
+        echo "DEBUG=\"$DEBUG\"" >>"$ENV_FILE"
     fi
 }
 
@@ -286,17 +296,17 @@ start_tmux_demo() {
     echo "" >$TOTALS
 
     tmux start-server
-    tmux new-session -d -s $SESSION_NAME -n $QEMU_WIN_NAME -d "$ME subcmd host_$MODE"
-    tmux set -s -t $SESSION_NAME mouse on
+    tmux new-session -d -s "$SESSION_NAME" -n "$QEMU_WIN_NAME" "$ME subcmd \"$ENV_FILE\" host_$MODE"
+    tmux set -s -t "$SESSION_NAME" mouse on
 
-    tmux set -w -t $SESSION_NAME:$QEMU_WIN_NAME pane-border-status top
+    tmux set -w -t "$SESSION_NAME:$QEMU_WIN_NAME" pane-border-status top
 
-    tmux attach -t$SESSION_NAME:$QEMU_WIN_NAME
+    tmux attach -t "$SESSION_NAME:$QEMU_WIN_NAME"
 }
 
 # main starts things up and then waits for tmux to finish or detach
 main() {
-    TESTS=( )
+    set_default_env
 
     if [ -n "$TMUX" ]; then
         echo "nested tmux not supported"
@@ -309,6 +319,8 @@ main() {
     else
         cd $1; shift
         TEST_DIR=$PWD
+        QEMU_WIN_NAME=$(basename $TEST_DIR)
+        QEMU_WIN_NAME=${QEMU_WIN_NAME%.d}
     fi
 
     if [ -e ./test-qemu-vars ]; then
@@ -318,9 +330,8 @@ main() {
     # save the rest of the arguments for the sub-processes
     SUB_ARGS=( "$@" )
 
-    export ENV_FILE=$LOGS/this-session-qemu-vars
+    export ENV_FILE="$LOGS/this-session-qemu-vars"
     mk_env
-    export TEST_QEMU_VARS=$ENV_FILE
 
     : ${TMPDIR:=/tmp}
     export MY_TMPDIR=$(mktemp -d -p $TMPDIR test-qemu-XXXXXXXX)
@@ -356,22 +367,11 @@ do_help_demo() {
     echo "This runs a host shell and one or more qemu instances in panes of a tmux session"
 }
 
-if [ -n "$TEST_QEMU_VARS" ]; then
-    . $TEST_QEMU_VARS
-fi
-
-case $MODE in
-test|demo)
-    true
-    ;;
-*)
-    echo "Unknown mode $MODE"
-    exit 2
-esac
-
 if [ x"$1" = x"subcmd" ]; then
-    CMD=$2
-    shift; shift;
+    ENV_FILE="$2"
+    CMD=$3
+    shift 3
+    . "$ENV_FILE"
     do_$CMD "$@"
 elif [ x"$1" = x"help" ]; then
     do_help_$MODE
