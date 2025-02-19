@@ -7,6 +7,7 @@ MY_DIR=$(dirname $ME_ABS)
 
 # all zephyr apps fetch as part of the zephyr dir
 $FETCH --image zephyr $KERNEL2 $QEMU_DIR
+$FETCH --template zephyr.tar.gz
 copy_debian_disk demo3
 
 # ivshmem-server detaches itself, just run it
