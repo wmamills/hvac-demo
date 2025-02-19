@@ -139,6 +139,19 @@ prj_setup() {
 prj_build() {
 	check_distro build
 
+	MODE_ARG=""
+	case $1 in
+	--fetch|--build)
+		MODE_ARG=$1
+		shift
+		;;
+	--*)
+		echo "Bad option $1"
+		exit 2
+		;;
+	esac
+
+
 	items=("$@")
 	if [ -z "${items[0]}" ]; then
 		items=( "all" )
@@ -154,18 +167,18 @@ prj_build() {
 			(build_${item})
 			;;
 		uio_ivshmem_test|devmem2)
-			$MY_DIR/build/util $item
+			$MY_DIR/build/util $MODE_ARG $item
 			;;
 		xen_vhost_frontend|vhost_device)
-			$MY_DIR/build/rust $item
+			$MY_DIR/build/rust $MODE_ARG $item
 			;;
 		*)
 			if [ -e $MY_DIR/build/$item ]; then
-				$MY_DIR/build/$item
+				$MY_DIR/build/$item $MODE_ARG
 			else
 				FIRST_PART=${item%%_*}
 				if [ -e $MY_DIR/build/$FIRST_ITEM ]; then
-					$MY_DIR/build/$FIRST_PART $item
+					$MY_DIR/build/$FIRST_PART $MODE_ARG $item
 				else
 					echo "Unknown build item $item"
 					exit 2
