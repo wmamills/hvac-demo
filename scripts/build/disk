@@ -235,4 +235,10 @@ build_disk() {
 	(build_disk_debian)
 }
 
+# disable kvm if there is no /dev/kvm device
+# This seems to happen automatically for x86_64 but not for arm64
+if [ ! -c /dev/kvm ]; then
+	export LIBGUESTFS_BACKEND_SETTINGS=force_tcg
+fi
+
 main "$@"
