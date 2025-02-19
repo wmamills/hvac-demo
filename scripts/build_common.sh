@@ -29,7 +29,7 @@ worktree_common() {
 	if [ ! -e src/$FULLNAME/.git ]; then
 		mkdir -p src/$FULLNAME
 		cd src-ref/$REF_NAME.git
-		git remote rm $NAME || true
+		git remote rm $NAME >/dev/null 2>&1 || true
 		git remote add $NAME $URL
 		git fetch $NAME
 		git worktree prune
