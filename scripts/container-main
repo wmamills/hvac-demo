@@ -13,11 +13,6 @@ check_distro() {
 # This is a poorman's dockit function
 # do distro setup like dockit would before admin_setup
 distro_setup() {
-	if [ -e /root/distro_setup.done ]; then
-		return
-	fi
-
-	check_distro run
 	apt-get -qq update
 	apt-get install -qqy sudo
 	if id $MY_UID >/dev/null 2>&1; then
@@ -31,8 +26,6 @@ distro_setup() {
 	usermod -a -G sudo_np $MY_USER
 	mkdir -p /etc/sudoers.d/
 	echo "%sudo_np ALL=(ALL:ALL) NOPASSWD:ALL" >/etc/sudoers.d/sudo_np
-
-	echo "done" >/root/distro_setup.done
 }
 
 # part of poorman's dockit
@@ -50,7 +43,7 @@ do_once() {
 	fi
 }
 
-# part of poorman's dockit
+# main function when container is built dynamically and using a mounted volume
 container_main() {
 	if [ "$EUID" -ne 0 ]; then
 		echo "Error: container-main must be run as root"
@@ -60,6 +53,8 @@ container_main() {
 		echo "Error: project directory not mounted at /prj"
 		exit 2
 	fi
+
+	check_distro run
 
 	cd /prj
 	MY_UID=$(stat --format="%u" /prj)
@@ -84,8 +79,37 @@ container_main() {
 	esac
 }
 
+# function to build the container from a Dockerfile
+container_build() {
+	MY_UID=1000
+	MY_GID=1000
+	MY_USER=user
+
+	do_once distro_setup distro_setup
+	do_once admin_setup $MY_DIR/prj_script.sh admin_setup
+	userjmp $THIS_SCRIPT do_once prj_setup $MY_DIR/prj_script.sh prj_setup
+	userjmp $THIS_SCRIPT do_once container_build_user container_build_user
+}
+
+# the part of container_build to be run as the user
+container_build_user() {
+	cd
+	git clone https://github.com/wmamills/hvac-demo.git
+	cd ~/hvac-demo
+
+	# prefetch images
+	./scripts/maybe-fetch host/$(uname -m)
+	./scripts/maybe-fetch target
+	./scripts/maybe-fetch zephyr.tar.gz
+	./scripts/maybe-fetch disk/debian-12-arm64-big.qcow2.bz2
+	./scripts/maybe-fetch disk/virtio_msg_rootfs.cpio.gz
+
+	# now delete the results, just save the git-lfs fetch
+	rm -rf build images
+}
+
 case $1 in
-do_once)
+do_once|container_build)
 	"$@"
 	;;
 *)
