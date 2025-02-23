@@ -2,8 +2,11 @@
 
 MY_DIR=$(cd $(dirname $0); pwd)
 
+DONE_DIR=".cache/hvac-demo/done"
+
 # exit on error
 set -e
+#set -x
 
 error() {
 	echo "ERROR: " "$@"
@@ -50,7 +53,7 @@ check_distro_run() {
 	esac
 }
 
-check_distro_build() {
+check_distro_build_host() {
 	get_distro_type
 
 	case $HOST_ARCH in
@@ -58,7 +61,7 @@ check_distro_build() {
 		true
 		;;
 	*)
-		error "Host architecture $HOST_ARCH not supported for building"
+		error "Host architecture $HOST_ARCH not supported for building host tools"
 		;;
 	esac
 
@@ -67,7 +70,29 @@ check_distro_build() {
 		true
 		;;
 	*)
-		error "Distro $ID $VERSION_CODENAME, not supported for building"
+		error "Distro $ID $VERSION_CODENAME, not supported for building host tools"
+		;;
+	esac
+}
+
+check_distro_build_target() {
+	get_distro_type
+
+	case $HOST_ARCH in
+	x86_64)
+		true
+		;;
+	*)
+		error "Host architecture $HOST_ARCH not supported for building target code"
+		;;
+	esac
+
+	case ${ID}-${VERSION_CODENAME} in
+	debian-bookworm)
+		true
+		;;
+	*)
+		error "Distro $ID $VERSION_CODENAME, not supported for building target code"
 		;;
 	esac
 
@@ -91,8 +116,11 @@ check_distro() {
 	"run")
 		check_distro_run
 		;;
-	""|"build")
-		check_distro_build
+	"build-host")
+		check_distro_build_host
+		;;
+	""|"build"|"build-target")
+		check_distro_build_target
 		;;
 	*)
 		error "Unknown check_distro type $1"
@@ -100,21 +128,53 @@ check_distro() {
 	esac
 }
 
-admin_setup() {
-	check_distro build
+check_setup() {
+	if [ -e ~/$DONE_DIR/setup-done-$1-$2 ]; then
+		return 0
+	fi
+
+	check_distro $2
+	return 1
+}
+
+setup_done() {
+	mkdir -p ~/$DONE_DIR/
+	echo "done" >~/$DONE_DIR/setup-done-$1-$2
+}
+
+admin_setup_build_host() {
+	check_setup admin build-host && return 0
+
+	admin_setup_run
+
+	# for basic build, qemu kernel etc
+	apt-get install -yqq build-essential git git-lfs bison flex wget curl pv \
+	    bc libssl-dev libncurses-dev kmod python3 python3-setuptools iasl
+
+	# qemu build support
+	apt-get install -yqq python3-pip python3-venv ninja-build libglib2.0-dev \
+	    libpixman-1-dev libslirp-dev
+
+	setup_done admin build-host
+}
+
+admin_setup_build_target() {
+	check_setup admin build-target && return 0
+
+	admin_setup_build_host
 
 	dpkg --add-architecture arm64
 	apt-get update -qq
+
 	# for xen (basic) and kernel build
 	apt-get install -yqq build-essential git git-lfs bison flex wget curl pv \
 	    bc libssl-dev libncurses-dev kmod python3 python3-setuptools iasl
+
 	# for cross-build
 	apt-get install -yqq gcc-aarch64-linux-gnu uuid-dev:arm64 libzstd-dev:arm64 \
 	    libncurses-dev:arm64 libyajl-dev:arm64 zlib1g-dev:arm64 \
 	    libfdt-dev:arm64 libpython3-dev:arm64 gdb-multiarch
-	# qemu build support
-	apt-get install -yqq python3-pip python3-venv ninja-build libglib2.0-dev \
-	    libpixman-1-dev libslirp-dev
+
 	# qemu cross compile support
 	apt-get install -yqq pkg-config:arm64 libglib2.0-dev:arm64 \
 	    libpixman-1-dev:arm64 libslirp-dev:arm64
@@ -124,20 +184,71 @@ admin_setup() {
 		guestfish $KERNEL guestfs-tools
 	chmod +r /boot/*
 
-	# for demos and because we are not savages forced to use vi
-	apt-get install -yqq tmux tcpdump device-tree-compiler nano net-tools
+	setup_done admin build-target
 }
 
-prj_setup() {
+admin_setup_build() {
+	admin_setup_build_target
+}
+
+admin_setup_run() {
+	check_setup admin run && return 0
+
+	apt-get update -qq
+
+	# for our basic operation, cross debug, qemu run, demo tools
+	apt-get install -yqq git git-lfs wget nano bzip2 \
+		gdb-multiarch \
+	    libpixman-1-dev libslirp-dev \
+		tmux fakeroot tcpdump device-tree-compiler net-tools
+
+	setup_done admin run
+}
+
+admin_setup() {
+	case $1 in
+	run|build|build-host|build-target)
+		admin_setup_${1//-/_}
+		;;
+	"")
+		admin_setup_build
+		;;
+	*)
+		echo "Unknown setup target $1"
+		exit 2
+		;;
+	esac
+}
+
+prj_setup_build_target() {
+	check_setup prj build-target && return 0
+
 	# install rustup/cargo/rustc, latest version, no prompts
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 	. ~/.cargo/env
 	rustup target add aarch64-unknown-linux-gnu
 	echo -e '[target.aarch64-unknown-linux-gnu]\nlinker = "aarch64-linux-gnu-gcc"' >>~/.cargo/config.toml
+
+	setup_done prj build-target
+}
+
+prj_setup() {
+	case $1 in
+	run|build-host)
+		true
+		;;
+	""|build|build-target)
+		prj_setup_build_target
+		;;
+	*)
+		echo "Unknown setup target $1"
+		exit 2
+		;;
+	esac
 }
 
 prj_build() {
-	check_distro build
+	#check_setup prj build
 
 	MODE_ARG=""
 	case $1 in
@@ -218,7 +329,7 @@ build_clean_src_all() {
 CMD=${1//-/_}; shift
 
 case $CMD in
-admin_setup|prj_setup|prj_build|check_distro)
+admin_setup|prj_setup|prj_build|check_distro|check_setup)
 	$CMD "$@"
 	;;
 build_*)

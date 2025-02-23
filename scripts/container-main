@@ -3,7 +3,7 @@
 #set -x
 
 THIS_SCRIPT=$0
-NAME=hvac-demo
+DONE_DIR=".cache/hvac-demo/done"
 
 ME_ABS=$(readlink -f $0)
 MY_DIR=$(dirname $ME_ABS)
@@ -37,10 +37,10 @@ userjmp() {
 
 do_once() {
 	NAME=$1; shift
-	if [ ! -e ~/.done/$NAME.done ]; then
+	if [ ! -e ~/$DONE_DIR/$NAME.done ]; then
 		"$@"
-		mkdir -p ~/.done
-		echo "done" >~/.done/$NAME.done
+		mkdir -p ~/$DONE_DIR
+		echo "done" >~/$DONE_DIR/$NAME.done
 	fi
 }
 
