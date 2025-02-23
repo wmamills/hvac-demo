@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -x
+
 THIS_SCRIPT=$0
 NAME=hvac-demo
 
@@ -10,8 +12,7 @@ check_distro() {
 	$MY_DIR/prj_script.sh check_distro $1 || exit 2
 }
 
-# This is a poorman's dockit function
-# do distro setup like dockit would before admin_setup
+# setup user / sudo and other basic distro setup
 distro_setup() {
 	apt-get -qq update
 	apt-get install -qqy sudo
@@ -26,9 +27,9 @@ distro_setup() {
 	usermod -a -G sudo_np $MY_USER
 	mkdir -p /etc/sudoers.d/
 	echo "%sudo_np ALL=(ALL:ALL) NOPASSWD:ALL" >/etc/sudoers.d/sudo_np
+	echo "$MY_USER ALL=(ALL:ALL) NOPASSWD:ALL" >/etc/sudoers.d/${MY_USER}_np
 }
 
-# part of poorman's dockit
 # This is suppose to be better than "su"
 userjmp() {
     setpriv --reuid=$MY_UID --regid=$MY_GID --init-groups --reset-env "$@"
@@ -44,6 +45,7 @@ do_once() {
 }
 
 # main function when container is built dynamically and using a mounted volume
+# This works for docker
 container_main() {
 	if [ "$EUID" -ne 0 ]; then
 		echo "Error: container-main must be run as root"
@@ -62,21 +64,24 @@ container_main() {
 	MY_USER="me"
 
 	do_once distro_setup distro_setup
-	do_once admin_setup $MY_DIR/prj_script.sh admin_setup
-	userjmp $THIS_SCRIPT do_once prj_setup $MY_DIR/prj_script.sh prj_setup
+	userjmp /bin/bash -l
+}
 
-	CMD=$1; shift
-	case $CMD in
-	build)
-		userjmp $MY_DIR/prj_script.sh prj_build "$@"
-		;;
-	shell|"")
-		userjmp /bin/bash -l
-		;;
-	*)
-		echo "unknown command $CMD"
-		exit 2
-	esac
+# first pass main for podman w/ mounted dir
+# setup user and do distro_setup
+podman_main1() {
+	MY_USER=${1:-user}
+	MY_UID=${2:-1000}
+	MY_GID=${3:-1000}
+
+	do_once distro_setup distro_setup
+}
+
+# on 2nd pass we will be running with the volume attached
+# and with --userns=keep-id
+podman_main2() {
+	cd /prj
+	/bin/bash -l
 }
 
 # function to build the container from a Dockerfile
@@ -109,7 +114,7 @@ container_build_user() {
 }
 
 case $1 in
-do_once|container_build)
+do_once|container_build|podman_main1|podman_main2)
 	"$@"
 	;;
 *)

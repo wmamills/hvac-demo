@@ -1,0 +1,157 @@
+#!/bin/bash
+
+set -e
+#set -x
+
+NAME_BASE=hvac-demo
+
+MY_DIR=$(dirname $0)
+
+CONTAINER_NAME_FILE=$MY_DIR/.container-name
+
+error() {
+	echo "error: $@"
+	exit 2
+}
+
+check_podman() {
+	if which podman >/dev/null 2>&1; then
+		if podman ps >/dev/null; then
+			return 0
+		else
+			echo "podman installed but won't run, this is unusual"
+		fi
+	fi
+	return 1
+}
+
+check_docker() {
+	if which docker >/dev/null 2>&1; then
+		if docker ps >/dev/null; then
+			return 0
+		else
+			echo "docker installed but won't run, check groups"
+		fi
+	fi
+	return 1
+}
+
+set_container_command() {
+	# if the var is already set to an acceptable value, just use it
+	case "$DOCKER" in
+	docker|podman)
+		if check_${DOCKER}; then
+			echo "Using $DOCKER"
+			return
+		fi
+	esac
+
+	if check_podman; then
+		DOCKER=podman
+	elif check_docker; then
+		DOCKER=docker
+	else
+		error "Please install docker or podman"
+	fi
+
+	echo "Using $DOCKER"
+}
+
+container_exists() {
+	if [ -n "$CONTAINER_NAME" ]; then
+		$DOCKER container inspect $CONTAINER_NAME >/dev/null 2>&1
+	else
+		false
+	fi
+}
+
+get_container_name() {
+	if [ -e $CONTAINER_NAME_FILE ]; then
+		CONTAINER_NAME=$(cat $CONTAINER_NAME_FILE)
+	else
+		CONTAINER_NAME=""
+	fi
+}
+
+make_container_name() {
+	CONTAINER_NAME=${NAME_BASE}-$(date --iso)-${RANDOM}
+	echo "$CONTAINER_NAME" >$CONTAINER_NAME_FILE
+}
+
+docker_run_container() {
+	$DOCKER run -it --name $CONTAINER_NAME -v$PWD:/prj \
+		-h $NAME_BASE \
+		docker.io/debian:12 \
+		/prj/scripts/container-main
+}
+
+podman_run_container() {
+	podman run -it --name $CONTAINER_NAME -v$PWD:/prj \
+		docker.io/debian:12 \
+		/prj/scripts/container-main podman_main1 $USER $UID $(id -g)
+	podman commit $CONTAINER_NAME ${CONTAINER_NAME}-base
+	podman rm $CONTAINER_NAME
+	podman run -it --name $CONTAINER_NAME -v$PWD:/prj \
+		-h $NAME_BASE \
+		--userns=keep-id \
+		${CONTAINER_NAME}-base \
+		/prj/scripts/container-main podman_main2
+}
+
+main() {
+	set_container_command
+	get_container_name
+	if container_exists $CONTAINER_NAME; then
+		$DOCKER start $CONTAINER_NAME >/dev/null
+		$DOCKER attach $CONTAINER_NAME
+		exit $?
+	else
+		make_container_name
+		${DOCKER}_run_container
+	fi
+}
+
+docker_delete_base() {
+	# nothing to do here
+	true
+}
+
+podman_delete_base() {
+	$DOCKER image rm ${CONTAINER_NAME}-base
+}
+
+do_delete() {
+	set_container_command
+	get_container_name
+	if container_exists $CONTAINER_NAME; then
+		$DOCKER rm -f $CONTAINER_NAME
+		${DOCKER}_delete_base
+		rm $CONTAINER_NAME_FILE
+	elif [ -n "$CONTAINER_NAME" ]; then
+		echo "cleaning up dangling container name $CONTAINER_NAME"
+		rm $CONTAINER_NAME_FILE
+	else
+		echo "nothing to do"
+	fi
+}
+
+get_help() {
+	echo "./container [--delete|--help]"
+	echo "start, restart or delete a container for the demos"
+}
+
+cd $MY_DIR
+case $1 in
+"")
+	main
+	;;
+--delete|--rm)
+	do_delete
+	;;
+--help)
+	get_help
+	;;
+*)
+	error "unknown arguments $@"
+	;;
+esac

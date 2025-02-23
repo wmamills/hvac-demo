@@ -10,3 +10,4 @@ qemu-xen-vm?-ram
 shm.pid
 shm.sock
 *.dtb
+/.container-name
