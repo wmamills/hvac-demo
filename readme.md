@@ -6,6 +6,9 @@ HVAC is a Linaro project to support virtio-msg on AMP systems.
 You can find out more about the HVAC project at the [HVAC home page](https://linaro.atlassian.net/wiki/spaces/HVAC/overview).
 
 Currently there are a few demos here but there will be more over time.
+These demos include virtio-msg for AMP systems and for other uses of
+virtio-msg such as virtio-msg-ffa.
+
 
 | Name       | Description                                               |
 |------------|-----------------------------------------------------------|
@@ -17,60 +20,86 @@ Currently there are a few demos here but there will be more over time.
 | [demo3](demo3.readme.md)  | dual QEMU using cortex-m Zephyr and Linux uio |
 | [demo4](demo4.readme.md)  | dual QEMU with direct kernel virtio-msg    |
 
-Upcoming demos:
+Upcoming additions or changes:
 
-| Name       | Description                                               |
-|------------|-----------------------------------------------------------|
+* Update demo3 to be Linux + Zephyr with virtio-msg
+* Eliminate the requirement for Debian 12 if only running the demos
+* Add option to use Yocto project rootfs for faster demo times
 
-We will also add the capability to run the demos without building everything
-yourself and we will have a container image ready to run or rebuild everything.
-
-## Running or Building the demos
+## Running the demos
 
 Currently this work assumes:
 
-* You are using an x86_64 based build machine and are running Linux
+* You are using an x86_64 or arm64 based build machine and are running Linux
 (either directly or in a VM).
 
-* You are building in Debian 12 (bookworm) directly or via a container as
+* You are running on Debian 12 (bookworm) directly or via a container as
 described below
 
-* The current versions of rustc when these demos were tested ranged from 1.80.0
-to 1.83.0.
+### Running the demo container image
 
-Demos that use Xen or QEMU on the target uses a Debian 12 based rootfs so we
-do all cross compilation for userspace on Debian 12 so the libraries match.
+A pre-built container image is available at: docker.io/wmills/hvac-demo.
 
-### Cloning the source
+It has been tested with podman and docker.
+
+Make sure you install podman or docker and that you can run it.
+See the "Podman install cheat-sheet" and "Docker install cheat-sheet" sections
+below for install instructions.
+
+To use podman:
+```
+podman run -it --rm docker.io/wmills/hvac-demo
+```
+
+To use docker:
+```
+docker run -it --rm docker.io/wmills/hvac-demo
+```
+
+Inside the container run any of the demos like:
+```
+./demo1
+```
+
+Building the demos in the container image is also possible but you would be
+better to use the instructions below to create a container with a mounted
+directory.
+
+### Running or Building on your machine
 
 When you clone the hvac-demo source, DO NOT clone sub-modules, the sub-modules
 are handled by the demo and build scripts as needed.
 
 Use:
 ```
-git clone git@github.com:wmamills/hvac-demo.git
+git clone https://github.com/wmamills/hvac-demo.git
 cd hvac-demo
 ```
 
-### Running or Building on a Debian 12 machine
+Create a persistent container w/ the hvac-demo project mounted.
 
-If you are already on a Debian 12 x86_64 machine, you can do the build and
-run the demos directly.  However, please understand that many packages will be
-added to your machine.  You may wish to follow the docker instructions below
-if you do not want that.
+Make sure you install docker or podman and that you can run it.
+See the Docker or Podman install cheat-sheet below for instructions.
 
-Clone the hvac-demo source as described above.
+(If you are already on a Debian 12, you may skip this step to run directly
+on your machine. However, please understand that many packages will be
+added to your machine.  You may wish to run in the container anyway.)
 
-Do setup, use:
+Use:
+```
+./container
+```
+
+Do setup for running the demos:
 
 ```
-./setup
+./setup run
 ```
 
 The setup script will use sudo to do the admin_setup and then setup the current
 user for rust development.  The admin_setup will install all the needed
-packages. The `setup` step only needs to be run once per machine.
-
+packages to run the demos. The `setup run` step only needs to be run once
+per machine.
 
 You can run the demos using commands like this:
 
@@ -82,9 +111,13 @@ The demo scripts will fetch any needed images from the save-images sub-module
 and build the final disk images as needed.
 You do not need to do anything to saved-images yourself.
 
+See the "about the demos" section below for what to expect and the
+demo specific readme to understand what the demo is doing and showing.
+
 To rebuild everything instead of using saved-images:
 
 ```
+./setup build
 ./Build all
 ```
 
@@ -92,84 +125,35 @@ The `Build` script can be run as many times as you wish.  The first build will
 clone the sources you need.  If the source already exists when the build
 happens, the source will be used as-is.
 
+To build everything will take 30 to 60 minutes and use ~50GB of disk space.
+Building everything again will take about 1/2 time.
+
 You can run individual builds steps by replacing `all` with the individual steps
 to run.  See the section on build steps below for more information.
 
+If you ran a container you can exit with the `exit` command and the container
+will stop.  You can reenter the container again with the `./container` command.
 
-### Running or Building in a Container
-
-Make sure you install docker and that you can run it.
-See the "Docker install cheat-sheet" below.
-
-Clone the hvac-demo source as described above.
-
-The following command will start the container:
+If you wish to remove the container use:
 
 ```
-docker run -it --name hvac-demo -v$PWD:/prj debian:12 \
-    /prj/scripts/container-main
+./container --delete
 ```
 
-`container-main` will run the distro setup and create your user and give you sudo
-access.  It will then run the admin_setup, switch to your user and run the
-prj_setup.  After that it will give you a shell where you can follow the
-instructions above for running or building.
+(You can also delete the container with the docker or podman commands,
+whichever was used.)
 
-To reuse a container after exit, use:
-```
-docker start hvac-demo
-docker attach hvac-demo
-```
+### Podman install cheat-sheet
 
-When you exit the shell, the container will stop again.
+Podman is very easy to install for our use case.  If you have no reason to
+prefer docker, we would suggest installing podman.
 
-To delete the container use:
+To install on Ubuntu 22.04 or later do this:
 
 ```
-docker rm -f hvac-demo
+sudo apt update
+sudo apt install podman
 ```
-
-### Building with dockit
-
-[dockit](https://github.com/wmamills/cloudbuild) is a utility [Bill](https://github.com/wmamills)
-uses to do persistent containers for development.  It is a work in progress but
-Bill uses it often.
-
-Clone that repo somewhere and create a symlink to the dockit file in your ~/bin
-or ~/.local/bin directory and make sure that the one you used is in your path.
-As with the other docker based methods, you will need to install docker.
-See the "Docker install cheat-sheet" below.
-
-Clone the hvac-demo source as described above.
-
-To run a demo script, use:
-
-```
-dockit icmd ./demo1
-```
-
-The first time you use dockit it will construct the conatiner for you.
-The first time you run a given demo it will fetch any missing images and build
-any missing final disk images.
-
-To build everything use this command:
-
-```
-dockit build
-```
-
-To do just one step use (xen as an example below):
-```
-dockit build xen
-```
-
-To get a shell in the container, use:
-```
-dockit shell
-```
-
-`dockit purge` will delete all containers for this project. Check 
-`dockit help` for more options.
 
 ### Docker install cheat-sheet
 
@@ -231,9 +215,9 @@ grep ^build_ scripts/prj_script.sh scripts/build/*
 Note: because the xen builds are done in-tree, the xen build steps clean all
 ignored files before the build.  Files that are not ignored and files that
 are modified will not be cleaned.  If you have an ignored file that you wish
-to keep, stage it for a commit, even if you don't intent to commit it.
+to keep, stage it for a commit, even if you don't intend to commit it.
 
-## Running the demos
+## About the demos
 
 Look at the individual readme's for the demos to understand what they are
 showing and the software layers involved.  This section will describe the demos
@@ -246,8 +230,8 @@ Each of the demos runs in tmux to get you access to:
 You can use the mouse to select which window will have focus.
 
 The demos are setup to automatically test themselves.
-The target systems will boot and then run a demo script specified on the
-command line. The demo script will give a TEST PASS message if everything works.
+The target systems will boot and then run a demo script.
+The demo script will give a TEST PASS message if everything works.
 Many errors are caught and will give a TEST FAIL message. Not all possible
 errors are caught. After the demo script runs, the autorun script will
 powerdown the target.
@@ -266,7 +250,8 @@ and any TEST PASSED or TEST FAILED messages will be printed.
 
 ### Known issues
 
-Whenever virtio-pci devices are used at the QEMU level and xen is used, the
+Whenever virtio-scsci-pci devices are used at the QEMU system level and xen
+is used, the
 Linux kernel has an oops when setting up the interrupts for this device.
 This does not happen without Xen.  This error is not fatal, the demos still
 work, but it is ugly.  I have switched to virtio-mmio to work around this issue
