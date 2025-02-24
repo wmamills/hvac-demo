@@ -49,6 +49,9 @@ for i in "$@"; do
     TAG=*)
         TAG=$VAL
         ;;
+    DEST_TAG=*)
+        DEST_TAG=$VAL
+        ;;
     push)
         PUSH=true
         ARGS="$ARGS $i"
@@ -202,16 +205,18 @@ build_manifest() {
         echo "Assume images are already present on the hub"
     fi
 
+    : ${DEST_TAG:=$TAG}
+
     echo "########## Manifest"
-    for c in demo demo-lite; do
+    for c in $CONTAINER_LIST; do
         AMENDS=""
         for a_host in $ARCH_LIST; do
             a=$(docker_arch $a_host)
             AMENDS="$AMENDS --amend $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}"
         done
 
-        docker manifest create $DOCKER_HUB_ACCOUNT/${c}:${TAG} $AMENDS
-        docker manifest push   $DOCKER_HUB_ACCOUNT/${c}:${TAG}
+        docker manifest create $DOCKER_HUB_ACCOUNT/${c}:${DEST_TAG} $AMENDS
+        docker manifest push   $DOCKER_HUB_ACCOUNT/${c}:${DEST_TAG}
     done
 }
 
@@ -246,6 +251,7 @@ help() {
     echo "    ec2-x86_64            do a build on x86_64 ec2 machine"
     echo "    ec2-arm64             do a build on arm64 ec2 machine"
     echo "    local-manifest        build and push a manifest from saved images"
+    echo "    promote               promote TAG to latest"
     echo "and where build-args are zero or more of:"
     echo "    URL=<url>         git repo url"
     echo "                      default $UPSTREAM_URL"
@@ -358,6 +364,13 @@ case $1 in
     # used saved images, push and then build & push manifest
     shift
     $ME prj_build load manifest $ARGS
+    ;;
+"promote")
+    SAVE=false
+    LOAD=false
+    # pull TAG version, push and then build & push manifest
+    shift
+    $ME prj_build pull DEST_TAG=latest manifest $ARGS
     ;;
 ""|help)
     help
