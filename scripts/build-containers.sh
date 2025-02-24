@@ -1,16 +1,27 @@
 #!/bin/bash
 
+set -e
+
 ME=$0
 MY_NAME=$(basename $ME)
 
-UBUNTU_VER=22.04
+UBUNTU_VER=24.04
 
 # Saved image name
-NAME=openamp-docker
+NAME=hvac-demo
+UPSTREAM_URL=https://github.com/wmamills/${NAME}.git
+PERSONAL_URL=https://github.com/wmamills/${NAME}.git
+
+DOCKER_HUB_ACCOUNT=wmills
 
 ARCH_LIST="x86_64 aarch64"
+CONTAINER_LIST="hvac-demo"
 
-JOB_NAME1=openamp-docker-build
+# in Gigabytes
+DISK_SIZE="60"
+MEM_SIZE="16"
+
+JOB_NAME1=${NAME}-docker-build
 JOB_DATE=$(date +%Y-%m-%d-%H%M%S)
 JOB_NAME=${JOB_NAME1}-${JOB_DATE}
 
@@ -82,17 +93,17 @@ fi
 
 # set defaults based on current branch
 case $CURRENT_BRANCH in
-wam-*)
+wam-*|wip-*)
     : ${BRANCH:=$CURRENT_BRANCH}
-    : ${URL:=https://github.com/wmamills/openamp-demo.git}
+    : ${URL:=$PERSONAL_URL}
     ;;
 "none")
     : ${BRANCH:=main}
-    : ${URL:=https://github.com/openamp/openamp-demo.git}
+    : ${URL:=$UPSTREAM_URL}
     ;;
 *)
     : ${BRANCH:=$CURRENT_BRANCH}
-    : ${URL:=https://github.com/openamp/openamp-demo.git}
+    : ${URL:=$UPSTREAM_URL}
     ;;
 esac
 
@@ -125,9 +136,9 @@ docker_arch() {
 build_one() {
     # images for current arch
     echo "########## Build"
-    rm -rf openamp-demo
-    git clone $URL openamp-demo
-    cd openamp-demo
+    rm -rf ./$NAME
+    git clone $URL $NAME
+    cd $NAME
     if [ -n "$BRANCH" ]; then
         git checkout $BRANCH
     fi
@@ -136,46 +147,46 @@ build_one() {
     fi
     git log -n 1
 
-    cd docker
-    make
-    for c in demo demo-lite; do
-        docker tag openamp/${c} \
-            openamp/${c}:${TAG}-${DOCKER_ARCH}
+    for c in $CONTAINER_LIST; do
+        (cd scripts; docker build -t $DOCKER_HUB_ACCOUNT/${c} \
+            -f Dockerfile.${c} .)
+        docker tag $DOCKER_HUB_ACCOUNT/${c} \
+            $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
     done
 
     if $PUSH; then
         echo "########## Push"
-        for c in demo demo-lite; do
-            docker tag openamp/${c}:${OLD_TAG}-${DOCKER_ARCH} \
-                openamp/${c}:${TAG}-${DOCKER_ARCH}
-            docker push openamp/${c}:${TAG}-${DOCKER_ARCH}
+        for c in $CONTAINER_LIST; do
+            docker tag $DOCKER_HUB_ACCOUNT/${c}:${OLD_TAG}-${DOCKER_ARCH} \
+                $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
+            docker push $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
         done
     fi
 
     if $SAVE; then
         echo "########## Save"
         mkdir -p $ORIG_PWD/out/docker
-        for c in demo demo-lite; do
+        for c in $CONTAINER_LIST; do
             echo "save ${c} image"
-            docker image save openamp/${c}:${TAG}-${DOCKER_ARCH} |
+            docker image save $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH} |
                 gzip >$ORIG_PWD/out/docker/${c}-${TAG}-${DOCKER_ARCH}.tar.gz
         done
     fi
 }
 
-# manifest, requires push so does not test it
+# manifest, requires push so does not test if $PUSH is true
 build_manifest() {
     if $PULL; then
         echo "########## Pull"
         for a_host in $ARCH_LIST; do
             a=$(docker_arch $a_host)
-            for c in demo demo-lite; do
-                docker pull openamp/${c}:${TAG}-${a}
+            for c in $CONTAINER_LIST; do
+                docker pull $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}
             done
         done
     elif $LOAD; then
         echo "########## Load"
-        for i in saved-images/host/*/docker/*.tar.gz; do
+        for i in docker-images/host/*/docker/*.tar.gz; do
             echo "load $(basename $i)"
             zcat $i | docker image load
         done
@@ -183,8 +194,8 @@ build_manifest() {
         # push images as they are needed for manifest command
         for a_host in $ARCH_LIST; do
             a=$(docker_arch $a_host)
-            for c in demo demo-lite; do
-                docker push openamp/${c}:${TAG}-${a}
+            for c in $CONTAINER_LIST; do
+                docker push $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}
             done
         done
     else
@@ -196,11 +207,11 @@ build_manifest() {
         AMENDS=""
         for a_host in $ARCH_LIST; do
             a=$(docker_arch $a_host)
-            AMENDS="$AMENDS --amend openamp/${c}:${TAG}-${a}"
+            AMENDS="$AMENDS --amend $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}"
         done
 
-        docker manifest create openamp/${c}:${TAG} $AMENDS
-        docker manifest push   openamp/${c}:${TAG}
+        docker manifest create $DOCKER_HUB_ACCOUNT/${c}:${TAG} $AMENDS
+        docker manifest push   $DOCKER_HUB_ACCOUNT/${c}:${TAG}
     done
 }
 
@@ -234,10 +245,10 @@ help() {
     echo "    ssh-sudo <remote>     do a remote build"
     echo "    ec2-x86_64            do a build on x86_64 ec2 machine"
     echo "    ec2-arm64             do a build on arm64 ec2 machine"
-    echo "    local-manifest        build and push a manifest from saved-images"
+    echo "    local-manifest        build and push a manifest from saved images"
     echo "and where build-args are zero or more of:"
     echo "    URL=<url>         git repo url"
-    echo "                      default https://github.com/openamp/openamp-demo.git"
+    echo "                      default $UPSTREAM_URL"
     echo "    BRANCH=main       git branch, default main"
     echo "    VER=<ver>         git commit or tag"
     echo ""
@@ -291,15 +302,15 @@ case $1 in
     # use multipass on the local machine to get a clean install of the distro
     # is always the same arch as the host
     shift
-    multipass launch -n $JOB_NAME -c 10 -d 25G -m 16G $UBUNTU_VER
+    multipass launch -n $JOB_NAME -c 10 -d ${DISK_SIZE}G -m ${MEM_SIZE}G $UBUNTU_VER
     multipass transfer $0 $JOB_NAME:.
     multipass exec $JOB_NAME -- ./$MY_NAME here-sudo-only $ARGS
     multipass exec $JOB_NAME -- ./$MY_NAME prj_build $ARGS
     # multipass always matches host
     TARGET_ARCH=$(uname -m)
     if $SAVE; then
-        mkdir -p saved-images/host/$TARGET_ARCH/docker
-        multipass transfer -r $JOB_NAME:out/docker saved-images/host/$TARGET_ARCH/.
+        mkdir -p docker-images/host/$TARGET_ARCH/docker
+        multipass transfer -r $JOB_NAME:out/docker docker-images/host/$TARGET_ARCH/.
     fi
     if $STOP; then
         multipass stop $JOB_NAME
@@ -317,21 +328,21 @@ case $1 in
     ssh $REMOTE_SSH ./$MY_NAME prj_build $ARGS
     if $SAVE; then
         TARGET_ARCH=$(ssh $REMOTE_SSH uname -m)
-        mkdir -p saved-images/host/$TARGET_ARCH/docker
-        scp "$REMOTE_SSH:out/docker/*" saved-images/host/$TARGET_ARCH/docker/.
+        mkdir -p docker-images/host/$TARGET_ARCH/docker
+        scp "$REMOTE_SSH:out/docker/*" docker-images/host/$TARGET_ARCH/docker/.
     fi
     ;;
 "ec2-x86_64"|"ec2-x86")
     JOB_NAME=${JOB_NAME1}-x86_64
     shift
-    ec2 aws-$JOB_NAME run --inst m7i.2xlarge  --os-disk 25 --distro ubuntu-$UBUNTU_VER
+    ec2 aws-$JOB_NAME run --inst m7i.2xlarge  --os-disk $DISK_SIZE --distro ubuntu-$UBUNTU_VER
     $ME ssh-sudo aws-$JOB_NAME $ARGS
     ec2_finish aws-$JOB_NAME
     ;;
 "ec2-arm64"|"ec2-arm")
     JOB_NAME=${JOB_NAME1}-aarch64
     shift
-    ec2 aws-$JOB_NAME run --inst m7g.2xlarge  --os-disk 25 --distro ubuntu-$UBUNTU_VER
+    ec2 aws-$JOB_NAME run --inst m7g.2xlarge  --os-disk $DISK_SIZE --distro ubuntu-$UBUNTU_VER
     $ME ssh-sudo aws-$JOB_NAME $ARGS
     ec2_finish aws-$JOB_NAME
     ;;
@@ -344,11 +355,11 @@ case $1 in
     ;;
 "local-manifest")
     SAVE=false
-    # build on both arch and push and then build manifest
+    # used saved images, push and then build & push manifest
     shift
     $ME prj_build load manifest $ARGS
     ;;
-"")
+""|help)
     help
     ;;
 *)

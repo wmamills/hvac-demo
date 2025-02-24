@@ -3,6 +3,7 @@
 /src-ref/
 /src/
 /images/
+/docker-images/
 qemu-ram
 net.pcap
 queue-linux-user-d*
