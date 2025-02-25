@@ -40,6 +40,7 @@ SAVE=false
 BUILD=true
 MANIFEST=false
 REMOTE_JOB=false
+LITE_BUILD=false
 
 set_bool() {
     case $1 in
@@ -122,6 +123,10 @@ for i in "$@"; do
         ;;
     stop*)
         STOP=$(set_bool $VAL)
+        ARGS="$ARGS $i"
+        ;;
+    lite-build*)
+        LITE_BUILD=$(set_bool $VAL)
         ARGS="$ARGS $i"
         ;;
     esac
@@ -306,6 +311,7 @@ build_one() {
 URL=$URL
 BRANCH=$BRANCH
 VER=$VER
+LITE_BUILD=$LITE_BUILD
 EOF
 
     echo "########## Build TAG=$TAG DOCKER_ARCH=$DOCKER_ARCH"

@@ -89,14 +89,19 @@ container_build() {
 	MY_UID=1000
 	MY_GID=1000
 	MY_USER=user
+	LITE_BUILD=false
 
 	if [ -e /.container-build-vars ]; then
 		. /.container-build-vars
 	fi
 
 	do_once distro_setup distro_setup
-	do_once admin_setup $MY_DIR/prj_script.sh admin_setup
-	userjmp $THIS_SCRIPT do_once prj_setup $MY_DIR/prj_script.sh prj_setup
+	if $LITE_BUILD; then
+		apt install -yqq git
+	else
+		do_once admin_setup $MY_DIR/prj_script.sh admin_setup
+		userjmp $THIS_SCRIPT do_once prj_setup $MY_DIR/prj_script.sh prj_setup
+	fi
 	userjmp $THIS_SCRIPT do_once container_build_user container_build_user
 }
 
@@ -105,6 +110,7 @@ container_build_user() {
 	URL=https://github.com/wmamills/hvac-demo.git
 	BRANCH=main
 	VER=""
+	LITE_BUILD=false
 
 	if [ -e /.container-build-vars ]; then
 		. /.container-build-vars
@@ -119,6 +125,11 @@ container_build_user() {
 	if [ -n "$VER" ]; then
 		git fetch origin $VER
 		git reset --hard $VER
+	fi
+
+	if $LITE_BUILD; then
+		echo "Container images built with LITE_BUILD will need user to do setup"
+		return 0
 	fi
 
 	# prefetch images
