@@ -1,6 +1,7 @@
 FROM debian:12
 
-COPY container-main prj_script.sh /
+# wildcard on vars file makes it conditional
+COPY container-main prj_script.sh .container-build-vars* /
 RUN /container-main container_build
 RUN rm /container-main /prj_script.sh
 

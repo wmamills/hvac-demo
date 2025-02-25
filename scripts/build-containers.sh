@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+#set -x
 
 ME=$0
 MY_NAME=$(basename $ME)
@@ -16,6 +17,8 @@ DOCKER_HUB_ACCOUNT=wmills
 
 ARCH_LIST="x86_64 aarch64"
 CONTAINER_LIST="hvac-demo"
+SAVE_PATH=build/docker-images
+REMOTE_BASE=remote-build-jobs
 
 # in Gigabytes
 DISK_SIZE="60"
@@ -24,19 +27,43 @@ MEM_SIZE="16"
 JOB_NAME1=${NAME}-docker-build
 JOB_DATE=$(date +%Y-%m-%d-%H%M%S)
 JOB_NAME=${JOB_NAME1}-${JOB_DATE}
+REMOTE_DIR=$REMOTE_BASE/$JOB_NAME
 
 # arguments to pass to sub-jobs
 ARGS=""
 
 PUSH=false
 PULL=false
-MANIFEST=false
 STOP=false
 LOAD=false
+SAVE=false
+BUILD=true
+MANIFEST=false
+REMOTE_JOB=false
+
+set_bool() {
+    case $1 in
+    ""|"yes"|"true"|y*|Y*|t*|T*)
+        echo "true"
+        ;;
+    "no"|"false"|n*|N*|f*|F*)
+        echo "false"
+        ;;
+    *)
+        echo "Unknown bool setting $1" >&2
+        exit 2
+        ;;
+    esac
+}
 
 for i in "$@"; do
     VAL=${i#*=}
+    # if there is no =, VAL will be the whole name
+    if [ "$VAL" == "$i" ]; then
+        VAL=""
+    fi
     case $i in
+    # these 5 are always passed in ARGS
     BRANCH=*)
         BRANCH=$VAL
         ;;
@@ -44,37 +71,57 @@ for i in "$@"; do
         URL=$VAL
         ;;
     VER=*)
-        VER=$VER
+        VER=$VAL
         ;;
     TAG=*)
         TAG=$VAL
         ;;
+    JOB_NAME=*)
+        JOB_NAME="$VAL"
+        REMOTE_DIR=$REMOTE_BASE/$JOB_NAME
+        ;;
+
+    # expand ARGS for the rest
     DEST_TAG=*)
         DEST_TAG=$VAL
+        ARGS="$ARGS $i"
         ;;
-    push)
-        PUSH=true
+    REMOTE_BASE=*)
+        REMOTE_BASE="$VAL"
+        REMOTE_DIR=$REMOTE_BASE/$JOB_NAME
+        ARGS="$ARGS $i"
+        ;;
+    push*)
+        PUSH=$(set_bool $VAL)
         ARGS="$ARGS $i"
         : ${SAVE:=false}
         ;;
-    save)
-        SAVE=true
+    save*)
+        SAVE=$(set_bool $VAL)
         ARGS="$ARGS $i"
         ;;
-    pull)
-        PULL=true
+    pull*)
+        PULL=$(set_bool $VAL)
         ARGS="$ARGS $i"
         ;;
-    load)
-        LOAD=true
+    load*)
+        LOAD=$(set_bool $VAL)
         ARGS="$ARGS $i"
         ;;
-    manifest)
-        MANIFEST=true
+    manifest*)
+        MANIFEST=$(set_bool $VAL)
         ARGS="$ARGS $i"
         ;;
-    stop)
-        STOP=true
+    build*)
+        BUILD=$(set_bool $VAL)
+        ARGS="$ARGS $i"
+        ;;
+    remote-job*)
+        REMOTE_JOB=$(set_bool $VAL)
+        ARGS="$ARGS $i"
+        ;;
+    stop*)
+        STOP=$(set_bool $VAL)
         ARGS="$ARGS $i"
         ;;
     esac
@@ -110,7 +157,7 @@ wam-*|wip-*)
     ;;
 esac
 
-ARGS="URL=$URL BRANCH=$BRANCH VER=$VER TAG=$TAG $ARGS"
+ARGS="URL=$URL BRANCH=$BRANCH VER=$VER TAG=$TAG $ARGS JOB_NAME=$JOB_NAME"
 echo "$@"
 
 admin_setup() {
@@ -136,9 +183,89 @@ docker_arch() {
     esac
 }
 
-build_one() {
+dead_code1() {
+            docker tag $DOCKER_HUB_ACCOUNT/${c}:${OLD_TAG}-${DOCKER_ARCH} \
+                $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
+}
+
+image_exists() {
+    docker image inspect $1 >/dev/null 2>&1
+}
+
+image_ops_output() {
+    if $PUSH; then
+        echo "########## Push"
+        for a_host in $ARCH_LIST; do
+            a=$(docker_arch $a_host)
+            for c in $CONTAINER_LIST; do
+                IMAGE_NAME=$DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}
+                if image_exists $IMAGE_NAME; then
+                    echo "push $IMAGE_NAME"
+                    docker push $IMAGE_NAME
+                else
+                    echo "skip $IMAGE_NAME, no image found"
+                fi
+            done
+        done
+    fi
+
+    if $SAVE; then
+        echo "########## Save"
+        mkdir -p $ORIG_PWD/$SAVE_PATH/$DOCKER_ARCH
+        for a_host in $ARCH_LIST; do
+            a=$(docker_arch $a_host)
+            for c in $CONTAINER_LIST; do
+                IMAGE_NAME=$DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}
+                TARFILE=$ORIG_PWD/$SAVE_PATH/$a/${c}-${TAG}-${a}.tar.gz
+                if image_exists $IMAGE_NAME; then
+                    echo "save $IMAGE_NAME to $(basename $TARFILE)"
+                    mkdir -p $(dirname $TARFILE)
+                    docker image save $IMAGE_NAME | gzip >$TARFILE
+                else
+                    echo "skip $IMAGE_NAME, no image found"
+                fi
+            done
+        done
+    fi
+}
+
+image_ops_input() {
+    if $PULL; then
+        echo "########## Pull"
+        for a_host in $ARCH_LIST; do
+            a=$(docker_arch $a_host)
+            for c in $CONTAINER_LIST; do
+                IMAGE_NAME=$DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}
+                docker pull $IMAGE_NAME
+            done
+        done
+    elif $LOAD; then
+        echo "########## Load"
+        for a_host in $ARCH_LIST; do
+            a=$(docker_arch $a_host)
+            for c in $CONTAINER_LIST; do
+                TARFILE=$ORIG_PWD/$SAVE_PATH/$a/${c}-${TAG}-${a}.tar.gz
+                if [ -r "$TARFILE" ]; then
+                    echo "load $(basename $TARFILE)"
+                    zcat $TARFILE | docker image load
+                else
+                    echo "skip $(basename $TARFILE), file not found"
+                fi
+            done
+        done
+    else
+        echo "Assume images are already present on the hub"
+    fi
+}
+
+image_ops() {
+    image_ops_input
+    image_ops_output
+}
+
+do_clone() {
     # images for current arch
-    echo "########## Build"
+    echo "########## Clone URL=$URL BRANCH=$BRANCH VER=$VER"
     rm -rf ./$NAME
     git clone $URL $NAME
     cd $NAME
@@ -146,77 +273,86 @@ build_one() {
         git checkout $BRANCH
     fi
     if [ -n "$VER" ]; then
+        git fetch $VER
         git reset --hard $VER
-    fi
-    git log -n 1
-
-    for c in $CONTAINER_LIST; do
-        (cd scripts; docker build -t $DOCKER_HUB_ACCOUNT/${c} \
-            -f Dockerfile.${c} .)
-        docker tag $DOCKER_HUB_ACCOUNT/${c} \
-            $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
-    done
-
-    if $PUSH; then
-        echo "########## Push"
-        for c in $CONTAINER_LIST; do
-            docker tag $DOCKER_HUB_ACCOUNT/${c}:${OLD_TAG}-${DOCKER_ARCH} \
-                $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
-            docker push $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
-        done
-    fi
-
-    if $SAVE; then
-        echo "########## Save"
-        mkdir -p $ORIG_PWD/out/docker
-        for c in $CONTAINER_LIST; do
-            echo "save ${c} image"
-            docker image save $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH} |
-                gzip >$ORIG_PWD/out/docker/${c}-${TAG}-${DOCKER_ARCH}.tar.gz
-        done
     fi
 }
 
-# manifest, requires push so does not test if $PUSH is true
-build_manifest() {
-    if $PULL; then
-        echo "########## Pull"
-        for a_host in $ARCH_LIST; do
-            a=$(docker_arch $a_host)
-            for c in $CONTAINER_LIST; do
-                docker pull $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}
-            done
-        done
-    elif $LOAD; then
-        echo "########## Load"
-        for i in docker-images/host/*/docker/*.tar.gz; do
-            echo "load $(basename $i)"
-            zcat $i | docker image load
-        done
+# build one container image for the local machine arch
+# normal flow is below remote only steps in []
+#   [cd to job dir]
+#   [clone correct repo branch and commit/tag]
+#   save info for Dockerfile
+#   do docker image build
+#   save image on build machine
+#   [transfer saved image from build machine to initiating machine]
+# if the build machine has push credentials you can push instead of save
+# For testing you can run w/o save and the image will be left on the build
+# machine, this is fine for local builds or persistent machines.  It is not
+# very useful for ec2 machines w/o stop also.
+build_one() {
+    ORIG_PWD=$PWD
+    ARCH=$(uname -m)
+    DOCKER_ARCH=$(docker_arch $ARCH)
 
-        # push images as they are needed for manifest command
-        for a_host in $ARCH_LIST; do
-            a=$(docker_arch $a_host)
-            for c in $CONTAINER_LIST; do
-                docker push $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}
-            done
-        done
-    else
-        echo "Assume images are already present on the hub"
+    # this is build one, only do the current arch
+    ARCHES="$ARCH"
+
+    if $REMOTE_JOB; then
+        do_clone
     fi
+
+    cat >scripts/.container-build-vars <<EOF
+URL=$URL
+BRANCH=$BRANCH
+VER=$VER
+EOF
+
+    echo "########## Build TAG=$TAG DOCKER_ARCH=$DOCKER_ARCH"
+
+    git log -n 1 --oneline
+
+    for c in $CONTAINER_LIST; do
+        (cd scripts; docker build -t $DOCKER_HUB_ACCOUNT/${c}:build-one \
+            -f Dockerfile.${c} .)
+        docker tag $DOCKER_HUB_ACCOUNT/${c}:build-one \
+            $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${DOCKER_ARCH}
+    done
+
+    image_ops_output
+}
+
+# build a manifest
+# the images added to a manifest need to be on the docker hub
+# they do not need to be local
+# normal sequences here would be:
+#     load form local images, push images, build and push manifest
+# An alternate sequences would be
+#     push local images (loaded or built etc), build and push manifest
+#     assume docker hub has images, build and push manifest
+# And for testing would be
+#     assume docker hub has images, build manifest and keep local
+# There really is no need for pull or save to be used for this flow
+build_manifest() {
+    # load push as directed
+    image_ops
 
     : ${DEST_TAG:=$TAG}
 
-    echo "########## Manifest"
+    echo "########## Manifest TAG=$TAG DEST_TAG=$DEST_TAG"
     for c in $CONTAINER_LIST; do
         AMENDS=""
         for a_host in $ARCH_LIST; do
             a=$(docker_arch $a_host)
-            AMENDS="$AMENDS --amend $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}"
+            AMENDS="$AMENDS $DOCKER_HUB_ACCOUNT/${c}:${TAG}-${a}"
         done
 
-        docker manifest create $DOCKER_HUB_ACCOUNT/${c}:${DEST_TAG} $AMENDS
-        docker manifest push   $DOCKER_HUB_ACCOUNT/${c}:${DEST_TAG}
+        MANIFEST_NAME=$DOCKER_HUB_ACCOUNT/${c}:${DEST_TAG}
+        docker manifest rm $MANIFEST_NAME >/dev/null 2>&1 || true
+        docker manifest create $MANIFEST_NAME $AMENDS
+        if $PUSH; then
+            docker manifest push   $DOCKER_HUB_ACCOUNT/${c}:${DEST_TAG}
+        fi
     done
 }
 
@@ -224,16 +360,22 @@ build_manifest() {
 # LOAD MANIFEST opt PUSH
 # PULL MANIFEST opt PUSH
 prj_build() {
-    ORIG_PWD=$PWD
     ARCH=$(uname -m)
     DOCKER_ARCH=$(docker_arch $ARCH)
-    rm -rf out
-    mkdir -p out
+
+    if $REMOTE_JOB; then
+        mkdir -p $REMOTE_DIR
+        cd $REMOTE_DIR
+    fi
+
+    ORIG_PWD=$PWD
 
     if $MANIFEST; then
         build_manifest
-    else
+    elif $BUILD; then
         build_one
+    else
+        image_ops
     fi
 }
 
@@ -248,10 +390,12 @@ help() {
     echo "    here-sudo-only        do admin setup locally"
     echo "    multipass             use multipass locally for a clean build"
     echo "    ssh-sudo <remote>     do a remote build"
+    echo "    ssh <remote>          do a remote build (assuming admin setup done)"
     echo "    ec2-x86_64            do a build on x86_64 ec2 machine"
     echo "    ec2-arm64             do a build on arm64 ec2 machine"
     echo "    local-manifest        build and push a manifest from saved images"
     echo "    promote               promote TAG to latest"
+    echo "    image-ops             Do only load/pull and or save/push"
     echo "and where build-args are zero or more of:"
     echo "    URL=<url>         git repo url"
     echo "                      default $UPSTREAM_URL"
@@ -311,12 +455,15 @@ case $1 in
     multipass launch -n $JOB_NAME -c 10 -d ${DISK_SIZE}G -m ${MEM_SIZE}G $UBUNTU_VER
     multipass transfer $0 $JOB_NAME:.
     multipass exec $JOB_NAME -- ./$MY_NAME here-sudo-only $ARGS
-    multipass exec $JOB_NAME -- ./$MY_NAME prj_build $ARGS
+    multipass exec $JOB_NAME -- ./$MY_NAME prj_build remote-job $ARGS
     # multipass always matches host
     TARGET_ARCH=$(uname -m)
+    TARGET_DOCKER_ARCH=$(docker_arch $TARGET_ARCH)
     if $SAVE; then
-        mkdir -p docker-images/host/$TARGET_ARCH/docker
-        multipass transfer -r $JOB_NAME:out/docker docker-images/host/$TARGET_ARCH/.
+        echo "### transfer saved files"
+        mkdir -p $SAVE_PATH/$TARGET_DOCKER_ARCH
+        multipass transfer -r $JOB_NAME:$REMOTE_DIR/$SAVE_PATH/$TARGET_DOCKER_ARCH/. \
+            $SAVE_PATH/$TARGET_DOCKER_ARCH/.
     fi
     if $STOP; then
         multipass stop $JOB_NAME
@@ -324,18 +471,26 @@ case $1 in
         multipass delete --purge $JOB_NAME
     fi
     ;;
-"ssh-sudo")
+"ssh-sudo"|"ssh")
     # save defaults to true if not pushing
-    : ${SAVE:=true}
+    MODE=$1
     REMOTE_SSH=$2
     shift 2
-    scp $ME $REMOTE_SSH:.
-    ssh $REMOTE_SSH ./$MY_NAME here-sudo-only $ARGS
-    ssh $REMOTE_SSH ./$MY_NAME prj_build $ARGS
+    ssh $REMOTE_SSH mkdir -p $REMOTE_DIR
+    scp $ME $REMOTE_SSH:$REMOTE_DIR
+    case $MODE in
+    ssh-sudo)
+        ssh $REMOTE_SSH $REMOTE_DIR/$MY_NAME here-sudo-only $ARGS
+        ;;
+    esac
+    ssh $REMOTE_SSH $REMOTE_DIR/$MY_NAME prj_build remote-job $ARGS
     if $SAVE; then
+        echo "### transfer saved files"
         TARGET_ARCH=$(ssh $REMOTE_SSH uname -m)
-        mkdir -p docker-images/host/$TARGET_ARCH/docker
-        scp "$REMOTE_SSH:out/docker/*" docker-images/host/$TARGET_ARCH/docker/.
+        TARGET_DOCKER_ARCH=$(docker_arch $TARGET_ARCH)
+        mkdir -p $SAVE_PATH/$TARGET_DOCKER_ARCH
+        scp "$REMOTE_SSH:$REMOTE_DIR/$SAVE_PATH/$TARGET_DOCKER_ARCH/*" \
+            $SAVE_PATH/$TARGET_DOCKER_ARCH/.
     fi
     ;;
 "ec2-x86_64"|"ec2-x86")
@@ -357,20 +512,22 @@ case $1 in
     shift
     $ME ec2-arm64  $ARGS save
     $ME ec2-x86_64 $ARGS save
-    $ME local-manifest $ARGS
+    $ME local-manifest $ARGS load push
     ;;
 "local-manifest")
-    SAVE=false
     # used saved images, push and then build & push manifest
     shift
-    $ME prj_build load manifest $ARGS
+    $ME prj_build manifest $ARGS
     ;;
 "promote")
-    SAVE=false
-    LOAD=false
-    # pull TAG version, push and then build & push manifest
+    # use the TAG version to create a new manifest
     shift
-    $ME prj_build pull DEST_TAG=latest manifest $ARGS
+    $ME prj_build DEST_TAG=latest manifest $ARGS
+    ;;
+"image-ops")
+    # do whatever the args say
+    shift
+    $ME prj_build build=no $ARGS
     ;;
 ""|help)
     help

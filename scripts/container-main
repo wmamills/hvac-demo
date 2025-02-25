@@ -90,6 +90,10 @@ container_build() {
 	MY_GID=1000
 	MY_USER=user
 
+	if [ -e /.container-build-vars ]; then
+		. /.container-build-vars
+	fi
+
 	do_once distro_setup distro_setup
 	do_once admin_setup $MY_DIR/prj_script.sh admin_setup
 	userjmp $THIS_SCRIPT do_once prj_setup $MY_DIR/prj_script.sh prj_setup
@@ -98,9 +102,24 @@ container_build() {
 
 # the part of container_build to be run as the user
 container_build_user() {
+	URL=https://github.com/wmamills/hvac-demo.git
+	BRANCH=main
+	VER=""
+
+	if [ -e /.container-build-vars ]; then
+		. /.container-build-vars
+	fi
+
 	cd
-	git clone https://github.com/wmamills/hvac-demo.git
+	git clone $URL hvac-demo
 	cd ~/hvac-demo
+	if [ -n "$BRANCH" ]; then
+		git checkout $BRANCH
+	fi
+	if [ -n "$VER" ]; then
+		git fetch origin $VER
+		git reset --hard $VER
+	fi
 
 	# prefetch images
 	./scripts/maybe-fetch host/$(uname -m)
