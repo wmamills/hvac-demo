@@ -207,7 +207,7 @@ build_manifest() {
 
     : ${DEST_TAG:=$TAG}
 
-    echo "########## Manifest"
+    echo "########## Manifest TAG=$TAG DEST_TAG=$DEST_TAG"
     for c in $CONTAINER_LIST; do
         AMENDS=""
         for a_host in $ARCH_LIST; do
