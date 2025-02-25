@@ -22,13 +22,12 @@
     * Makefile will check dependencies and then run the scripts
     * Add demo targets to Makefile that will build or fetch what is needed
     * Save dependencies for each saved-image so they can be checked
-* build a container
-  * w/ everything to run demos
-  * can rebuild everything but will download and clone stuff
+X build a container
+  X w/ everything to run demos
+  X can rebuild everything but will download and clone stuff
   * can work w/ mounted user /prj or not
-* bundle a copy of dockit into the project
-* make container run work on arm64
-* make build run on arm64
+X make container run work on arm64
+X make build run on arm64
 * make demos work w/o container if distro has needed things
   * build host qemu's on old enough distro and save result
   * add an easy way to install needed packages
