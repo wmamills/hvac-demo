@@ -144,3 +144,90 @@ struct amp_queue_def_t {
 	uint64_t	device_head;
 	uint64_t	device_data;
 }
+
+/* Example Layout, (medium)
+**
+** Driver Segment 4k, driver r/w, device ro
+**    512 bytes layout definition & queue heads
+**    512 bytes rx notification (1 direct notification and 4032 indirect )
+**    512 bytes rx mask
+**    512 bytes tx notification
+**    2K  bytes 32 64 byte messages
+** Device Segment 4k, device r/w, device ro
+**    (same)
+**
+** Notification layout: N=48, bits/device = 16
+** word 0
+**    0 message queue always
+**    1 all virtqueues for all devices > 201
+**    2 all virtqueues for device 188
+**    3 to 15 same for devices 189 to 201
+**    16 to 63, indirect cascade for n = 1 to 47
+** word 1
+**    bit 0 to 14, per virtqueue notification, device 0
+**    bit 15       all other virtqueues for device 0
+**    bit 16 to 30, per virtqueue notification, device 1
+**    bit 31       all other virtqueues for device 1
+**    bit 32 to 46, per virtqueue notification, device 2
+**    bit 47       all other virtqueues for device 2
+**    bit 48 to 62, per virtqueue notification, device 3
+**    bit 63       all other virtqueues for device 3
+** word 2 to 47
+**    same for devices 4 to 187
+**
+**    status and config change is always done in band via messages
+*/
+
+/* Example Layout, (reasonable minimal)
+**
+** Shared Device / Driver Segment 576 bytes
+**    16   byte shared header
+**    [optional padding]
+**    Device:
+**    8   byte queue heard
+**    8   bytes rx notification (64 direct notifications, no masking)
+**    8   bytes tx notification
+**    [optional padding]
+**    Driver:
+**    8   byte queue heard
+**    8   bytes rx notification (64 direct notifications, no masking)
+**    8   bytes tx notification
+**    [optional padding]
+**    Device:
+**    256 bytes, 4 64 byte message
+**    [optional padding]
+**    Driver:
+**    256 bytes, 4 64 byte message
+**
+** Notification layout:
+**    64 direct notifications
+**    0 message queue always
+**    for device 0 to 2 (3 devices)
+**       virtqueues 0 to 6 each have individual notification bits
+**       virtqueues 7 and above share 1 notification bit
+**    for devices 3 to 8 (6 devices)
+**       all virtqueues share one notification bit (one bit per device)
+**    for devices 9 and above
+**       all virtqueues on all devices share one notification bit
+**
+**    status and config change is always done in band via messages
+*/
+
+/* Example Layout, (pathologically minimal)
+**
+** Shared Device / Driver Segment 160 bytes
+**    8   byte shared header
+**    Device:
+**    8   byte queue heard
+**    Driver:
+**    8   byte queue heard
+**    pad:
+**    8   (pad to 64 byte boundary)
+**    Device:
+**    64 bytes, 1 64 byte message
+**    Driver:
+**    64 bytes, 1 64 byte message
+**
+** Notification layout:
+**    all device and virtqueue notifications are done in band via messages
+*/
