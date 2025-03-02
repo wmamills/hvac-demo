@@ -19,11 +19,52 @@
 **
 */
 struct amp_queue_head_t {
-	uint16_t	status;		// magic & ready indication
-	uint16_t	resv;		// reserved for now, maybe restart detect
+	uint16_t	magic;		// magic / valid indication
+	uint16_t	status;		// status of self
 	uint16_t	head;		// head index for my queue
 	uint16_t	tail;		// tail index for other queue
 }
+
+// self status and peer status
+#DEFINE AMP_Q_STATUS_INIT	0	// just started up and not ready
+#DEFINE AMP_Q_STATUS_READY	1	// just started up and ready
+#DEFINE AMP_Q_STATUS_RUN	2	// normal run state
+#DEFINE AMP_Q_STATUS_SHUTDOWN	3	// shutting down, won't send new messages
+#DEFINE AMP_Q_STATUS_PEER_DEAD	4	// peer has been called dead
+
+// One normally starts in the INIT state but it is valid to start in the READY
+// state so long as the peer state is NOT RUN
+//
+// Once one is ready to start communication, and the peer is in any state other
+// than READY, the head and tail should be set to 0 and the state set to READY.
+//
+// Once self is set to the READY state and the peer is seen in the READY state,
+// self will transition to the RUN state.  Once both sides are in the RUN state,
+// communication starts
+//
+// A graceful shutdown is done via Bus level messages.  Once one side has issued
+// its last message, it will set state to SHUTDOWN. Once both sides are in the
+// SHUTDOWN state, graceful SHUTDOWN has been achieved.
+//
+// A "signaled abortive shutdown" can be signaled to the peer by setting self
+// state to SHUTDOWN.  The peer can do its own clean up and wait for bus
+// restart.  All devices should be assumed to be reset. No messages nor
+// additional notifications are expected once a peer sets the state to SHUTDOWN.
+// (Example: a crash handler can set the state to SHUTDOWN w/o doing anything
+// else.)
+//
+// If in RUN,RUN state and then peer goes to INIT, it means the peer has
+// silently restarted. Set the state to SHUTDOWN and do any cleanup locally.
+// After the local cleanup is done, the state can be set to INIT or READY.
+//
+// If self determins that the peer is unresponsive, it will set its state to
+// PEER_DEAD and do local cleanup.  The state should stay in PEER_DEAD until
+// the peer's state is READY, at which time self state should be set to
+// INIT or READY.
+//
+// If either peer is in SHUTDOWN or PEER_DEAD state, the bus may only be
+// restarted by each side doing its own cleanup and then setting its state to
+// INIT or (if peer state != RUN) READY
 
 /* Queue layout definition
 ** This structure can be used in the start of shared memory to define the 
