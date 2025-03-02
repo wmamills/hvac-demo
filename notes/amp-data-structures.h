@@ -231,3 +231,61 @@ struct amp_queue_def_t {
 ** Notification layout:
 **    all device and virtqueue notifications are done in band via messages
 */
+
+/* The small layout definition is an in memory self description of the
+** communication shared memory area and appears at byte 0 of this area
+** This form of the structure does:
+**     * allows 0 to 4038 bit of bi-directional notification, with optional mask
+**     * defines one queue in each direction with element size of 64 bytes and
+**       with the number of elements from 1 to
+*/
+struct amp_layout_def_small_t {
+	uint16_t	magic;			// magic & ready indication
+						// ready = MAGIC_LAYOUT_DEF_SMALL
+						// not ready = 0 or MAGIC_Q_DEF_NOT_READY
+	uint8_t		version;		// 0x01
+	uint8_t		length;			// size of this structure
+
+	// driver and device know who they are, no peer_id's are used
+
+	/* number of notification words provided in each direction
+	** 0 to 64
+	** implies number of direct & indirect
+	** layout is implied device, then driver
+	** for each:
+	**    u64 tx[N];
+	**    u64 rx[N];
+	**    optional u64 mask[N];
+	*/
+	#define AMP_LAYOUT_NOTIFICATION_FLAG_BITMASK 0xF000
+	#define AMP_LAYOUT_NOTIFICATION_FLAG_MASK    0x8000 // include mask array in layout
+	uint8_t	num_notifications;		// 0 to 64
+	uint8_t num_vq_notify_per_device;	// 1, 2, 4, 8, 16
+
+	/* count of number of queue elements for each direction
+	** expected range 1 to 8096
+	** for size == 16, max elements <= 480
+	*/
+	uint16_t	num_q_elements;
+
+// if size == 8, stop here, offsets are implied by values above
+// if size == 16, everything fits in 64K (always include, never include)
+	uint16_t	off_dev_notifications;
+	uint16_t	off_drv_notifications;
+	uint16_t	off_dev_q_elements;
+	uint16_t	off_drv_q_elements;
+// if size == 32, everything fits in one segment < 4G (overkill?)
+	uint32_t	off_dev_notifications;
+	uint32_t	off_drv_notifications;
+	uint32_t	off_dev_q_elements;
+	uint32_t	off_drv_q_elements;
+	uint32_t	size_dev_q_elements;
+	uint32_t	size_drv_q_elements;
+// if size == 40, big offsets with MAP IDs in MSB (overkill!?)
+	uint64_t	off_dev_notifications;
+	uint64_t	off_drv_notifications;
+	uint64_t	off_dev_q_elements;
+	uint64_t	off_drv_q_elements;
+	uint32_t	size_dev_q_elements;
+	uint32_t	size_drv_q_elements;
+}
