@@ -1,5 +1,24 @@
 /* AMP shared memory structures */
 
+/* AMP memory reference
+** A memory reference is an unsigned 64 bit integer
+** The upper most bits contain the memory area ID
+** The lower bits contain the offset within the memory area
+**
+** There are 4096 possible memory area IDs,
+**    although only one or two are used in most case
+** ID 0 is always reserved for driver side PA addresses
+** ID 1 is often the only memory area used and is normally the main memory area
+**
+** The maximum size of any memory area is 4096 TB
+**
+** TODO: max AREA_SHIFT bus defined at run time?
+*/
+#define AMP_MEMREF_AREA_MASK	0xFFF0000000000000ul
+#define AMP_MEMREF_OFFSET_MASK	0x000FFFFFFFFFFFFFul
+#define AMP_MEMREF_AREA_SHIFT	12
+typedef uint64_t amp_memref_t;
+
 /* Each side of a queue pair has its own queue_head
 **
 ** status indicates when this peer is ready for communication to start.
