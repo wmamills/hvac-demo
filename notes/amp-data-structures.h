@@ -66,6 +66,46 @@ struct amp_queue_head_t {
 // restarted by each side doing its own cleanup and then setting its state to
 // INIT or (if peer state != RUN) READY
 
+// An array of notification bits
+// each peer will have its own array
+// pending events n:
+//        unit64_t pending = self->notify->rx[n] ^ peer->notify->tx[n]
+//    gives 64 bits of pending events
+//    events must be acknowledged before action is taken
+//    events are acknowledged via
+//        self->notify->rx[n] ^= pending
+//    if mask is present, each 1 bit will prevent low level notification for the
+//    event.  Events can still be made pending but no IRQ will be fired.
+//    On Rx, masked events can be:
+//              not acknowledge and not acted upon (expected)
+//              acknowledged and acted upon
+//    Said, another way, a receiver may acknowledged a masked event or not but
+//    any acknowledged event MUST then be acted upon.
+//
+// Some layouts will use the notification array in multiple levels
+// A direct level will be triggered by a lower level IRQ
+// An indirect level will be triggered by a different direct level bit
+// One common layout is that n=0 will be triggered by the IRQ
+// and n=1 to 63 will be triggered by a bit in level 0.
+// The bit in level 0 depends on the value of N such that the MSBs of level 0
+// are used for the indirect cascade with the MSB of level 0 corresponding to
+// n = N -1.
+// For example if N = 2
+// 	There will be 63 direct events, 0 to 62 (in bits 0 to 62) of n=0
+//      There will be 64 indirect events in n=1 triggered by bit 63 of n=0
+// For example if N = 63
+//      There will be 1 direct event, 0 (bit 0 (LSB) of n=0)
+//      There will be 64 indirect events numbered 64 to 127 in n=1,
+//          triggered by bit 1 of n=0
+//      There will be 64 indirect events in n=63 triggered by bit 63 of n=0
+struct amp_notification_t<u8 N, bool mask> {
+	uint64_t		tx[N];		// array of rx bits
+	uint64_t		rx[N];		// array of rx bits
+	if mask {
+		uint64_t 	rx_mask[N];	// array of mask bits
+	}
+}
+
 /* Queue layout definition
 ** This structure can be used in the start of shared memory to define the 
 ** shared memory layout for a queue pair.
