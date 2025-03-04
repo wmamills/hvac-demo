@@ -44,12 +44,19 @@ struct amp_queue_head_t {
 	uint16_t	tail;		// tail index for other queue
 }
 
-// self status and peer status
-#DEFINE AMP_Q_STATUS_INIT	0	// just started up and not ready
-#DEFINE AMP_Q_STATUS_READY	1	// just started up and ready
-#DEFINE AMP_Q_STATUS_RUN	2	// normal run state
-#DEFINE AMP_Q_STATUS_SHUTDOWN	3	// shutting down, won't send new messages
-#DEFINE AMP_Q_STATUS_PEER_DEAD	4	// peer has been called dead
+// status field layout
+#define AMP_Q_STATUS_STATE_MASK 0x001F
+#define AMP_Q_STATUS_FLAG_MASK  0xF000
+
+#define AMP_Q_FLAG_DEBUGGABLE   0x8000	// this side may enter debug mode
+
+// state field of queue status
+#define AMP_Q_STATE_INIT        0       // just started up and not ready
+#define AMP_Q_STATE_READY       1       // just started up and ready
+#define AMP_Q_STATE_RUN         2       // normal run state
+#define AMP_Q_STATE_SHUTDOWN    3       // shutting down, won't send new messages
+#define AMP_Q_STATE_PEER_DEAD   4       // peer has been called dead
+
 
 // One normally starts in the INIT state but it is valid to start in the READY
 // state so long as the peer state is NOT RUN
