@@ -132,7 +132,7 @@ struct amp_notification_t<u8 N, bool mask> {
 	}
 }
 
-/* Example Layout, (medium)
+/* Example Layout, (medium, 4k for device, 4k for driver)
 **
 ** Driver Segment 4k, driver r/w, device ro
 **    512 bytes layout definition & queue heads
@@ -186,16 +186,31 @@ struct amp_notification_t<u8 N, bool mask> {
 **    Driver:
 **    256 bytes, 4 64 byte message
 **
-** Notification layout:
+** Notification layout: N=1 bits/device=8
+**    Summary:
 **    64 direct notifications
+**    7 devices with 7 vq specific notification and one catch-all for other vq
+**    6 devices with 1 catch-all for all vq
+**    1 catch-all for all vq's on all other devices
+**    1 for the message queue
+**
+**    Layout:
 **    0 message queue always
-**    for device 0 to 2 (3 devices)
-**       virtqueues 0 to 6 each have individual notification bits
-**       virtqueues 7 and above share 1 notification bit
-**    for devices 3 to 8 (6 devices)
-**       all virtqueues share one notification bit (one bit per device)
-**    for devices 9 and above
-**       all virtqueues on all devices share one notification bit
+**    1 all virtqueues on all devices > 12
+**    2 all virtqueues on device 7
+**    3 all virtqueues on device 8
+**    4 to 7 same for devices 9 to 12
+**    8 to 15 device 0
+**        8  virtqueue 0 on device 0
+**        9  virtquque 1 on device 0
+**        10 to 14 same for virtqueues 2 to 6 of device 0
+**        15 all virtqueus > 6 on device 0
+**    16 to 23 same pattern as above for device 1
+**    24 to 31 same pattern as above for device 2
+**    32 to 39 same pattern as above for device 3
+**    40 to 39 same pattern as above for device 4
+**    48 to 39 same pattern as above for device 5
+**    56 to 63 same pattern as above for device 6
 **
 **    status and config change is always done in band via messages
 */
