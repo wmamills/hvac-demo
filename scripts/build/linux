@@ -115,6 +115,19 @@ build_linux_virtio_msg_ffa() {
 	linux_common linux-virtio-msg-ffa
 }
 
+# Build virtio-msg-amp w/ a driver for the vek280 FPGA on x86_64
+build_linux_virtio_msg_amd_x86() {
+	URL=https://github.com/edgarigl/linux.git
+	BRANCH="edgari/virtio-msg-sapphire"
+	COMMIT="1dc75e798bb7fd416fd3e9683b31ba995a19b22f"
+	CONFIG="x86_64_defconfig xen.config"
+	EXTRA_CONFIG="\
+		extra.config virtio.config vfio.config \
+		qemu-xen.config uio.config trim.config"
+	ARCH="x86"
+	linux_common linux-virtio-msg-amd-x86
+}
+
 build_linux_upstream() {
 	URL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 	BRANCH=""
@@ -140,6 +153,7 @@ build_linux() {
 	(build_linux_virtio_msg)
 	(build_linux_virtio_msg_ffa)
 	(build_linux_upstream)
+	(build_linux_virtio_msg_amd_x86)
 
 	# we use virtio_msg for this now
 	# (build_linux_ivshmem_uio)
