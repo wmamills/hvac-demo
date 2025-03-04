@@ -13,14 +13,16 @@ linux_common() {
 		https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
 		$NAME || true
 
+	# default to arm64 but allow override
+	: ${ARCH:=arm64}
+	export ARCH
+
 	for f in $EXTRA_CONFIG; do
 		echo "adding config file $f"
-		cp mixins/linux/$f src/$NAME/arch/arm64/configs/.
+		cp mixins/linux/$f src/$NAME/arch/$ARCH/configs/.
 	done
 	cd src/$NAME
 
-	export ARCH=arm64
-	export CROSS_COMPILE=aarch64-linux-gnu-
 	export KBUILD_BASE="$(cd ../../build; pwd)/${NAME}"
 	export KBUILD_OUTPUT=${KBUILD_BASE}-build
 	export INSTALL_PATH_BASE=${KBUILD_BASE}-install
@@ -29,8 +31,26 @@ linux_common() {
 	export INSTALL_MOD_PATH=$INSTALL_PATH_BASE
 	mkdir -p $KBUILD_OUTPUT
 
+	case $ARCH in
+	"x86")
+		IMAGE_TARGET="bzImage"
+		DTBS=""
+		INSTALL_ARCH="x86_64"
+		export CROSS_COMPILE=""
+		;;
+	"arm64")
+		IMAGE_TARGET="Image"
+		DTBS="dtbs"
+		INSTALL_ARCH="aarch64"
+		export CROSS_COMPILE=aarch64-linux-gnu-
+		;;
+	*)
+		error "Don't know how to compile kernel for $ARCH"
+		;;
+	esac
+
 	make $CONFIG $EXTRA_CONFIG
-	make -j10 Image modules dtbs
+	make -j10 $IMAGE_TARGET modules $DTBS
 
 	rm -rf ../../build/${NAME}-install
 	mkdir -p ../../build/${NAME}-install/boot
@@ -38,7 +58,9 @@ linux_common() {
 	KREL=$(make --no-print-directory kernelrelease)
 	echo "KREL=$KREL"
 	fakeroot make INSTALL_MOD_STRIP=1 install modules_install
-	fakeroot make dtbs_install || true
+	if [ -n "$DTBS" ]; then
+		fakeroot make dtbs_install || true
+	fi
 	#fakeroot make firmware_install || true
 	(cd $INSTALL_PATH_BASE;
 	  mkdir -p lib/firmware;
@@ -48,11 +70,13 @@ linux_common() {
 	LINUX=$(cd ../../build/${NAME}-install/boot; ls -1 vmlinuz-*)
 	MODULES=$(cd ../../build/${NAME}-install; ls -1 modules-*.tar.gz)
 	echo "Symlinking $NAME to $LINUX"
-	mkdir -p $BASE_DIR/images/target/aarch64
+
+
+	mkdir -p $BASE_DIR/images/target/$INSTALL_ARCH
 	ln -fs  ../../../build/${NAME}-install/boot/$LINUX \
-		$BASE_DIR/images/target/aarch64/$NAME-Image
+		$BASE_DIR/images/target/$INSTALL_ARCH/$NAME-Image
 	ln -fs  ../../../build/${NAME}-install/$MODULES    \
-		$BASE_DIR/images/target/aarch64/$NAME-modules.tar.gz
+		$BASE_DIR/images/target/$INSTALL_ARCH/$NAME-modules.tar.gz
 }
 
 linux_virtio_common() {

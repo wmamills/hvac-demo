@@ -107,7 +107,9 @@ admin_setup() {
 	apt-get update -qq
 	# for xen (basic) and kernel build
 	apt-get install -yqq build-essential git git-lfs bison flex wget curl pv \
-	    bc libssl-dev libncurses-dev kmod python3 python3-setuptools iasl
+	    bc libssl-dev libncurses-dev kmod python3 python3-setuptools iasl \
+	    libelf-dev
+
 	# for cross-build
 	apt-get install -yqq gcc-aarch64-linux-gnu uuid-dev:arm64 libzstd-dev:arm64 \
 	    libncurses-dev:arm64 libyajl-dev:arm64 zlib1g-dev:arm64 \
