@@ -41,7 +41,7 @@ linux_common() {
 	"arm64")
 		IMAGE_TARGET="Image"
 		DTBS="dtbs"
-		INSTALL_ARCH="$ARCH"
+		INSTALL_ARCH="aarch64"
 		export CROSS_COMPILE=aarch64-linux-gnu-
 		;;
 	*)
