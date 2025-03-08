@@ -166,7 +166,7 @@ do_one_initramfs() {
 	# include in callbacks: cb:strip-modules cb:cond-depmod cb:rm-non-modules 
 
 	# add any extra stuff
-	new-cpio $G/mixins.cpio.gz $MIXINS_COMMON $MIXINS
+	new-cpio $G/mixins.cpio.gz $MIXINS_COMMON $MIXINS cb:usr-merge
 
 	# cpio-cat OUTPUT INPUT INPUT ...
 	cpio-cat $D/rootfs.cpio.gz \

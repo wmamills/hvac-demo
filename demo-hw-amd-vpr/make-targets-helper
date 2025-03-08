@@ -9,7 +9,7 @@ BASE=$(cd ..; pwd)
 LOCAL=$(pwd)
 
 # uncomment to keep the working dirs for debug
-KEEP_DIRS=y
+#KEEP_DIRS=y
 
 # strip the extra stuff from /usr/{share,bin,lib}
 strip_usr() {
@@ -26,7 +26,7 @@ build_arm64() {
 	BOARD=ve2303
 	ROOTFS_FILE=xen-image-minimal-genericarm64.rootfs.cpio.gz
 	MODULES_KEEP=false
-	HACK_CBS="cb:usr-merge cb:strip_usr"
+	HACK_CBS="cb:root-home-symlink cb:usr-merge cb:strip_usr cb:add-init-symlink"
 	do_one_initramfs
 }
 
