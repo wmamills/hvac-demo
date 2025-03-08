@@ -120,10 +120,11 @@ build_linux_virtio_msg_amd_x86() {
 	URL=https://github.com/edgarigl/linux.git
 	BRANCH="edgari/virtio-msg-sapphire"
 	COMMIT="1dc75e798bb7fd416fd3e9683b31ba995a19b22f"
-	CONFIG="x86_64_defconfig xen.config"
+	CONFIG="x86_64_defconfig"
 	EXTRA_CONFIG="\
+		ubuntu-22.04-6.8-generic.config \
 		extra.config virtio.config vfio.config \
-		qemu-xen.config uio.config trim.config"
+		qemu-xen.config uio.config"
 	ARCH="x86"
 	linux_common linux-virtio-msg-amd-x86
 }
