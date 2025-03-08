@@ -4,6 +4,7 @@
 /src/
 /images/
 /docker-images/
+xxx-temp*
 qemu-ram
 net.pcap
 queue-linux-user-d*
