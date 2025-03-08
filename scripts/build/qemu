@@ -149,11 +149,12 @@ qemu_msg_common() {
 	#BRANCH="edgar/virtio-msg"
 	#PATCH=""
 
-	# Use my branch
-	URL=https://github.com/wmamills/qemu.git
-	BRANCH="wam-virtio-msg"
-	COMMIT=""
-	PATCH=""
+	URL=https://github.com/edgarigl/qemu.git
+	BRANCH="edgar/virtio-msg-8.2.7"
+	COMMIT="eda15e1f5c34a0eb3b3ffd0e2fad76a010b52746"
+
+	# My repo has the same branch and commit as backup
+	#URL=https://github.com/wmamills/qemu.git
 }
 
 # QEMU w/ virtio-msg for the target system
@@ -188,7 +189,7 @@ build_qemu_msg() {
 	qemu_msg_common
 
 	TARGETS="aarch64-softmmu"
-	EXTRA_CONFIG=""
+	EXTRA_CONFIG="--disable-werror"
 	qemu_common_host qemu-msg
 }
 
