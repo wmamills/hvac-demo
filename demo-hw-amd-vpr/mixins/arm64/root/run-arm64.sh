@@ -1,0 +1,1 @@
+/usr/bin/run-versal-virtio-msg-net-backend.sh

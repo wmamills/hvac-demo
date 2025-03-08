@@ -1,0 +1,62 @@
+# use kernel and modules from current dir and make standalone rootfs in initrd
+
+# this file is used by make-image-targets
+# do not try to run it on its own
+# use: make-image-targets dir
+# where dir is the directory this file is in
+
+BASE=$(cd ..; pwd)
+LOCAL=$(pwd)
+
+# uncomment to keep the working dirs for debug
+#KEEP_DIRS=y
+
+# strip the extra stuff from /usr/{share,bin,lib}
+strip_usr_common() {
+    echo "Strip unneeded stuff from /usr/share"
+    rm -rf xxx-temp/usr/share/qemu/edk2*
+    rm -rf xxx-temp/usr/share/vim
+    rm -rf xxx-temp/usr/lib/{python3.12,grub}
+}
+
+# strip the extra stuff from /usr/{share,bin,lib}
+strip_usr_x86() {
+    strip_usr_common
+    # we don't need our own qemu for x86 side (we are not doing a proxy demo)
+    rm -rf xxx-temp/usr/share/virtio-msg-demo
+    rm -rf xxx-temp/usr/bin/qemu-{,system-}{arm,aarch64,i386,x86_64}
+}
+
+# strip the extra stuff from /usr/{share,bin,lib}
+strip_usr_arm() {
+    strip_usr_common
+    rm -rf xxx-temp/usr/bin/qemu-system-{i386,x86_64}
+    rm -rf xxx-temp/usr/lib/grub
+}
+
+DEF_TARGETS="arm64 x86"
+
+build_arm64() {
+	BOARD=ve2303
+	KERNEL_NAME=xyz
+	# ROOTFS_FILE=xen-image-minimal-genericarm64.rootfs.tar.bz2
+	ROOTFS_FILE=versal-virtio-msg-demo-image-versal-generic.rootfs.tar.gz
+	MODULES_KEEP=true
+	HACK_CBS="cb:root-home-symlink cb:usr-merge cb:strip_usr_arm cb:add-init-symlink"
+	do_one_initramfs
+	# after the above $D will be set
+	mkimage -A arm64 -T ramdisk -d $D/rootfs.cpio.gz $D/rootfs.cpio.gz.u-boot
+}
+
+build_x86() {
+	BOARD=fp6
+	ARCH=x86_64
+	ROOTFS_FILE=xen-image-minimal-genericx86-64.rootfs.tar.bz2
+	KERNEL_NAME=virtio-msg-amd-x86
+	MODULES_KEEP=false
+	STRIP=strip
+	HACK_CBS="cb:root-home-symlink cb:usr-merge cb:strip_usr_x86 cb:add-init-symlink"
+	do_one_initramfs
+}
+
+.  $BASE/scripts/make-targets-helper-lib
