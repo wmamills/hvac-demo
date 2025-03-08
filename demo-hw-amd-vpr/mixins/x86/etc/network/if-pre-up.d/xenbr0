@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ "$IFACE" = xenbr0 ]; then
+    brctl addbr xenbr0 || /bin/true
+    brctl addif xenbr0 eth0 || /bin/true
+    ifconfig eth0 up
+fi

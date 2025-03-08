@@ -1,0 +1,10 @@
+#!/bin/sh
+
+brctl addbr xenbr0
+
+# tap0 will be created by QEMU when virtio-msg/net comes up.
+# If this script, runs before QEMU the following will fail
+# but users can manually add tap0 to the bridge. So ignore
+# errors.
+brctl addif xenbr0 tap0 || /bin/true
+ip link set up dev tap0 || /bin/true

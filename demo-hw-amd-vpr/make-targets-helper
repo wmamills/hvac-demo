@@ -1,0 +1,27 @@
+# use kernel and modules from current dir and make standalone rootfs in initrd
+
+# this file is used by make-image-targets
+# do not try to run it on its own
+# use: make-image-targets dir
+# where dir is the directory this file is in
+
+# strip the extra stuff from /usr/{share,bin,lib}
+strip_usr() {
+    echo "Strip uneeded stuff from /usr/share"
+    rm xxx-temp/usr/share/qemu/edk2*
+    rm -rf xxx-temp/usr/share/{vim,virtio-msg-demo}
+    rm -rf xxx-temp/usr/bin/qemu-{,system-}{arm,aarch64,i386,x86_64}
+    rm -rf xxx-temp/usr/lib/{python3.12}
+}
+
+# uncomment to keep the working dirs for debug
+#KEEP_DIRS=y
+
+. make-targets-helper-lib
+
+ROOTFS_FILE=xen-image-minimal-qemux86-64.rootfs.cpio.gz
+MODULES_KEEP=false
+STRIP=strip
+HACK_CBS="cb:usr-merge cb:strip_usr"
+
+
