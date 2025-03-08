@@ -1,0 +1,187 @@
+# this file is used by make-image-targets
+# do not try to run it on its own
+# use: make-image-targets dir
+# where dir is the directory this file is in
+
+default_vars() {
+	: ${IMAGES:=$BASE/images/disk}
+	: ${ROOTFS_FILE:=you_must_define_one.tar.gz}
+	: ${KERNEL_NAME:=you_must_define_kernel_name}
+	: ${MODULES_KEEP:=false}
+	: ${BOARD:=generic}
+	: ${TTY:=ttyS0}
+	: ${ARCH:=arm64}
+	: ${NAME:=$(basename $LOCAL)-$TARGET}
+	: ${MIXINS_COMMON:=$BASE/mixins/minimal}
+	: ${MIXINS:=$LOCAL/mixins/$TARGET}
+	: ${HACK_CBS:=cb:add-init-symlink}
+	: ${CB_USR_MERGE:=cb:usr-merge}
+	: ${STRIP:=aarch64-linux-gnu-strip}
+}
+
+my-tty() {
+	# ensure our tty is enabled
+	add-tty $TTY
+}
+
+# remove any existing modules
+rm-modules() {
+	rm -rf xxx-temp/lib/modules
+}
+
+# trim the modules
+trim-modules() {
+	echo "Before:"; du -sh xxx-temp/lib/modules/*
+
+	#    rm -rf xxx-temp/lib/modules/*/kernel/drivers/gpu
+	#    rm -rf xxx-temp/lib/modules/*/kernel/drivers/media
+	#    rm -rf xxx-temp/lib/modules/*/kernel/sound
+
+	echo "After:"; du -sh xxx-temp/lib/modules/*
+}
+
+# Yocto deploy of modules-*.tgz are not stripped
+strip-modules() {
+	echo "Before:"; du -sh xxx-temp/lib/modules/*
+	find xxx-temp/lib/modules/*/kernel -name "*.ko" | xargs -n 1 $STRIP --strip-debug
+	echo "After:"; du -sh xxx-temp/lib/modules/*
+}
+
+cond-depmod() {
+	for m in xxx-temp/lib/modules/*; do
+		if [ ! -r $m/modules.alias ]; then
+		KVER=$(basename $m)
+		SMAP_FILE=xxx-temp/boot/System.map-$KVER
+		MOD_SYMVERS_FILE=xxx-temp/boot/Module.symvers-$KVER
+		if [ -r $SMAP_FILE -a -r $MOD_SYMVERS_FILE ]; then
+			depmod -ae -b xxx-temp -F $SMAP_FILE -E $MOD_SYMVERS_FILE $KVER && \
+			echo "depmod done for $KVER"
+		else
+			echo "ERROR: depmod needed for $KVER but support files not found"
+			ls -l xxx-temp/boot
+		fi
+
+		fi
+	done
+}
+
+# To get the files needed for depmod we install other things, remove them now
+rm-non-modules() {
+	rm -rf xxx-temp/boot
+	rm -rf xxx-temp/var
+}
+
+# We don't need the boot dir contents in the initrd
+rm-boot() {
+	rm -rf xxx-temp/boot/*
+}
+
+add-init-symlink() {
+	ln -fs /sbin/init xxx-temp/init
+}
+
+root-home-symlink() {
+	mkdir xxx-temp/root
+	mv xxx-temp/home/root/* xxx-temp/root/.  || true
+	rm -rf xxx-temp/home/root
+	ln -fs /root xxx-temp/home/root
+}
+
+usr-merge() {
+	mkdir -p xxx-temp/usr
+
+	for d in bin sbin lib; do
+		if [ ! -h xxx-temp/$d -a -d xxx-temp/$d ]; then
+		if [ -d xxx-temp/usr/$d ]; then
+			mv xxx-temp/$d/* xxx-temp/usr/$d
+			rm -rf xxx-temp/$d
+		else
+			mv xxx-temp/$d xxx-temp/usr/$d
+		fi
+		ln -s usr/$d xxx-temp/$d
+	fi
+	done
+}
+
+uname_m_arch() {
+	# based on setting of ARCH now, set the expect uname -m response
+	case $ARCH in
+	arm64|aarch64)
+		UNAME_M_ARCH=aarch64
+		;;
+	x86_64|amd64)
+		UNAME_M_ARCH=x86_64
+		;;
+	*)
+		error "unknown ARCH=$ARCH"
+		;;
+	esac
+}
+
+do_one_initramfs() {
+	shopt -s nullglob
+
+	default_vars
+	uname_m_arch
+	echo "ARCH=$ARCH UNAME_M_ARCH=$UNAME_M_ARCH"
+
+	D=$BASE/build/disk/$NAME
+	G=$D/generated
+	TP="target/$UNAME_M_ARCH"
+	mkdir -p $G
+
+	# fetch any missing input
+	$BASE/scripts/maybe-fetch --image \
+		disk/$ROOTFS_FILE
+		$TP/linux-${KERNEL_NAME}-Image \
+		$TP/linux-${KERNEL_NAME}-modules.tar.gz
+
+	if $MODULES_KEEP; then
+		CB_RM_MODULES=""
+		MODULES_CPIO=""
+	else
+		CB_RM_MODULES=cb:rm-modules
+		MODULES_CPIO=$G/modules.cpio.gz
+	fi
+
+	# hack the input rootfs
+	new-cpio $G/hacked.cpio.gz \
+		$BASE/images/disk/$ROOTFS_FILE \
+		$CB_RM_MODULES $HACK_CBS cb:rm-boot
+
+	# make a cpio of the modules
+	if ! $MODULES_KEEP; then
+		MF=$BASE/images/$TP/linux-${KERNEL_NAME}-modules.tar.gz
+		if [ ! -e $MF ]; then
+			error "Module file $MF does not exist"
+		fi
+		new-cpio $G/modules.cpio.gz \
+		$MF \
+		cb:trim-modules cb:usr-merge
+		
+	fi
+
+	# to handle modules in Yocto deploy format we need the following
+	# include in input files modules-*.tgz kernel-dev*.{rpm,ipk}
+	# include in callbacks: cb:strip-modules cb:cond-depmod cb:rm-non-modules 
+
+	# add any extra stuff
+	new-cpio $G/mixins.cpio.gz $MIXINS_COMMON $MIXINS
+
+	# cpio-cat OUTPUT INPUT INPUT ...
+	cpio-cat $D/rootfs.cpio.gz \
+		$G/hacked.cpio.gz \
+		$MODULES_CPIO \
+		$G/mixins.cpio.gz
+}
+
+main() {
+	TARGETS="$@"
+	if [ -z "$TARGETS" ]; then
+		TARGETS=$DEF_TARGETS
+	fi
+
+	for TARGET in "$TARGETS"; do
+		(build_$TARGET)
+	done
+}
