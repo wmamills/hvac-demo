@@ -133,7 +133,7 @@ build_linux_virtio_msg_amd_x86() {
 build_linux_virtio_msg_amd_arm64() {
 	URL=https://github.com/edgarigl/linux.git
 	BRANCH="edgari/virtio-msg-versal"
-	#COMMIT="1dc75e798bb7fd416fd3e9683b31ba995a19b22f"
+	COMMIT="fc55acd223a5a1a60f4a6fda94523dc76b8dc0f5"
 	CONFIG="defconfig xen.config"
 	EXTRA_CONFIG="\
 		extra.config virtio.config vfio.config \
