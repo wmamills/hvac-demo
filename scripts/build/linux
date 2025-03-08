@@ -23,6 +23,7 @@ linux_common() {
 	done
 	cd src/$NAME
 
+	mkdir -p ../../build
 	export KBUILD_BASE="$(cd ../../build; pwd)/${NAME}"
 	export KBUILD_OUTPUT=${KBUILD_BASE}-build
 	export INSTALL_PATH_BASE=${KBUILD_BASE}-install
