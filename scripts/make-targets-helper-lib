@@ -33,6 +33,7 @@ rm-modules() {
 trim-modules() {
 	echo "Before:"; du -sh xxx-temp/lib/modules/*
 
+	rm -rf xxx-temp/lib/modules/*/kernel/drivers/net/wireless
 	#    rm -rf xxx-temp/lib/modules/*/kernel/drivers/gpu
 	#    rm -rf xxx-temp/lib/modules/*/kernel/drivers/media
 	#    rm -rf xxx-temp/lib/modules/*/kernel/sound
