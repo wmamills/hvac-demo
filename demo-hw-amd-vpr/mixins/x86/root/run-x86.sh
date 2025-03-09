@@ -2,19 +2,30 @@
 
 vif=$1
 
-if [ -z ${vif} ]; then
-	vif="eth3"
-fi
+KVER=$(uname -r)
 
 set -x
-insmod /usr/share/virtio-msg-demo/virtio_msg_amp.ko
-insmod /usr/share/virtio-msg-demo/virtio_msg_sapphire.ko
+insmod /lib/modules/$KVER/kernel/drivers/virtio/virtio_msg.ko
+insmod /lib/modules/$KVER/kernel/drivers/virtio/virtio_msg_amp.ko
+insmod /lib/modules/$KVER/kernel/drivers/virtio/virtio_msg_sapphire.ko
 
-brctl addbr br0
-brctl addif br0 eth1
-brctl addif br0 ${vif}
-ip link set up dev eth1
-ip link set up dev ${vif}
+# sleep longer than arm side
+sleep 5
 
-echo "iface br0 inet dhcp" >>/etc/network/interfaces
-ifup br0
+if [ -z ${vif} ]; then
+    vif="eth3"
+    for eth_if in eth2 eth3; do
+        DRIVER=$(readlink /sys/class/net/${eth_if}/device/driver)
+        case $DRIVER in
+        */virtio_net)
+            vif=${eth_if}
+            break
+            ;;
+        esac
+    done
+fi
+
+
+ifconfig ${vif} up
+ifconfig ${vif} inet 192.168.160.1
+ping -c 3 192.168.160.2
