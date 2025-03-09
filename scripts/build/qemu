@@ -170,6 +170,18 @@ build_qemu_msg_arm64() {
 	qemu_common_cross qemu-msg-arm64
 }
 
+build_qemu_msg_arm64_yp() {
+	echo "****** Build qemu virtio-msg arm64 (target side)"
+	XEN_DEB=""
+
+	qemu_msg_common
+
+	# build for kvm and xen
+	TARGETS="aarch64-softmmu,i386-softmmu"
+	EXTRA_CONFIG="--cross-prefix=aarch64-poky-gnu- --disable-werror"
+	qemu_common_cross qemu-msg-arm64-yp
+}
+
 # QEMU w/ virtio-msg for the host system
 build_qemu_msg() {
 	echo "****** Build qemu w/ virtio-msg (host side for system emulation)"
