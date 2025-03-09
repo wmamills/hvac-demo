@@ -1,0 +1,383 @@
+#!/bin/bash
+
+ME_ORIG=$0
+ME=$(readlink -f $ME_ORIG)
+DIR=$PWD
+
+error() {
+	echo "$@"
+	exit 2
+}
+
+any-cat() {
+	if [ -z "$1" ]; then
+		error "any-cat: decompress a file to stdout"
+	fi
+
+	case $1 in
+	*.gz|*.tgz)
+		zcat $1
+		;;
+	*.bz2)
+		bzcat $1
+		;;
+	*.xz)
+		xzcat $1
+		;;
+	*.zstd)
+		zstdcat $1
+		;;
+	*)
+		cat $1
+		;;
+	esac
+}
+
+any-compress() {
+	if [ -z "$1" ]; then
+		error "any-compress: compress stdin to any format based on name"
+	fi
+
+	case $1 in
+	*.gz)
+		gzip - >$1
+		;;
+	*.bz2)
+		bzip2 - >$1
+		;;
+	*.xz)
+		xz - >$1
+		;;
+	*.zstd)
+		zstd - >$1
+		;;
+	*)
+		cat - >$1
+		;;
+	esac
+}
+
+# new-cpio OUTPUT INPUT callback-function
+new-cpio() {
+	fakeroot $ME in-fakeroot new-cpio "$@"
+}
+
+fr_new-cpio() {
+	echo "new-cpio $@"
+	OUTPUT=$1
+	OUTPUT_NAME=$(basename $OUTPUT)
+	OUTPUT_NAME=${OUTPUT_NAME%%.*}
+	shift
+
+	rm -rf xxx-temp
+	rm -rf xxx-temp.$OUTPUT_NAME
+	mkdir -p xxx-temp
+
+	for i in "$@"; do
+		case $i in 
+		cb:*)
+			f=${i#cb:}
+			echo "Calling $f"
+			$f
+			;;
+		*)
+			extract $i
+			;;
+		esac
+	done
+
+	truncate --size 0 $OUTPUT
+	re-archive $OUTPUT
+	if [ -n "$KEEP_DIRS" ]; then
+		mv xxx-temp xxx-temp.$OUTPUT_NAME
+	else
+		rm -rf xxx-temp
+	fi
+}
+
+# new-vfat OUTPUT SIZE NAME INPUT ... callback-function ...
+new-vfat() {
+	fakeroot $ME in-fakeroot new-fs vfat "$@"
+}
+
+# new-ext4 OUTPUT SIZE NAME INPUT ... callback-function ...
+new-ext4() {
+	fakeroot $ME in-fakeroot new-fs ext4 "$@"
+}
+
+fr_new-fs() {
+	echo "new-vfat $@"
+	FS_TYPE=$1
+	OUTPUT=$2
+	SIZE=$3
+	LABEL=$4
+	OUTPUT_DIR=$(dirname $OUTPUT)
+	OUTPUT_NAME=$(basename $OUTPUT)
+	OUTPUT_NAME=${OUTPUT_NAME%%.*}
+	OUTPUT_IMAGE=${OUTPUT}
+	shift 4
+
+	rm -rf xxx-temp
+	rm -rf xxx-temp.$OUTPUT_NAME
+	mkdir -p xxx-temp
+
+	for i in "$@"; do
+		case $i in
+		cb:*)
+			f=${i#cb:}
+			echo "Calling $f"
+			$f
+			;;
+		*)
+			extract $i
+			;;
+		esac
+	done
+
+	rm $OUTPUT_IMAGE || true
+	truncate --size $SIZE $OUTPUT_IMAGE
+	case $FS_TYPE in
+	vfat)
+		mkfs.vfat -n $LABEL $OUTPUT_IMAGE
+		mcopy -i $OUTPUT_IMAGE xxx-temp/* ::
+		;;
+	ext4)
+		mkfs.ext4 -L $LABEL -d xxx-temp/ $OUTPUT_IMAGE
+		;;
+	*)
+		error unknown fs type $FS_TYPE
+		;;
+	esac
+
+	if [ -n "$KEEP_DIRS" ]; then
+		mv xxx-temp xxx-temp.$OUTPUT_NAME
+	else
+		rm -rf xxx-temp
+	fi
+}
+
+# new-mbr-image OUTPUT SIZE PART1 PART2
+# PART1 will have boot flag set
+new-mbr-image() {
+	new-disk-image dos "$@"
+}
+
+# new-gpt-image OUTPUT SIZE PART1 PART2
+# PART1 will have boot flag set
+new-gpt-image() {
+	new-disk-image gpt "$@"
+}
+
+part-type-dos() {
+	case $1 in
+	*.vfat)
+		echo "c"
+		;;
+	*.ext4)
+		echo "83"
+		;;
+	*)
+		error "partition $part is not a know format"
+		;;
+	esac
+}
+
+part-type-gpt() {
+	case $1 in
+	*.efi|*.uefi)
+		echo "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+		;;
+	*.ext4|*.vfat)
+		echo "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+		;;
+	*)
+		error "partition $part is not a know format"
+		;;
+	esac
+}
+
+# new-disk-image dos|gpt OUTPUT SIZE PART1 PART2
+# PART1 will have boot flag set
+new-disk-image() {
+	echo "new-disk-image $@"
+	FORMAT=$1
+	OUTPUT=$2
+	SIZE=$3
+	OUTPUT_DIR=$(dirname $OUTPUT)
+	OUTPUT_NAME=$(basename $OUTPUT)
+	OUTPUT_NAME=${OUTPUT_NAME%%.*}
+	OUTPUT_IMAGE=${OUTPUT}
+	SFDISK_FILE=${OUTPUT_DIR}/${OUTPUT_NAME}.sfdisk
+	shift 3
+
+	cat >$SFDISK_FILE <<EOF
+label: $FORMAT
+unit:  sectors
+EOF
+
+	START=2048
+	BOOTABLE=", bootable"
+	for part in "$@"; do
+		TYPE=$(part-type-$FORMAT $part)
+
+		# get the block count
+		F_SIZE=$(( ( $(stat --printf="%s" $part) + 511 ) / 512 ));
+		printf "start=$START, size=$F_SIZE, type=$TYPE $BOOTABLE \n" \
+			>>$SFDISK_FILE
+		START=$(( $START + $F_SIZE ))
+		BOOTABLE=""
+	done
+
+	rm $OUTPUT_IMAGE || true
+	truncate --size $SIZE $OUTPUT_IMAGE
+	ls -l $OUTPUT_IMAGE
+	sfdisk $OUTPUT_IMAGE <$SFDISK_FILE
+
+	# now actually copy the data into the partitions
+	START=2048
+	for part in "$@"; do
+		# get the block count
+		F_SIZE=$(( ( $(stat --printf="%s" $part) + 511 ) / 512 ));
+		dd if=$part of=$OUTPUT_IMAGE bs=512 seek=$START count=$F_SIZE \
+			conv=notrunc
+		START=$(( $START + $F_SIZE ))
+	done
+}
+
+# cpio-cat OUTPUT INPUT INPUT ...
+cpio-cat() {
+	OUTPUT=$1
+	shift
+	truncate --size 0 $OUTPUT
+	for i in "$@"; do
+		cat $i >>$OUTPUT
+	done
+}
+
+add-tty() {
+	TTY=$1
+	SHORT=${TTY#tty}
+	BAUD=115200
+	TERM=vt102
+	INITTAB=xxx-temp/etc/inittab
+	SEC=xxx-temp/etc/securetty
+
+	if ! grep -q "^${SHORT}:" $INITTAB; then
+		echo "$SHORT:12345:respawn:/bin/start_getty $BAUD $TTY $TERM" >>$INITTAB
+	fi
+
+	if ! grep -q "^${TTY}" $SEC; then
+		chmod u+w $SEC
+		echo "$TTY" >>$SEC
+		chmod -w $SEC
+	fi
+}
+
+rm-tty() {
+	TTY=$1
+	SHORT=${TTY#tty}
+	INITTAB=xxx-temp/etc/inittab
+
+	if grep -q "^${SHORT}:" $INITTAB; then
+		sed -i -e "s/^${SHORT}:/#${SHORT}:/" $INITTAB
+	fi
+}
+
+extract() {
+	echo "Extracting $1"
+
+	# handle directories first
+	if [ -d $1 ]; then
+		cp -dR --preserve=mode,timestamps $1/. xxx-temp
+		return
+	fi
+
+	if [ ! -e $1 ]; then
+		error "$1 does not exist"
+	fi
+
+	# otherwise archives
+	case $1 in
+	*.tar.gz|*.tgz|*.tar.bz2|*.tar.xz|*.tar.zstd|*.tar)
+		any-cat $1 | tar x -C xxx-temp
+		;;
+	*.cpio.gz|*.cpio.bz2|*.cpio.xz|*.cpio.zstd|*.cpio)
+		any-cat $1 | (cd xxx-temp; cpio -i)
+		;;
+	*.rpm)
+		# This does not add the package scripts or info
+		rpm2cpio $1 | (cd xxx-temp; cpio -i)
+		;;
+	*.deb|*.ipk)
+		# This does not add the package scripts or info
+		# This does not handle OpenWRT's *.ipk's as they are not *.deb's
+		# This does work fine with Yocto Project *.ipk'ss
+		dpkg-deb -x $1 xxx-temp
+		;;
+	*)
+		echo "don't know how to handle $1"
+		exit 2
+		;;
+	esac
+}
+
+re-archive() {
+	echo "Re-archiving to $1"
+
+	case $1 in
+	*.tar|*.tar.gz|*.tar.bz2|*.tar.xz|*.tar.zstd)
+		tar c -C xxx-temp | any-compress $1
+		;;
+	*.cpio|*.cpio.gz|*.cpio.bz2|*.cpio.xz|*.cpio.zstd)
+		(cd xxx-temp; find . | cpio -H newc -o ) | any-compress $1
+		;;
+	*)
+		echo "don't know how to handle $1"
+		exit 2
+		;;
+	esac
+}
+
+# this will only get used if the dir has no helper script
+# these should only be very safe things
+main() {
+	echo "running default main()"
+	echo "no defaults for now"
+}
+
+import-helper() {
+	if [ -e ./make-targets-helper ]; then
+		source ./make-targets-helper
+	fi
+}
+
+premain() {
+	if [ -d $1 ]; then
+		cd $1
+		if [ -e ./make-targets-helper ]; then
+			echo " sourcing $1/make-targets-helper"
+			source ./make-targets-helper
+		else
+			echo "no helper found, doing default processing"
+		fi
+		shift
+		main "$@"
+	else
+		error "input 1 needs to be a dir"
+	fi
+}
+
+case $1 in
+"")
+	echo "need an input dir"
+	exit 2
+	;;
+"in-fakeroot")
+	CMD=$2; shift 2
+	import-helper
+	fr_${CMD} "$@"
+	;;
+*)
+	premain "$@"
+	;;
+esac
