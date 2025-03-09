@@ -6,5 +6,5 @@ iface lo inet loopback
 
 iface eth0 inet manual
 
-iface xenbr0 inet dhcp
-        bridge_ports tap0
+#iface xenbr0 inet dhcp
+#        bridge_ports tap0
