@@ -1,0 +1,44 @@
+/ {
+	axi {
+                user_io@0 {
+                        compatible = "mydevice,generic-uio,ui_pdrv";
+                        reg = <0x04A0 0x00000000 0x8 0x60000000
+                               0x0202 0x00004000 0x0 0x2000>;
+
+                        // Level
+                        interrupts = <0 87 4>;
+                        // Edge triggered
+                        //interrupts = <0 87 4>;
+                        status = "okay";
+                };
+
+                user_irq@0 {
+                        compatible = "pl-irq";
+                        status = "okay";
+                        reg = <0x201 0x80000000 0x0 0x1000
+                               0x202 0x00050000 0x0 0x1000 >;
+                };
+	};
+
+        chosen {
+                #address-cells = <2>;
+                #size-cells = <2>;
+
+                xen,xen-bootargs = "console=dtuart dtuart=serial0 dom0_mem=5G dom0_max_vcpus=2 bootscrub=0 vwfi=native sched=null";
+                xen,dom0-bootargs = "console=hvc0 earlycon=xenboot autorun=./run-arm64.sh autopoweroff=no";
+
+                module@0 {
+                        compatible = "xen,linux-zimage", "multiboot,module";
+			//reg = <0x0 0x47000000 0x0 0x29a1a00>;
+			reg = <0x0 0xE00000 0x0 0x29a1a00>;
+                };
+
+                module@1 {
+                        compatible = "xen,linux-initrd", "xen,multiboot-module", "multiboot,module";
+                        //reg = <0x0 0x50000000 0x0 0x20000000>;
+			reg = <0x0 0x2600000 0x0 0x8030000>;
+                };
+
+        };
+};
+

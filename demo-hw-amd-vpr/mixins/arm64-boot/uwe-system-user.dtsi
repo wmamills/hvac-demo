@@ -1,0 +1,92 @@
+&amba {
+        zyxclmm_drm {
+                compatible = "xlnx,zocl-versal";
+        };
+};
+
+&qspi {
+	status = "disabled";
+};
+
+&can0 {
+        status = "disabled";
+};
+
+&can1 {
+        status = "disabled";
+};
+	
+&ttc0 {
+        status = "disabled";
+};
+
+&ttc1 {
+        status = "disabled";
+};
+
+/ {
+    reserved-memory {
+        #address-cells = <2>;
+        #size-cells = <2>;
+        ranges;
+        rproc_0_reserved: rproc@3ed00000 {
+            no-map;
+            reg = <0x0 0x3ed00000 0x0 0x40000>;
+        };
+    };
+  
+    tcm0: tcm_0a@ffe00000 {
+        no-map;
+        reg = <0x0 0xffe00000 0x0 0x10000>;
+        status = "okay";
+        compatible = "mmio-sram";
+        power-domain = <&versal_firmware 0x1831800b>;
+    };
+  
+    tcm1: tcm_0b@ffe20000 {
+        no-map;
+        reg = <0x0 0xffe20000 0x0 0x10000>;
+        status = "okay";
+        compatible = "mmio-sram";
+        power-domain = <&versal_firmware 0x1831800c>;    
+    };
+  
+    rf5ss@ff9a0000 {
+        compatible = "xlnx,zynqmp-r5-remoteproc";
+        #address-cells = <0x2>;
+        #size-cells = <0x2>;
+        ranges;
+        xlnx,cluster-mode = <1>;
+        reg = <0x0 0xff9a0000 0x0 0x10000>;
+  
+        r5f_0 {
+            compatible = "xilinx,r5f";
+            #address-cells = <0x2>;
+            #size-cells = <0x2>;
+            ranges;
+            sram = <&tcm0 &tcm1>;
+            memory-region = <&rproc_0_reserved>;
+            power-domain = <&versal_firmware 0x18110005>;
+        };
+    };
+      
+    /* Shared memory */
+    shm0: shm@0 {
+        compatible = "shm_uio";
+        reg = <0x0 0x3ed80000 0x0 0x1000000>;
+    };
+  
+    /* IPI device */
+    ipi_amp: ipi@ff360000 {
+        compatible = "ipi_uio";
+        reg = <0x0 0xff360000 0x0 0x1000>;
+        interrupt-parent = <&gic>;
+        interrupts = <0 33 4>;
+    };
+  
+    /* Triple Timer Counter */
+    ttc0 {
+        compatible = "ttc-uio";
+        reg = <0x0 0xFF0E0000 0x0 0x1000>;
+    };
+};
