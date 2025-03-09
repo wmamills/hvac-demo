@@ -21,7 +21,7 @@ strip_usr_common() {
 
 # strip the extra stuff from /usr/{share,bin,lib}
 strip_usr_x86() {
-    strip_user_common
+    strip_usr_common
     # we don't need our own qemu for x86 side (we are not doing a proxy demo)
     rm -rf xxx-temp/usr/share/virtio-msg-demo
     rm -rf xxx-temp/usr/bin/qemu-{,system-}{arm,aarch64,i386,x86_64}
