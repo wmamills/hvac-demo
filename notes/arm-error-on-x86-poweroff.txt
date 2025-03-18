@@ -1,0 +1,15 @@
+; The below error is recived from the ARM side when the x86 side is powered off
+; After this the arm side is not responsive at all
+
+[164398.075]PMC EAM ERR1: 0x200
+[164398.124]PSM EAM Interrupt: ERR1: 0x20000 ERR2: 0x0 
+[164402.978]Received CPM PCIE1 interrupt
+[164406.584]Proc ID received: 0x2
+[165985.293]Polling 0xFCE90038 Mask: 0x3F ExpectedValue: 0x0
+[165987.790]MaskPoll: Addr: 0x0FCE90038, Mask: 0x3F, ExpVal: 0x0, Timeout: 1000000, RegVal: 0x28 ...ERROR
+[165996.983]CMD: 0x00040101 execute failed, Processed Cdo Length 0x78
+[166003.082]CMD Payload START, Len:0x00000004
+ 0x00000000FFC0FF50: 0xFCE90038 0x0000003F 0x00000000 0x00001000 
+ 0x00000000FFC0FF5C: 
+[166014.848]CMD Payload END
+[166017.339]PLM Error Status: 0x21010001
