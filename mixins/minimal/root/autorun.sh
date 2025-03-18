@@ -39,7 +39,7 @@ delay() {
 
 AUTORUN=$(get_cmdline_arg autorun "")
 AUTORUN_DELAY=$(get_cmdline_arg autorun_delay 5)
-AUTOPOWEROFF=$(get_cmdline_arg autorunpoweroff "yes")
+AUTOPOWEROFF=$(get_cmdline_arg autopoweroff "yes")
 AUTORUN_TTY=$(get_cmdline_arg autorun_tty "")
 PRIME_CONSOLE=$(cat /proc/consoles | cut -d" " -f 1 | head -n 1)
 
@@ -84,7 +84,7 @@ off|OFF|no|NO|n|N)
 	exit
 	;;
 0*|1*|2*|3*|4*|5*|6*|7*|8*|9*|0*)
-	AUTORUN_DELAY=(( $AUTOPOWEROFF + 0 ))
+	AUTORUN_DELAY=$(( $AUTOPOWEROFF + 0 ))
 	;;
 esac
 
