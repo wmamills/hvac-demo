@@ -83,7 +83,7 @@ add-init-symlink() {
 
 root-home-symlink() {
 	mkdir xxx-temp/root
-	mv xxx-temp/home/root/* xxx-temp/root/.  >/devnull 2>&1 || true
+	mv xxx-temp/home/root/* xxx-temp/root/.  >/dev/null 2>&1 || true
 	rm -rf xxx-temp/home/root
 	ln -fs /root xxx-temp/home/root
 }
