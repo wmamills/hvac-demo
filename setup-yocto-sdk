@@ -1,0 +1,66 @@
+# file should be sourced, not executed
+# setup the yocto sdk for use, source each time
+# if the sdk is not already installed it will be
+
+# set defaults
+: ${ARCH:=arm64}
+
+# calculate
+case $ARCH in
+arm|arm64)
+	ARCH=arm64
+	ENV_FILE_ARCH=armv8a
+	INSTALLER_ARCH=armv8a-genericarm64
+	;;
+x86_64|x86)
+	ARCH=x86_64
+	ENV_FILE_ARCH=core2-64
+	INSTALLER_ARCH=core2-64-genericx86-64
+esac
+
+# should be calculated but do this for now
+: ${HOST:=x86_64}
+
+# constants
+INSTALL_BASE=~/opt/yoxen/2024.02.10
+
+ENV_FILE=${INSTALL_BASE}/${ARCH}/environment-setup-${ENV_FILE_ARCH}-poky-linux
+INSTALLER=host/${HOST}/yoxen-glibc-$HOST-xen-image-minimal-${INSTALLER_ARCH}-toolchain-2024.02.10.sh
+
+do_install() {
+	echo "Yocto SDK install for $ARCH"
+	./scripts/maybe-fetch --image $INSTALLER
+	chmod +x ./images/$INSTALLER
+	./images/$INSTALLER -y -d $INSTALL_BASE/$ARCH
+}
+
+if [ ! -r $ENV_FILE ]; then
+	(do_install)
+fi
+
+if [ ! -r $ENV_FILE ]; then
+	echo "Yocto SDK setup file for $ARCH not found."
+	echo $ENV_FILE
+	return
+fi
+
+. $ENV_FILE
+
+# Make a script version of $CC and place it in the path first
+# xen make does not honor preset CC, instead it sets it to ${CROSS_PREFIX}gcc
+# It does honor CFLAGS CROSS_PREFIX and LDFLAGS
+ORIG_CC="$CC"
+ORIG_CFLAGS="$CFLAGS"
+ORIG_LDFLAGS="$LDFLAGS"
+CC_ARGS=$(echo "$CC" | cut -d " " -f2-)
+CC=$(echo "$CC" | cut -d " " -f1)
+CC_FULL=$(which $CC)
+mkdir -p build/yocto-sdk/bin
+echo '#!/bin/sh' >build/yocto-sdk/bin/$CC
+echo "$CC_FULL $CC_ARGS \"\$@\"" >>build/yocto-sdk/bin/$CC
+chmod +x build/yocto-sdk/bin/$CC
+PATH=$PWD/build/yocto-sdk/bin:$PATH
+
+unset LDFLAGS
+export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-poky-linux-gcc
+export PKG_CONFIG=pkg-config
