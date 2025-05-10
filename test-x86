@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./scripts/make-image-targets demo-hw-amd-vpr x86
+cp ./build/disk/demo-hw-amd-vpr-x86/rootfs.cpio.gz /home/bill/srv/tftp/fp6/my/.

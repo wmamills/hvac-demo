@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./scripts/make-image-targets demo-hw-amd-vpr arm64
+cp ./build/disk/demo-hw-amd-vpr-arm64/rootfs.cpio.gz.u-boot /home/bill/srv/tftp/vek280/my/.
