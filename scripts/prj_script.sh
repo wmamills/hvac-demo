@@ -163,7 +163,7 @@ prj_build() {
 		item=${item//-/_}
 		case $item in
 		demo*)
-			(./$item)
+			(build_${item})
 			;;
 		all|clean*)
 			(build_${item})
@@ -175,27 +175,37 @@ prj_build() {
 			$MY_DIR/build/rust $MODE_ARG $item
 			;;
 		*)
-			if [ -e $MY_DIR/build/$item ]; then
-				$MY_DIR/build/$item $MODE_ARG
-			else
-				FIRST_PART=${item%%_*}
-				if [ -e $MY_DIR/build/$FIRST_ITEM ]; then
-					$MY_DIR/build/$FIRST_PART $MODE_ARG $item
-				else
-					echo "Unknown build item $item"
-					exit 2
-				fi
-			fi
+			build_one $item
 			;;
 		esac
 	done
 	echo "****** Done"
 }
 
-build_all() {
-	for item in rust util xen qemu linux u_boot zephyr disk; do
-		$MY_DIR/build/$item --build
+build_one() {
+	local item=$1
+	if [ -e $MY_DIR/build/$item ]; then
+		$MY_DIR/build/$item $MODE_ARG
+	else
+		FIRST_PART=${item%%_*}
+		if [ -e $MY_DIR/build/$FIRST_ITEM ]; then
+			$MY_DIR/build/$FIRST_PART $MODE_ARG $item
+		else
+			echo "Unknown build item $item"
+			exit 2
+		fi
+	fi
+}
+
+build_some() {
+	local item
+	for item in "$@"; do
+		(build_one $item)
 	done
+}
+
+build_all() {
+	build_some rust util xen qemu linux u_boot zephyr disk
 }
 
 build_clean() {
@@ -215,6 +225,40 @@ build_clean_src() {
 build_clean_src_all() {
 	build_clean_src
 	rm -rf src-ref
+}
+
+build_demo1() {
+	build_some rust util xen_ffa qemu_i2c qemu_ffa_arm64 \
+	  linux_virtio_msg_ffa disk_demo1_guest disk_debian 
+}
+
+build_demo2a() {
+	build_some util xen_virtio_msg qemu_msg qemu_msg_arm64 \
+	  linux_virtio_msg_ffa disk_demo2a 
+}
+
+build_demo2b() {
+	build_some util xen_virtio_msg qemu_msg qemu_msg_arm64 \
+	  linux_virtio_msg_ffa disk_demo2b disk_debian
+}
+
+build_demo2() {
+	build_demo2a
+	build_demo2b
+}
+
+build_demo3() {
+	build_some devmem2 build_uio_ivshmem_test qemu_ivshmem_flat \
+	  linux_virtio_msg disk_debian
+}
+
+build_demo4() {
+	build_some devmem2 qemu_msg zephyr \
+	  linux_virtio_msg disk_demo4
+}
+
+build_demo_amd_hw() {
+	build_some linux_virtio_msg_amd_x86 linux_virtio_msg_amd_arm64
 }
 
 CMD=${1//-/_}; shift
