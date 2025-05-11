@@ -36,11 +36,15 @@ strip_usr_arm() {
 
 DEF_TARGETS="arm64 x86"
 
-build_arm64() {
+common_arm64() {
 	BOARD=ve2303
 	KERNEL_NAME=xyz
 	# ROOTFS_FILE=xen-image-minimal-genericarm64.rootfs.tar.bz2
 	ROOTFS_FILE=versal-virtio-msg-demo-image-versal-generic.rootfs.tar.gz
+}
+
+build_arm64() {
+	common_arm64
 	MODULES_KEEP=true
 	HACK_CBS="cb:root-home-symlink cb:usr-merge cb:strip_usr_arm cb:add-init-symlink"
 	do_one_initramfs
@@ -48,15 +52,55 @@ build_arm64() {
 	mkimage -A arm64 -T ramdisk -d $D/rootfs.cpio.gz $D/rootfs.cpio.gz.u-boot
 }
 
-build_x86() {
+# build bootable sdcard disk image
+build_arm64_disk() {
+	build_arm64
+	D=generated
+	I=../../images/debian-12-arm64
+	mkdir -p $D
+	mkdir -p $D/efi
+	echo "This is a blank EFI partition" >$D/efi/README-blank.txt
+
+	new-vfat $D/boot.efi     250M EFI  $D/efi
+	new-ext4 $D/rootfs.ext4 2700M root $D/rootfs.cpio.gz
+	new-gpt-image $I/hd.img 3000M $D/boot.efi $D/rootfs.ext4
+	rm $I/hd.sfdisk
+}
+
+common_x86() {
 	BOARD=fp6
 	ARCH=x86_64
 	ROOTFS_FILE=xen-image-minimal-genericx86-64.rootfs.tar.bz2
 	KERNEL_NAME=virtio-msg-amd-x86
+}
+
+# build initramfs for x86
+build_x86() {
+	common_x86
+
 	MODULES_KEEP=false
 	STRIP=strip
 	HACK_CBS="cb:root-home-symlink cb:usr-merge cb:strip_usr_x86 cb:add-init-symlink"
 	do_one_initramfs
+}
+
+# build bootable USB disk image
+build_x86_disk() {
+	common_x86
+
+	mkdir -p $D
+	mkdir -p $D/efi
+	echo "This is a blank EFI partition" >$D/efi/README.txt
+
+	new-vfat $D/boot.efi     250M EFI  $D/efi
+	new-ext4 $D/rootfs.ext4 2700M root $D/rootfs.tar.gz
+	new-gpt-image $I/hd.img 3000M $D/boot.efi $D/rootfs.ext4
+	rm $I/hd.sfdisk
+}
+
+build_disks() {
+	(build_arm64_disk)
+	(build_x86_disk)
 }
 
 .  $BASE/scripts/make-targets-helper-lib
