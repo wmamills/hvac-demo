@@ -42,7 +42,7 @@ struct amp_queue_head_t {
 	uint16_t	status;		// status of self
 	uint16_t	head;		// head index for my queue
 	uint16_t	tail;		// tail index for other queue
-}
+};
 
 // status field layout
 #define AMP_Q_STATUS_STATE_MASK 0x001F
@@ -130,7 +130,7 @@ struct amp_notification_t<u8 N, bool mask> {
 	if mask {
 		uint64_t 	rx_mask[N];	// array of mask bits
 	}
-}
+};
 
 /* Example Layout, (medium, 4k for device, 4k for driver)
 **
@@ -234,146 +234,61 @@ struct amp_notification_t<u8 N, bool mask> {
 **    all device and virtqueue notifications are done in band via messages
 */
 
-/* The small layout definition is an in memory self description of the
+/* The simple layout definition is an in memory self description of the
 ** communication shared memory area and appears at byte 0 of this area
 ** This form of the structure does:
-**     * allows 0 to 4038 bit of bi-directional notification, with optional mask
-**     * defines one queue in each direction with element size of 64 bytes and
-**       with the number of elements from 1 to
+**     * allows 0 to 4038 bits of bi-directional notification, with optional mask
+**     * defines one queue in each direction with specified element size and
+**       number of elements
+**     * 64 bit memrefs are used to specify either offsets from the start of
+**       this structure or references to other memory areas
 */
-struct amp_layout_def_small_t {
+struct amp_layout_def_simple_t {
 	uint16_t	magic;			// magic & ready indication
-						// ready = MAGIC_LAYOUT_DEF_SMALL
+						// ready = MAGIC_LAYOUT_DEF_SIMPLE
 						// not ready = 0 or MAGIC_Q_DEF_NOT_READY
-	uint8_t		version;		// 0x01
-	uint8_t		length;			// size of this structure
+	uint16_t	version;		// 0x01
+	uint16_t	length;			// 64
+
+	// include mask array in layout
+	#define AMP_LAYOUT_OPTION_NOTIFICATION_MASK    0x0001
+	uint16_t	options;
 
 	// driver and device know who they are, no peer_id's are used
 
 	/* number of notification words provided in each direction
 	** 0 to 64
 	** implies number of direct & indirect
-	** layout is implied device, then driver
 	** for each:
 	**    u64 tx[N];
 	**    u64 rx[N];
 	**    optional u64 mask[N];
 	*/
-	#define AMP_LAYOUT_NOTIFICATION_FLAG_BITMASK 0xF000
-	#define AMP_LAYOUT_NOTIFICATION_FLAG_MASK    0x8000 // include mask array in layout
-	uint8_t	num_notifications;		// 0 to 64
-	uint8_t num_vq_notify_per_device;	// 1, 2, 4, 8, 16
+	uint8_t		num_notifications;		// 0 to 64
+	uint8_t 	num_vq_notify_per_device;	// 1, 2, 4, 8, 16
 
 	/* count of number of queue elements for each direction
-	** expected range 1 to 8096
-	** for size == 16, max elements <= 480
+	** and the size of each queue element
 	*/
 	uint16_t	num_q_elements;
+	uint16_t	size_q_elements;
 
-// if size == 8, stop here, offsets are implied by values above
-// if size == 16, everything fits in 64K (always include, never include)
-	uint16_t	off_dev_notifications;
-	uint16_t	off_drv_notifications;
-	uint16_t	off_dev_q_elements;
-	uint16_t	off_drv_q_elements;
-// if size == 32, everything fits in one segment < 4G (overkill?)
-	uint32_t	off_dev_notifications;
-	uint32_t	off_drv_notifications;
-	uint32_t	off_dev_q_elements;
-	uint32_t	off_drv_q_elements;
-	uint32_t	size_dev_q_elements;
-	uint32_t	size_drv_q_elements;
-// if size == 40, big offsets with MAP IDs in MSB (overkill!?)
-	uint64_t	off_dev_notifications;
-	uint64_t	off_drv_notifications;
-	uint64_t	off_dev_q_elements;
-	uint64_t	off_drv_q_elements;
-	uint32_t	size_dev_q_elements;
-	uint32_t	size_drv_q_elements;
-}
+	uint16_t	pad1;			// reserved, should be zero
 
-/* Full flexibility layout definition
-
-I need to find the right terms and I have more data structures to add but here is the idea:
-
-I expect one or more share memory areas. Example:
-	one area somewhere in DDR and one in OCRAM
-
-Each memory area will have a data structure that gives it an ID and defines sub-regions.
-Each sub-region will define which peers have what r/w permissions and who has allocate ownership.
-
-The 4k below is just an example, it could be 256 bytes or 1k or whatever fits the data.
-Memory permissions can be the honor system or can be enforced by HW or hypervisors etc.
-If enforced the size of the sub-areas will need to be adjusted to fit.
-
-This sketch shows TWO virtio-msg buses:
-	Linux driver and M4 device
-	M4 driver and Linux device
-
-DDR shared memory segment:
-4K coordinator owned data, ro for peer 0  & 1
-	memory area header 	// header for this memory area
-	memory ID table		// table of all memory areas
-	memory sub-area table	// sub-area list for this memory area
-	peer ID table		// list of peers
-	device table		// list of virtio-msg buses and other devices
-4k peer 0 (Linux) owned data, rw by peer 1, ro peer 0
-	peer 0 info structures
-	queue heads and queue data for Linux driver to M4 device
-	queue heads and queue data for M4 driver to Linux device
-4k peer 1 (M4) owned data, rw by peer 1, ro peer 0
-	peer 1 info structures
-	queue heads and queue data for M4 device to Linux driver
-	queue heads and queue data for M4 driver to Linux device
-2M-12K
-	r/w by Linux and M4, allocation owner = M4
-	M4 allocates virt-queues and buffers here for its drivers
-8M
-	r/w by Linux and M4, allocation owner = Linux
-	Linux allocates virt-queues and buffers here for its drivers
-
-
-Shared OCRAM:
-	memory area header
-	r/w by Linux and M4, allocation owner = Linux
-
-*/
-
-/* Queue layout definition
-** This structure can be used in the start of shared memory to define the
-** shared memory layout for a queue pair.
-**
-** This structure is static at run time from the device & driver POV
-**
-** Use of this structure is not required if both sides can get this information
-** from other places such as devicetree or compile time constants.
-*/
-struct amp_queue_def_t {
-	uint32_t	magic;			// magic & ready indication
-						// ready = MAGIC_Q_DEF
-						// not ready = 0 or MAGIC_Q_DEF_NOT_READY
-	uint32_t	version;		// 0x0001_0000
-	uint32_t	driver_peer_ord;	// should be 0 if not used
-	uint32_t	device_peer_ord;	// should be 1 if not used
-
-	/* size and count of queue elements from driver to device
-	** element size should be a power of 2,
-	**    some implementations may only support a given size such as 64
-	** number of elements should be > 1 */
-	uint16_t	driver_element_size;
-	uint16_t	driver_num_elements;
-
-	/* size and count of queue elements from device to driver
-	** same constraints as driver to device */
-	uint16_t	device_element_size;
-	uint16_t	device_num_elements;
-
-	/* offsets from the start of the containing memory area
-	** each head is of type amp_queue_head_t
-	** each data is u8 data[num_elements][element_size]
+	/* if the AREA of each memref is 1, then it an unsigned offset from the 
+	** start of this memory area and this data structure is assumed to be
+	** as offset 0.  This is the normal expected usage
+	** 
+	** An AREA ID of 0 is a driver side PA address and can point anywhere 
+	** but the device will need to understand it.
+	** 
+	** other AREA ID may be used by mutual agreement by the driver and device
+	** side bus implementations.
 	*/
-	amp_memref_t	driver_head;
-	amp_memref_t	driver_data;
-	amp_memref_t	device_head;
-	amp_memref_t	device_data;
-}
+	amp_memref_t	off_dev_notifications;
+	amp_memref_t	off_drv_notifications;
+	amp_memref_t	off_dev_q_head;
+	amp_memref_t	off_drv_q_head;
+	amp_memref_t	off_dev_q_elements;
+	amp_memref_t	off_drv_q_elements;
+};
