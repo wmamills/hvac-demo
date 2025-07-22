@@ -20,16 +20,6 @@ build_xen_vhost_frontend() {
 		cd xen-vhost-frontend
 		git checkout virtio-msg
 		git reset --hard c2ceaeea8f7fa32c37447cc87d2b133783da6d94
-
-if false; then
-		# Xen 4.19 support pending in PR #1
-		# https://github.com/mathieupoirier/xen-sys/pull/1
-		# https://github.com/epilys/xen-sys/commits/feature/add-domctl-interface-version-features/
-		sed -i -e 's#'\
-'{ git = "https://github.com/mathieupoirier/xen-sys" }#'\
-'{ git = "https://github.com/epilys/xen-sys.git", rev = "e711d67ff3a77df88a92f1f1b45bfd6ec59b3190" }#'\
-		    Cargo.toml
-fi
 	else
 		cd src/xen-vhost-frontend
 	fi
