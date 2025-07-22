@@ -91,6 +91,27 @@ build_linux_virtio_msg_ffa() {
 	linux_common linux-virtio-msg-ffa
 }
 
+# this one should go away when demo4 is rebased
+build_linux_virtio_msg_lb() {
+	linux_virtio_common
+	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+	# As of 2025/07/22
+	# virtio/msg-v2-xen 8 commits on top of:
+	# virtio/msg-v2     2 commits on top of:
+	# virtio/msg-rfc-v1 9 commits on top of v6.16-rc6
+	#
+	# virtio/msg-v2-xen is commit w/ viresh's initramfs addeded then disabled
+	# COMMIT="7de2e61d73c3a756ec1e05c75a960c30c30b112d"
+	# commit w/ viresh's code but zero defconfig changes
+	# COMMIT="5054df4d1fd74ee077a79aafb65a847793d64b12"
+	BRANCH="virtio/msg-rfc-v1"
+	TAG=""
+	COMMIT="7de2e61d73c3a756ec1e05c75a960c30c30b112d"
+	CONFIG="defconfig"
+	EXTRA_CONFIG=""
+	linux_common linux-virtio-msg-lb
+}
+
 build_linux_upstream() {
 	URL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 	BRANCH=""
@@ -115,6 +136,7 @@ build_linux_ivshmem_uio() {
 build_linux() {
 	(build_linux_virtio_msg)
 	(build_linux_virtio_msg_ffa)
+	(build_linux_virtio_msg_lb)
 	(build_linux_upstream)
 
 	# we use virtio_msg for this now

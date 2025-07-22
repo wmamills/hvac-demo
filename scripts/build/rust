@@ -8,6 +8,7 @@ TGT=target/aarch64-unknown-linux-gnu/release
 build_rust() {
 	(build_xen_vhost_frontend)
 	(build_vhost_device)
+	(build_rust_lb_vhost_frontend)
 }
 
 build_xen_vhost_frontend() {
@@ -30,6 +31,28 @@ build_xen_vhost_frontend() {
 	ln -fs  \
 		../../../../src/xen-vhost-frontend/$TGT/xen-vhost-frontend \
 		$BASE_DIR/images/target/aarch64/debian-12/xen-vhost-frontend
+}
+
+build_rust_lb_vhost_frontend() {
+	echo "****** Build lb-vhost-frontend"
+	mkdir -p build
+	if [ ! -d src/lb-vhost-frontend ]; then
+		mkdir -p src; cd src
+		git clone https://github.com/vireshk/xen-vhost-frontend lb-vhost-frontend
+		#git clone https://github.com/wmamills/xen-vhost-frontend
+		cd lb-vhost-frontend
+		git checkout virtio/msg-v2-lb
+		git reset --hard 1faf490658c8a96e130d781901d6c332a8efd77a
+	else
+		cd src/lb-vhost-frontend
+	fi
+	. ~/.cargo/env
+	cargo build --release --all-features \
+		--target aarch64-unknown-linux-gnu
+	mkdir -p $BASE_DIR/images/target/aarch64/debian-12
+	ln -fs  \
+		../../../../src/lb-vhost-frontend/$TGT/xen-vhost-frontend \
+		$BASE_DIR/images/target/aarch64/debian-12/lb-vhost-frontend
 }
 
 build_vhost_device() {
