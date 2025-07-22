@@ -8,6 +8,8 @@ TGT=target/aarch64-unknown-linux-gnu/release
 build_rust() {
 	(build_xen_vhost_frontend)
 	(build_vhost_device)
+	(build_rust_lb_vhost_frontend)
+	(build_rust_lb_vhost_device)
 }
 
 build_xen_vhost_frontend() {
@@ -32,6 +34,28 @@ build_xen_vhost_frontend() {
 		$BASE_DIR/images/target/aarch64/debian-12/xen-vhost-frontend
 }
 
+build_rust_lb_vhost_frontend() {
+	echo "****** Build lb-vhost-frontend"
+	mkdir -p build
+	if [ ! -d src/lb-vhost-frontend ]; then
+		mkdir -p src; cd src
+		git clone https://github.com/vireshk/xen-vhost-frontend lb-vhost-frontend
+		#git clone https://github.com/wmamills/xen-vhost-frontend
+		cd lb-vhost-frontend
+		git checkout virtio/msg-v2-lb
+		git reset --hard 1faf490658c8a96e130d781901d6c332a8efd77a
+	else
+		cd src/lb-vhost-frontend
+	fi
+	. ~/.cargo/env
+	cargo build --release --all-features \
+		--target aarch64-unknown-linux-gnu
+	mkdir -p $BASE_DIR/images/target/aarch64/debian-12
+	ln -fs  \
+		../../../../src/lb-vhost-frontend/$TGT/xen-vhost-frontend \
+		$BASE_DIR/images/target/aarch64/debian-12/lb-vhost-frontend
+}
+
 build_vhost_device() {
 	echo "****** Build vhost-device"
 	mkdir -p build
@@ -50,6 +74,26 @@ build_vhost_device() {
 	ln -fs  \
 		../../../../src/vhost-device/$TGT/vhost-device-i2c \
 		$BASE_DIR/images/target/aarch64/debian-12/vhost-device-i2c
+}
+
+build_rust_lb_vhost_device() {
+	echo "****** Build lb-vhost-device"
+	mkdir -p build
+	if [ ! -d src/lb-vhost-device ]; then
+		mkdir -p src; cd src
+		git clone https://github.com/rust-vmm/vhost-device lb-vhost-device
+		cd lb-vhost-device
+		git reset --hard 9f8ba88c197df381740e77c5b673ffb122e2ec24
+	else
+		cd src/lb-vhost-device
+	fi
+	. ~/.cargo/env
+	cargo build --bin vhost-device-i2c --release \
+		--target aarch64-unknown-linux-gnu
+	mkdir -p $BASE_DIR/images/target/aarch64/debian-12
+	ln -fs  \
+		../../../../src/lb-vhost-device/$TGT/vhost-device-i2c \
+		$BASE_DIR/images/target/aarch64/debian-12/lb-vhost-device-i2c
 }
 
 main "$@"

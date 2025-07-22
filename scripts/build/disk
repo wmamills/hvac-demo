@@ -152,6 +152,7 @@ build_disk_debian_mixins() {
 		demo2b.d/mixins/debian \
 		demo3.d/mixins/debian \
 		demo4.d/mixins/debian \
+		demo-loopback.d/mixins/debian \
 
 }
 
@@ -192,10 +193,13 @@ build_disk_debian() {
 		qemu-ffa-arm64.tar.gz \
 		vhost-device-i2c \
 		xen-vhost-frontend \
+		lb-vhost-device-i2c \
+		lb-vhost-frontend \
 		xen-upstream.deb \
 		xen-virtio-msg.deb \
 		xen-ffa.deb \
 		devmem2	\
+		virtio-msg-loopback \
 		uio_ivshmem_test; do
 		$FETCH --image target/aarch64/debian-12/$f
 	done
@@ -218,10 +222,13 @@ tar-in images/target/aarch64/debian-12/qemu-ffa-arm64.tar.gz /opt/qemu-ffa compr
 tar-in build/mixins-debian.tar.gz / compress:gzip
 upload images/target/aarch64/debian-12/vhost-device-i2c /root/vhost-device-i2c
 upload images/target/aarch64/debian-12/xen-vhost-frontend /root/xen-vhost-frontend
+upload images/target/aarch64/debian-12/lb-vhost-frontend /root/lb-vhost-frontend
+upload images/target/aarch64/debian-12/lb-vhost-device-i2c /root/lb-vhost-device-i2c
 upload images/target/aarch64/debian-12/xen-upstream.deb /root/xen-upstream.deb
 upload images/target/aarch64/debian-12/xen-virtio-msg.deb /root/xen-virtio-msg.deb
 upload images/target/aarch64/debian-12/xen-ffa.deb /root/xen-ffa.deb
 upload images/target/aarch64/debian-12/devmem2 /root/devmem2
+upload images/target/aarch64/debian-12/virtio-msg-loopback /root/virtio-msg-loopback
 upload images/target/aarch64/debian-12/uio_ivshmem_test /root/uio_ivshmem_test
 upload build/demo-xen-ffa-rootfs.cpio.gz  /root/demo-xen-ffa-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
