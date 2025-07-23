@@ -15,10 +15,10 @@ build_xen_vhost_frontend() {
 	mkdir -p build
 	if [ ! -d src/xen-vhost-frontend ]; then
 		mkdir -p src; cd src
-		git clone https://github.com/vireshk/xen-vhost-frontend
-		#git clone https://github.com/wmamills/xen-vhost-frontend
+		#git clone https://github.com/vireshk/xen-vhost-frontend
+		git clone https://github.com/wmamills/xen-vhost-frontend
 		cd xen-vhost-frontend
-		git checkout virtio-msg
+		git checkout virtio-msg-v1.1
 		git reset --hard c2ceaeea8f7fa32c37447cc87d2b133783da6d94
 	else
 		cd src/xen-vhost-frontend
