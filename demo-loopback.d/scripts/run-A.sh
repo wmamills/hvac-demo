@@ -13,4 +13,5 @@ ${QEMU} \
   -display none -m 8192 -smp 8 \
   -kernel ${IMAGES}/${KERNEL} \
   -append "earlycon root=/dev/sda2 autorun=./demo-loopback/demo.sh" \
-  -device ds1338,address=0x20
+  -device ds1338,address=0x20 \
+  -dtb $MY_DIR/qemu.dtb
