@@ -34,7 +34,7 @@ if [ ! -e /dev/rtc1 ]; then
 	echo "***** TEST FAILED, no /dev/rtc1"
 fi
 
-if ! hwclock; then
+if ! hwclock -f /dev/rtc1; then
 	echo "***** TEST FAILED, can't run hwclock"
 else
 	echo "***** TEST PASSED, hwclock worked"
