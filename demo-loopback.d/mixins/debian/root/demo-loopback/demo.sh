@@ -19,7 +19,7 @@ if [ ! -e /run/demo-loopback-setup.done ]; then
 fi
 
 # start the i2c backend
-RUST_BACKTRACE=full ./vhost-device-i2c -s /root/i2c.sock -c 1 -l "90c0000.i2c:32" &
+RUST_BACKTRACE=full ./lb-vhost-device-i2c -s /root/i2c.sock -c 1 -l "90c0000.i2c:32" &
 RUST_BACKTRACE=full ./lb-vhost-frontend --socket-path /root/ &
 
 # create the I2C device using the loopback utility

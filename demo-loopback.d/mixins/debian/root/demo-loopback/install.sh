@@ -15,7 +15,7 @@ apt-get install ./xen-ffa.deb
 # use /opt/qemu-upstream as /opt/qemu
 ln -fs -T qemu-ffa /opt/qemu
 
-chmod +x vhost-device-* lb-vhost-frontend virtio-msg-loopback
+chmod +x lb-vhost-device-* lb-vhost-frontend virtio-msg-loopback
 
 echo "Installing packages done"
 mkdir -p ~/.done

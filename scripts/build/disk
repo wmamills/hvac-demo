@@ -193,6 +193,7 @@ build_disk_debian() {
 		qemu-ffa-arm64.tar.gz \
 		vhost-device-i2c \
 		xen-vhost-frontend \
+		lb-vhost-device-i2c \
 		lb-vhost-frontend \
 		xen-upstream.deb \
 		xen-virtio-msg.deb \
@@ -222,6 +223,7 @@ tar-in build/mixins-debian.tar.gz / compress:gzip
 upload images/target/aarch64/debian-12/vhost-device-i2c /root/vhost-device-i2c
 upload images/target/aarch64/debian-12/xen-vhost-frontend /root/xen-vhost-frontend
 upload images/target/aarch64/debian-12/lb-vhost-frontend /root/lb-vhost-frontend
+upload images/target/aarch64/debian-12/lb-vhost-device-i2c /root/lb-vhost-device-i2c
 upload images/target/aarch64/debian-12/xen-upstream.deb /root/xen-upstream.deb
 upload images/target/aarch64/debian-12/xen-virtio-msg.deb /root/xen-virtio-msg.deb
 upload images/target/aarch64/debian-12/xen-ffa.deb /root/xen-ffa.deb
