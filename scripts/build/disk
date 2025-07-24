@@ -235,6 +235,7 @@ upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
 upload images/target/aarch64/linux-virtio-msg-Image /root/linux-virtio-msg-Image
 upload images/target/aarch64/linux-virtio-msg-ffa-Image /root/linux-virtio-msg-ffa-Image
+upload images/target/aarch64/linux-virtio-msg-lb-Image /root/linux-virtio-msg-lb-Image
 upload images/target/aarch64/linux-upstream-Image /root/linux-upstream-Image
 EOF
 }
