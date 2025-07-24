@@ -15,11 +15,11 @@ build_xen_vhost_frontend() {
 	mkdir -p build
 	if [ ! -d src/xen-vhost-frontend ]; then
 		mkdir -p src; cd src
-		#git clone https://github.com/vireshk/xen-vhost-frontend
-		git clone https://github.com/wmamills/xen-vhost-frontend
+		git clone https://github.com/vireshk/xen-vhost-frontend
+		#git clone https://github.com/wmamills/xen-vhost-frontend
 		cd xen-vhost-frontend
-		git checkout virtio-msg-v1.1
-		git reset --hard c2ceaeea8f7fa32c37447cc87d2b133783da6d94
+		git checkout virtio/msg-v2
+		git reset --hard fe30a1a4659e7b6db8d7759719eb902738dbc0c7
 	else
 		cd src/xen-vhost-frontend
 	fi
@@ -39,7 +39,7 @@ build_vhost_device() {
 		mkdir -p src; cd src
 		git clone https://github.com/rust-vmm/vhost-device
 		cd vhost-device
-		git reset --hard 079d9024be604135ca2016e2bc63e55c013bea39
+		git reset --hard 9f8ba88c197df381740e77c5b673ffb122e2ec24
 	else
 		cd src/vhost-device
 	fi

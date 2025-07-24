@@ -72,8 +72,8 @@ build_xen_virtio_msg() {
 
 build_xen_ffa() {
 	URL=https://gitlab.com/xen-project/people/bmarquis/xen-ffa-research/
-	BRANCH=ffa-virtio/vm-to-vm
-	COMMIT="2770c186f551d85bef4a4df311aa91c9d5083cd1"
+	BRANCH=ffa-virtio/v2/ffa-v1.2
+	COMMIT="b77dca54eadfbbe921311aeb0a97c1b9fb003b4d"
 	EXTRA_CONFIG=""\
 "CONFIG_IOREQ_SERVER=y\n"\
 "CONFIG_EXPERT=y\n"\
