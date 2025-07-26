@@ -39,11 +39,14 @@ build_rust_lb_vhost_frontend() {
 	mkdir -p build
 	if [ ! -d src/lb-vhost-frontend ]; then
 		mkdir -p src; cd src
-		git clone https://github.com/vireshk/xen-vhost-frontend lb-vhost-frontend
-		#git clone https://github.com/wmamills/xen-vhost-frontend
+		# commented lines are for Viresh's version
+		# We are using my version that adjusts the memory address
+		#git clone https://github.com/vireshk/xen-vhost-frontend lb-vhost-frontend
+		git clone https://github.com/wmamills/xen-vhost-frontend lb-vhost-frontend
 		cd lb-vhost-frontend
 		git checkout virtio/msg-v2-lb
-		git reset --hard 1faf490658c8a96e130d781901d6c332a8efd77a
+		#git reset --hard 1faf490658c8a96e130d781901d6c332a8efd77a
+		git reset --hard 1d58c923b3688ddade9f8175c8e6387cf02120bd
 	else
 		cd src/lb-vhost-frontend
 	fi

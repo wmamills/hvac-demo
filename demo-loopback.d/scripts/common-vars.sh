@@ -14,7 +14,7 @@ QEMU_BASE=(
   -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::8022-:22
   -drive file=${BUILD}/demo-loopback-disk.qcow2,id=hd0,if=none,format=qcow2
   -device virtio-scsi-pci -device scsi-hd,drive=hd0
-  -display none -m 8192 -smp 8
+  -display none -m 512 -smp 2
   -kernel ${IMAGES}/${KERNEL}
   -append "earlycon root=/dev/sda2 autorun=./demo-loopback/demo.sh"
   -device ds1338,address=0x20
