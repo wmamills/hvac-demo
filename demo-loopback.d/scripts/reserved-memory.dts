@@ -1,0 +1,12 @@
+/ {
+	reserved-memory {
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+		ranges;
+
+		vmsglb@100000000 {
+			compatible = "restricted-dma-pool";
+			reg = <0x01 0x00 0x00 0x400000>;
+		};
+	};
+};
