@@ -4,9 +4,12 @@
 		#size-cells = <0x02>;
 		ranges;
 
-		vmsglb@100000000 {
+		// 4MB @ 508 MB into RAM, ie the last 4MB of the 512MB
+		// RAM Base = 0x0_4000_0000
+		// 508 MB  = 0x0_5fc0_0000
+		vmsglb@5fc00000 {
 			compatible = "restricted-dma-pool";
-			reg = <0x01 0x00 0x00 0x400000>;
+			reg = <0x00 0x5fc00000 0x00 0x400000>;
 		};
 	};
 };
