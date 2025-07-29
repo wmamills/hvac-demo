@@ -6,7 +6,7 @@
 QEMU_DIR=host/${HOST_ARCH}/qemu-i2c
 QEMU=$IMAGES/$QEMU_DIR/bin/qemu-system-aarch64
 
-KERNEL=target/aarch64/linux-virtio-msg-lb-Image
+KERNEL=target/aarch64/linux-virtio-msg-Image
 
 QEMU_BASE=(
   -machine virt,virtualization=on,gic-version=3

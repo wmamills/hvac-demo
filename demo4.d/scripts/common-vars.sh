@@ -9,7 +9,7 @@ IVSHMEM_SERVER=$IMAGES/$QEMU_DIR/bin/ivshmem-server
 
 KERNEL1=target/aarch64/linux-upstream-Image
 DISK1=demo4-A
-KERNEL2=target/aarch64/linux-virtio-msg-Image
+KERNEL2=target/aarch64/linux-virtio-msg-amp-v1-Image
 INITRD2=demo4-rootfs.cpio.gz
 
 DISK_TARGETS[$INITRD2]=disk_demo4

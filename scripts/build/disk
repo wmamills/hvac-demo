@@ -119,9 +119,9 @@ debian_mixins_common() {
 }
 
 build_disk_demo_xen_ffa_guest() {
-	$FETCH --image target/aarch64/linux-virtio-msg-ffa-modules.tar.gz
+	$FETCH --image target/aarch64/linux-virtio-msg-modules.tar.gz
 	buildroot_mixins_common demo-xen-ffa demo-xen-ffa.d/mixins/qemu1-guest \
-		images/target/aarch64/linux-virtio-msg-ffa-modules.tar.gz
+		images/target/aarch64/linux-virtio-msg-modules.tar.gz
 }
 
 build_disk_demo2a() {
@@ -139,11 +139,11 @@ build_disk_demo2b() {
 build_disk_demo4() {
 	echo "****** Get components needed for demo4"
 	$FETCH --image target/aarch64/debian-12/devmem2
-	$FETCH --image target/aarch64/linux-virtio-msg-modules.tar.gz
+	$FETCH --image target/aarch64/linux-virtio-msg-amp-v1-modules.tar.gz
 	cp images/target/aarch64/debian-12/devmem2 demo4.d/mixins/minimal/root
 	chmod +x demo4.d/mixins/minimal/root/devmem2
 	buildroot_mixins_common demo4 demo4.d/mixins/minimal \
-		images/target/aarch64/linux-virtio-msg-modules.tar.gz
+		images/target/aarch64/linux-virtio-msg-amp-v1-modules.tar.gz
 }
 
 build_disk_debian_mixins() {
@@ -177,12 +177,10 @@ build_disk_debian() {
 	for f in \
 		linux-upstream-modules.tar.gz \
 		linux-virtio-msg-modules.tar.gz \
-		linux-virtio-msg-lb-modules.tar.gz \
-		linux-virtio-msg-ffa-modules.tar.gz \
+		linux-virtio-msg-amp-v1-modules.tar.gz \
 		linux-upstream-Image \
 		linux-virtio-msg-Image \
-		linux-virtio-msg-lb-Image \
-		linux-virtio-msg-ffa-Image ; do
+		linux-virtio-msg-amp-v1-Image ; do
 		$FETCH --image target/aarch64/$f
 	done
 
@@ -214,8 +212,7 @@ mkdir /opt/qemu-msg
 mkdir /opt/qemu-ffa
 tar-in images/target/aarch64/linux-upstream-modules.tar.gz / compress:gzip
 tar-in images/target/aarch64/linux-virtio-msg-modules.tar.gz / compress:gzip
-tar-in images/target/aarch64/linux-virtio-msg-lb-modules.tar.gz / compress:gzip
-tar-in images/target/aarch64/linux-virtio-msg-ffa-modules.tar.gz / compress:gzip
+tar-in images/target/aarch64/linux-virtio-msg-amp-v1-modules.tar.gz / compress:gzip
 tar-in images/target/aarch64/debian-12/qemu-upstream-arm64.tar.gz /opt/qemu-upstream compress:gzip
 tar-in images/target/aarch64/debian-12/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
 tar-in images/target/aarch64/debian-12/qemu-ffa-arm64.tar.gz /opt/qemu-ffa compress:gzip
@@ -234,8 +231,7 @@ upload build/demo-xen-ffa-rootfs.cpio.gz  /root/demo-xen-ffa-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
 upload images/target/aarch64/linux-virtio-msg-Image /root/linux-virtio-msg-Image
-upload images/target/aarch64/linux-virtio-msg-ffa-Image /root/linux-virtio-msg-ffa-Image
-upload images/target/aarch64/linux-virtio-msg-lb-Image /root/linux-virtio-msg-lb-Image
+upload images/target/aarch64/linux-virtio-msg-amp-v1-Image /root/linux-virtio-msg-amp-v1-Image
 upload images/target/aarch64/linux-upstream-Image /root/linux-upstream-Image
 EOF
 }
