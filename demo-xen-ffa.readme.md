@@ -1,4 +1,4 @@
-# Demo1: virtio-msg kernel prototype with FFA
+# Demo-xen-ffa: virtio-msg kernel prototype with FFA
 
 This work shows virtio-msg running over the Arm FFA interface.
 It uses FFA indirect messages from DomU to Dom0.
@@ -13,7 +13,7 @@ TEEs in secure world.
 
 This demo is based on [this write up](https://linaro.atlassian.net/wiki/spaces/HVAC/pages/29657792513/2024-11+kernel+prototype+with+FFA).
 
-### Demo1 software layers
+### Demo-xen-ffa software layers
 
 ```
 * QEMU system model of arm64.

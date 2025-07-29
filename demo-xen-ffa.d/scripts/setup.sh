@@ -6,4 +6,4 @@ MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
 $FETCH --image $QEMU_DIR $XEN $KERNEL
-copy_debian_disk demo1
+copy_debian_disk demo-xen-ffa
