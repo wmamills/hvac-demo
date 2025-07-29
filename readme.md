@@ -12,6 +12,7 @@ virtio-msg such as virtio-msg-ffa.
 
 | Name       | Description                                               |
 |------------|-----------------------------------------------------------|
+| [demo-loopback](demo-loopback.readme.md) | virtio-msg-loopback demo    |
 | [demo-xen-ffa](demo-xen-ffa.readme.md)   | virtio-msg-ffa demo with Xen |
 | [demo2](demo2.readme.md)  | QEMU with virtio-msg-proxy                 |
 | demo2a     | dual QEMU with Linux user-space connection                |
