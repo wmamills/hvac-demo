@@ -118,9 +118,9 @@ debian_mixins_common() {
 	fakeroot tar czf build/mixins-$NAME.tar.gz -C build/mixins/$NAME .
 }
 
-build_disk_demo1_guest() {
+build_disk_demo_xen_ffa_guest() {
 	$FETCH --image target/aarch64/linux-virtio-msg-ffa-modules.tar.gz
-	buildroot_mixins_common demo1 demo1.d/mixins/qemu1-guest \
+	buildroot_mixins_common demo-xen-ffa demo-xen-ffa.d/mixins/qemu1-guest \
 		images/target/aarch64/linux-virtio-msg-ffa-modules.tar.gz
 }
 
@@ -148,7 +148,7 @@ build_disk_demo4() {
 
 build_disk_debian_mixins() {
 	debian_mixins_common debian \
-		demo1.d/mixins/debian \
+		demo-xen-ffa.d/mixins/debian \
 		demo2b.d/mixins/debian \
 		demo3.d/mixins/debian \
 		demo4.d/mixins/debian \
@@ -159,7 +159,7 @@ build_disk_debian_mixins() {
 build_disk_debian() {
 	do_disk_common_debian
 	do_disk_common_buildroot
-	(build_disk_demo1_guest)
+	(build_disk_demo_xen_ffa_guest)
 	(build_disk_demo2b)
 	(build_disk_debian_mixins)
 
@@ -230,7 +230,7 @@ upload images/target/aarch64/debian-12/xen-ffa.deb /root/xen-ffa.deb
 upload images/target/aarch64/debian-12/devmem2 /root/devmem2
 upload images/target/aarch64/debian-12/virtio-msg-loopback /root/virtio-msg-loopback
 upload images/target/aarch64/debian-12/uio_ivshmem_test /root/uio_ivshmem_test
-upload build/demo1-rootfs.cpio.gz  /root/demo1-rootfs.cpio.gz
+upload build/demo-xen-ffa-rootfs.cpio.gz  /root/demo-xen-ffa-rootfs.cpio.gz
 upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
 upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
 upload images/target/aarch64/linux-virtio-msg-Image /root/linux-virtio-msg-Image

@@ -1,8 +1,0 @@
-NUM_QEMU=1
-
-QEMU_SSH_NAME[0]=qemu1
-QEMU_BOOT_SCRIPT[0]="demo1.d/scripts/run-A.sh"
-QEMU_BOOT_ARG[0]=""
-
-CLEANUP_SCRIPT="demo1.d/scripts/cleanup.sh"
-SETUP_SCRIPT="demo1.d/scripts/setup.sh"

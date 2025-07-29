@@ -6,11 +6,11 @@ set -e
 
 test -c /dev/i2c-0
 
-$MY_DIR/install-demo1.sh
+$MY_DIR/install.sh
 
 # once per dom0 boot
 # /run is volatile and does not persist from boot to boot
-if [ ! -e /run/demo1-setup.done ]; then
+if [ ! -e /run/demo-xen-ffa-setup.done ]; then
 	# start the xen daemons
 	/etc/init.d/xencommons start
 
@@ -21,7 +21,7 @@ if [ ! -e /run/demo1-setup.done ]; then
 	echo ds1338 0x20 > /sys/bus/i2c/devices/i2c-0/new_device
 	echo 0-0020 > /sys/bus/i2c/devices/0-0020/driver/unbind
 
-	touch /run/demo1-setup.done
+	touch /run/demo-xen-ffa-setup.done
 fi
 
 # start the i2c backend
