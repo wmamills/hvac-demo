@@ -17,8 +17,9 @@ build_xen_vhost_frontend() {
 	mkdir -p build
 	if [ ! -d src/xen-vhost-frontend ]; then
 		mkdir -p src; cd src
+		# My virtio/msg-v2 == viresh's virtio/msg-v2 2025-07-30
+		# git clone https://github.com/wmamills/xen-vhost-frontend
 		git clone https://github.com/vireshk/xen-vhost-frontend
-		#git clone https://github.com/wmamills/xen-vhost-frontend
 		cd xen-vhost-frontend
 		git checkout virtio/msg-v2
 		git reset --hard fe30a1a4659e7b6db8d7759719eb902738dbc0c7
@@ -39,14 +40,12 @@ build_rust_lb_vhost_frontend() {
 	mkdir -p build
 	if [ ! -d src/lb-vhost-frontend ]; then
 		mkdir -p src; cd src
-		# commented lines are for Viresh's version
-		# We are using my version that adjusts the memory address
-		#git clone https://github.com/vireshk/xen-vhost-frontend lb-vhost-frontend
-		git clone https://github.com/wmamills/xen-vhost-frontend lb-vhost-frontend
+		# My virtio/msg-v2.1-lb == viresh's virtio/msg-v2-lb 2025-07-30
+		# git clone https://github.com/wmamills/xen-vhost-frontend lb-vhost-frontend
+		git clone https://github.com/vireshk/xen-vhost-frontend lb-vhost-frontend
 		cd lb-vhost-frontend
 		git checkout virtio/msg-v2-lb
-		#git reset --hard 1faf490658c8a96e130d781901d6c332a8efd77a
-		git reset --hard 1d58c923b3688ddade9f8175c8e6387cf02120bd
+		git reset --hard ce0c0810784ec270803b37e5bbf92b5dab32f3b8
 	else
 		cd src/lb-vhost-frontend
 	fi
