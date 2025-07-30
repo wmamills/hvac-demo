@@ -76,21 +76,21 @@ build_linux_virtio_msg_amp_v1() {
 # this one should go away when demo4 is rebased
 build_linux_virtio_msg() {
 	linux_virtio_common
-	URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
-	# As of 2025/07/22
-	# virtio/msg-v2-xen 8 commits on top of:
+	#URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+	# As of 2025/07/30 updated for RFC #1 to LKML
+	# virtio/msg-v2-xen 6 commits on top of:
 	# virtio/msg-v2     2 commits on top of:
-	# virtio/msg-rfc-v1 9 commits on top of v6.16-rc6
+	# virtio/msg-rfc-v1 8 commits on top of v6.16
 	#
 	# virtio/msg-v2-xen is commit w/ viresh's initramfs added
-	#     COMMIT="234030b70c0494b5e5aca835c0e5e73ff6e4bf5e"
+	#     COMMIT="5c862c7aa0142e3f43efc66a4a8f01f72aeed5ea"
 	# commit w/ defconfig changes but no built-in rootfs.cpio
-	#     COMMIT="453ae24a0ace3959a9053ab0ca7bafec1f606fb2"
+	#     COMMIT="60dbf1f7796473a45feb35a491c9275f34e4535e"
 	# commit w/ viresh's code but zero defconfig changes
-	#     COMMIT="78bcdde64a89ac0b29c9ad43d26069fa7efc532d"
-	BRANCH="virtio/msg-v2-xen"
+	#     COMMIT="a209866c4341b000c1928b5a0fc845839fdefea8"
+	BRANCH="viresh-virtio-msg-v2.1-xen"
 	TAG=""
-	COMMIT="453ae24a0ace3959a9053ab0ca7bafec1f606fb2"
+	COMMIT="60dbf1f7796473a45feb35a491c9275f34e4535e"
 	CONFIG="defconfig"
 	EXTRA_CONFIG=""
 	linux_common linux-virtio-msg
