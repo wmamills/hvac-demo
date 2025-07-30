@@ -82,13 +82,15 @@ build_linux_virtio_msg() {
 	# virtio/msg-v2     2 commits on top of:
 	# virtio/msg-rfc-v1 9 commits on top of v6.16-rc6
 	#
-	# virtio/msg-v2-xen is commit w/ viresh's initramfs addeded then disabled
-	# COMMIT="7de2e61d73c3a756ec1e05c75a960c30c30b112d"
+	# virtio/msg-v2-xen is commit w/ viresh's initramfs added
+	#     COMMIT="234030b70c0494b5e5aca835c0e5e73ff6e4bf5e"
+	# commit w/ defconfig changes but no built-in rootfs.cpio
+	#     COMMIT="453ae24a0ace3959a9053ab0ca7bafec1f606fb2"
 	# commit w/ viresh's code but zero defconfig changes
-	# COMMIT="5054df4d1fd74ee077a79aafb65a847793d64b12"
-	BRANCH="virtio/msg-rfc-v1"
+	#     COMMIT="78bcdde64a89ac0b29c9ad43d26069fa7efc532d"
+	BRANCH="virtio/msg-v2-xen"
 	TAG=""
-	COMMIT="7de2e61d73c3a756ec1e05c75a960c30c30b112d"
+	COMMIT="453ae24a0ace3959a9053ab0ca7bafec1f606fb2"
 	CONFIG="defconfig"
 	EXTRA_CONFIG=""
 	linux_common linux-virtio-msg
