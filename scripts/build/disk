@@ -176,9 +176,11 @@ build_disk_debian() {
 	for f in \
 		linux-upstream-modules.tar.gz \
 		linux-virtio-msg-modules.tar.gz \
+		linux-virtio-msg-lb-modules.tar.gz \
 		linux-virtio-msg-ffa-modules.tar.gz \
 		linux-upstream-Image \
 		linux-virtio-msg-Image \
+		linux-virtio-msg-lb-Image \
 		linux-virtio-msg-ffa-Image ; do
 		$FETCH --image target/aarch64/$f
 	done
@@ -208,6 +210,7 @@ mkdir /opt/qemu-msg
 mkdir /opt/qemu-ffa
 tar-in images/target/aarch64/linux-upstream-modules.tar.gz / compress:gzip
 tar-in images/target/aarch64/linux-virtio-msg-modules.tar.gz / compress:gzip
+tar-in images/target/aarch64/linux-virtio-msg-lb-modules.tar.gz / compress:gzip
 tar-in images/target/aarch64/linux-virtio-msg-ffa-modules.tar.gz / compress:gzip
 tar-in images/target/aarch64/debian-12/qemu-upstream-arm64.tar.gz /opt/qemu-upstream compress:gzip
 tar-in images/target/aarch64/debian-12/qemu-msg-arm64.tar.gz /opt/qemu-msg compress:gzip
