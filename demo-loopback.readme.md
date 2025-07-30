@@ -45,7 +45,7 @@ This demo is based on [this write up](https://linaro.atlassian.net/wiki/spaces/H
         bridges vhost-i2c to kernel's i2c bus
         communicates to vhost-frontend via socket inode
     * lb-vhost-frontend
-        converts FFA indirect messages to standard vhost interface
+        converts virtio-msg messages to standard vhost interface
         uses memmap on /dev/virtio-msg-lb for reserved memory access
         uses read & write on /dev/virtio-msg-0 to tx/rx messages to bus
     * virtio-msg-loopback
