@@ -8,7 +8,7 @@ ROOTFS=${HOME}/demo2b-kvm-rootfs.cpio.gz
 R_VMID=$1
 shift
 
-DEV_DOORBELL=0000:00:03.0
+DEV_DOORBELL=0000:00:01.0
 
 set -x
 ${QEMU} ${MACHINE} -m 512M -cpu host -accel kvm                   \

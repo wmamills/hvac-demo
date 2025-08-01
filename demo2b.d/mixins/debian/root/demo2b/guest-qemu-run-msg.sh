@@ -6,8 +6,8 @@ MACHINE="-M x-virtio-msg"
 R_VMID=$1
 shift 1
 
-DEV_DOORBELL=0000:00:03.0
-DEV_SYSMEM=0000:00:04.0
+DEV_DOORBELL=0000:00:01.0
+DEV_SYSMEM=0000:00:02.0
 
 MEMFILE=/sys/bus/pci/devices/${DEV_SYSMEM}/resource2_wc
 

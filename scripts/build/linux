@@ -104,7 +104,8 @@ build_linux_upstream() {
 	CONFIG="defconfig xen.config"
 	EXTRA_CONFIG="\
 		extra.config virtio.config vfio.config \
-		qemu-xen.config uio.config trim.config"
+		qemu-xen.config uio.config trim.config \
+		virtio-mmio.config"
 	linux_common linux-upstream
 }
 
