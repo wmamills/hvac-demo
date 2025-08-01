@@ -18,9 +18,9 @@ required as those specify MSI parameters and MSI is not used in ivshmem-flat.)
 On the other side, Linux is used.  This Linux branch has a uio driver for PCI 
 ivshmem.  The Linux userspace has a test program that uses uio to communicate
 with the Cortex-M.  There are multiple way this demo could have been constructed
-such as using vfio or perhaps the generic PCI uio driver.  However since demo4
-will create a ivshmem pci driver for virtio-msg, this demo tests some of the 
-low level facilities before we do that using an existing kernel pci driver.
+such as using vfio or perhaps the generic PCI uio driver.  However since
+demo-amp-dual-linux uses a ivshmem pci driver for virtio-msg, this demo tests
+some of the low level facilities for that using an existing kernel pci driver.
 
 ### Demo3 software layers
 

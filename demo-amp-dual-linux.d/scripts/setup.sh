@@ -7,7 +7,7 @@ MY_DIR=$(dirname $ME_ABS)
 
 $FETCH --image $KERNEL1 $KERNEL2 $QEMU_DIR
 $CHK_BUILD $INITRD2
-copy_debian_disk demo4-A
+copy_debian_disk demo-amp-dual-linux-device
 
 # ivshmem-server detaches itself, just run it
 $IVSHMEM_SERVER -S shm.sock -p shm.pid -l 4M -n 2

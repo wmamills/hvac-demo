@@ -1,6 +1,7 @@
 #!/bin/bash
 
-NAME=demo4
+NAME=demo-amp-dual-linux-driver
+SHORT_NAME=demo-driver
 
 # include the common variable settings
 ME_ABS=$(readlink -f $0)
@@ -24,7 +25,7 @@ ${QEMU} \
 	-netdev type=user,id=net0,hostfwd=tcp::2224-:22,hostfwd=tcp::2225-10.0.2.16:22 \
 	-kernel "${IMAGES}/${KERNEL2}" \
 	-initrd "${BUILD}/${INITRD2}" \
-	-append "root=$ROOT console=ttyAMA0 earlycon autorun=./$NAME/${NAME}.sh"
+	-append "root=$ROOT console=ttyAMA0 earlycon autorun=./demo-amp-dual-linux/${SHORT_NAME}.sh"
 
 	#-drive file=$DISK,id=hd0,if=none,format=qcow2 \
 	#-device virtio-blk-pci,drive=hd0 \

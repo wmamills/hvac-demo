@@ -16,7 +16,7 @@ virtio-msg such as virtio-msg-ffa.
 | [demo-xen-ffa](demo-xen-ffa.readme.md)   | virtio-msg-ffa demo with Xen |
 | [demo-qemu-proxy](demo-qemu-proxy.readme.md) | QEMU with virtio-msg-proxy |
 | [demo3](demo3.readme.md)  | dual QEMU using cortex-m Zephyr and Linux uio |
-| [demo4](demo4.readme.md)  | dual QEMU with direct kernel virtio-msg    |
+| [demo-amp-dual-linux](demo-amp-dual-linux.readme.md)  | dual QEMU with direct kernel virtio-msg    |
 
 Upcoming additions or changes:
 

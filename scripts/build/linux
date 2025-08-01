@@ -66,6 +66,7 @@ linux_virtio_common() {
 		qemu-xen.config uio.config trim.config"
 }
 
+# this one may go away when demo-amp-dual-linux is rebased
 build_linux_virtio_msg_amp_v1() {
 	linux_virtio_common
 	BRANCH=""
@@ -73,7 +74,6 @@ build_linux_virtio_msg_amp_v1() {
 	linux_common linux-virtio-msg-amp-v1
 }
 
-# this one should go away when demo4 is rebased
 build_linux_virtio_msg() {
 	linux_virtio_common
 	#URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git

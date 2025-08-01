@@ -132,13 +132,16 @@ build_disk_demo_qemu_proxy() {
 		images/target/aarch64/linux-upstream-modules.tar.gz
 }
 
-build_disk_demo4() {
-	echo "****** Get components needed for demo4"
+# Build initramfs for driver side
+build_disk_demo_amp_dual_linux() {
+	echo "****** Get components needed for demo-amp-dual-linux (driver side)"
 	$FETCH --image target/aarch64/debian-12/devmem2
 	$FETCH --image target/aarch64/linux-virtio-msg-amp-v1-modules.tar.gz
-	cp images/target/aarch64/debian-12/devmem2 demo4.d/mixins/minimal/root
-	chmod +x demo4.d/mixins/minimal/root/devmem2
-	buildroot_mixins_common demo4 demo4.d/mixins/minimal \
+	cp images/target/aarch64/debian-12/devmem2 \
+		demo-amp-dual-linux.d/mixins/minimal/root
+	chmod +x demo-amp-dual-linux.d/mixins/minimal/root/devmem2
+	buildroot_mixins_common demo-amp-dual-linux-driver \
+		demo-amp-dual-linux.d/mixins/minimal \
 		images/target/aarch64/linux-virtio-msg-amp-v1-modules.tar.gz
 }
 
@@ -147,7 +150,7 @@ build_disk_debian_mixins() {
 		demo-xen-ffa.d/mixins/debian \
 		demo-qemu-proxy.d/mixins/debian \
 		demo3.d/mixins/debian \
-		demo4.d/mixins/debian \
+		demo-amp-dual-linux.d/mixins/debian \
 		demo-loopback.d/mixins/debian \
 
 }
@@ -233,7 +236,7 @@ EOF
 }
 
 build_disk() {
-	(build_disk_demo4)
+	(build_disk_demo_amp_dual_linux)
 	(build_disk_debian)
 }
 

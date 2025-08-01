@@ -1,6 +1,6 @@
-# Demo4: Dual QEMU with direct kernel virtio-msg
+# demo-amp-dual-linux: Dual QEMU with direct kernel virtio-msg
 
-This demo has QEMU and Linux kernel with virtio-msg implemented.
+This demo has QEMU and Linux kernel with virtio-msg-amp implemented.
 
 Please keep in mind the following caveats for these demos at this stage:
 
@@ -53,7 +53,7 @@ When the kernel side is taught how to constrain its memory usage to only the
 shared memory area, then IVSHMEM2 will not be needed.
 IVSHMEM1 will be made larger for most use cases in this mode.
 
-### Demo4 Software Layers
+### Demo Software Layers
 
 ```
 Device Side:

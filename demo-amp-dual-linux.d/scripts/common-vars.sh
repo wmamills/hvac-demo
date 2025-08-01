@@ -8,11 +8,11 @@ QEMU=$IMAGES/$QEMU_DIR/bin/qemu-system-aarch64
 IVSHMEM_SERVER=$IMAGES/$QEMU_DIR/bin/ivshmem-server
 
 KERNEL1=target/aarch64/linux-upstream-Image
-DISK1=demo4-A
+DISK1=demo-amp-dual-linux-device
 KERNEL2=target/aarch64/linux-virtio-msg-amp-v1-Image
-INITRD2=demo4-rootfs.cpio.gz
+INITRD2=demo-amp-dual-linux-driver-rootfs.cpio.gz
 
-DISK_TARGETS[$INITRD2]=disk_demo4
+DISK_TARGETS[$INITRD2]=disk_demo_amp_dual_linux
 
 QEMU_BASE=(
 -machine virt,gic_version=3,iommu=smmuv3
@@ -28,8 +28,8 @@ QEMU_BASE=(
 -chardev socket,path=shm.sock,id=ivsh
 )
 
-# use direct linux boot (where you can use kvm if you wish)
-QEMU_KVM=(
+# use direct linux boot (no hypervisor)
+QEMU_DIRECT=(
 -kernel "${IMAGES}/${KERNEL1}"
--append "root=/dev/sda2 console=ttyAMA0 earlycon autorun=./demo4/${NAME}-kvm.sh"
+-append "root=/dev/sda2 console=ttyAMA0 earlycon autorun=./demo-amp-dual-linux/${SHORT_NAME}.sh"
 )

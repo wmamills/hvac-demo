@@ -1,10 +1,11 @@
 #!/bin/bash
 
-ARG1=${1:-KVM}; shift
+ARG1=${1:-DIRECT}; shift
 ARG2=${1:-$ARG1}; shift
 
 MODE=$ARG1
-NAME=demo4-A
+NAME=demo-amp-dual-linux-device
+SHORT_NAME=demo-device
 
 # include the common variable settings
 ME_ABS=$(readlink -f $0)
