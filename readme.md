@@ -14,9 +14,7 @@ virtio-msg such as virtio-msg-ffa.
 |------------|-----------------------------------------------------------|
 | [demo-loopback](demo-loopback.readme.md) | virtio-msg-loopback demo    |
 | [demo-xen-ffa](demo-xen-ffa.readme.md)   | virtio-msg-ffa demo with Xen |
-| [demo2](demo2.readme.md)  | QEMU with virtio-msg-proxy                 |
-| demo2b     | dual QEMU machines connected via two ivshmem pcie devices |
-| demo2b-xen | as demo2b but uses Xen on both sides as well              |
+| [demo-qemu-proxy](demo-qemu-proxy.readme.md) | QEMU with virtio-msg-proxy |
 | [demo3](demo3.readme.md)  | dual QEMU using cortex-m Zephyr and Linux uio |
 | [demo4](demo4.readme.md)  | dual QEMU with direct kernel virtio-msg    |
 

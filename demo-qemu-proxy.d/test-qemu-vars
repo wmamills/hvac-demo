@@ -1,0 +1,14 @@
+NUM_QEMU=2
+
+# The first qemu is for the device side
+QEMU_SSH_NAME[0]=device-side
+QEMU_BOOT_SCRIPT[0]="demo-qemu-proxy.d/scripts/run-A.sh"
+QEMU_BOOT_ARG[0]=""
+
+# The second qemu is for the driver side
+QEMU_SSH_NAME[1]=driver-side
+QEMU_BOOT_SCRIPT[1]="demo-qemu-proxy.d/scripts/run-B.sh"
+QEMU_BOOT_ARG[1]=""
+
+CLEANUP_SCRIPT="demo-qemu-proxy.d/scripts/cleanup.sh"
+SETUP_SCRIPT="demo-qemu-proxy.d/scripts/setup.sh"

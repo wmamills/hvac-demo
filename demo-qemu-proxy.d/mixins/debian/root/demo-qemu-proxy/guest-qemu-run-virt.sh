@@ -4,7 +4,7 @@
 QEMU=/opt/qemu-msg/bin/qemu-system-aarch64
 MACHINE="-M virt"
 KERNEL=${HOME}/linux-upstream-Image
-ROOTFS=${HOME}/demo2b-kvm-rootfs.cpio.gz
+ROOTFS=${HOME}/demo-qemu-proxy-kvm-rootfs.cpio.gz
 R_VMID=$1
 shift
 
@@ -15,7 +15,7 @@ ${QEMU} ${MACHINE} -m 512M -cpu host -accel kvm                   \
         -serial mon:stdio -display none                             \
         -kernel ${KERNEL}                                       \
         -initrd ${ROOTFS}                                       \
-        -append "console=ttyAMA0 autorun=./demo2b.sh"     \
+        -append "console=ttyAMA0 autorun=./demo.sh"     \
         -device virtio-msg-proxy-driver-pci,virtio-id=0x1 \
         -device virtio-msg-bus-ivshmem,dev=${DEV_DOORBELL},iommu=linux-proc-pagemap,remote-vmid=${R_VMID} \
         "$@"

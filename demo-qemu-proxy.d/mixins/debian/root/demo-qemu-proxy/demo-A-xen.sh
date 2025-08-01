@@ -4,7 +4,7 @@ MY_DIR=$(dirname $0)
 
 set -e
 
-. $MY_DIR/demo2b-common.sh
+. $MY_DIR/demo-common.sh
 
 mark_not_ready
 install_common

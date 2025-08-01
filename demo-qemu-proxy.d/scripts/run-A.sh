@@ -4,7 +4,8 @@ ARG1=${1:-KVM}; shift
 ARG2=${1:-$ARG1}; shift
 
 MODE=$ARG1
-NAME=demo2b-A
+NAME=demo-qemu-proxy-A
+SHORT_NAME=demo-A
 
 # include the common variable settings
 ME_ABS=$(readlink -f $0)

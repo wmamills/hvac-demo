@@ -124,11 +124,11 @@ build_disk_demo_xen_ffa_guest() {
 		images/target/aarch64/linux-virtio-msg-modules.tar.gz
 }
 
-build_disk_demo2b() {
-	echo "****** Get components needed for demo2b"
+build_disk_demo_qemu_proxy() {
+	echo "****** Get components needed for demo-qemu-proxy"
 	$FETCH --image target/aarch64/linux-upstream-modules.tar.gz
-	buildroot_mixins_common demo2b-kvm demo2b.d/mixins/qemu2-guest{,-kvm}
-	buildroot_mixins_common demo2b-xen demo2b.d/mixins/qemu2-guest \
+	buildroot_mixins_common demo-qemu-proxy-kvm demo-qemu-proxy.d/mixins/qemu2-guest{,-kvm}
+	buildroot_mixins_common demo-qemu-proxy-xen demo-qemu-proxy.d/mixins/qemu2-guest \
 		images/target/aarch64/linux-upstream-modules.tar.gz
 }
 
@@ -145,7 +145,7 @@ build_disk_demo4() {
 build_disk_debian_mixins() {
 	debian_mixins_common debian \
 		demo-xen-ffa.d/mixins/debian \
-		demo2b.d/mixins/debian \
+		demo-qemu-proxy.d/mixins/debian \
 		demo3.d/mixins/debian \
 		demo4.d/mixins/debian \
 		demo-loopback.d/mixins/debian \
@@ -156,7 +156,7 @@ build_disk_debian() {
 	do_disk_common_debian
 	do_disk_common_buildroot
 	(build_disk_demo_xen_ffa_guest)
-	(build_disk_demo2b)
+	(build_disk_demo_qemu_proxy)
 	(build_disk_debian_mixins)
 
 	echo "****** Get components to be added to debian disk"
@@ -224,8 +224,8 @@ upload images/target/aarch64/debian-12/devmem2 /root/devmem2
 upload images/target/aarch64/debian-12/virtio-msg-loopback /root/virtio-msg-loopback
 upload images/target/aarch64/debian-12/uio_ivshmem_test /root/uio_ivshmem_test
 upload build/demo-xen-ffa-rootfs.cpio.gz  /root/demo-xen-ffa-rootfs.cpio.gz
-upload build/demo2b-kvm-rootfs.cpio.gz /root/demo2b-kvm-rootfs.cpio.gz
-upload build/demo2b-xen-rootfs.cpio.gz /root/demo2b-xen-rootfs.cpio.gz
+upload build/demo-qemu-proxy-kvm-rootfs.cpio.gz /root/demo-qemu-proxy-kvm-rootfs.cpio.gz
+upload build/demo-qemu-proxy-xen-rootfs.cpio.gz /root/demo-qemu-proxy-xen-rootfs.cpio.gz
 upload images/target/aarch64/linux-virtio-msg-Image /root/linux-virtio-msg-Image
 upload images/target/aarch64/linux-virtio-msg-amp-v1-Image /root/linux-virtio-msg-amp-v1-Image
 upload images/target/aarch64/linux-upstream-Image /root/linux-upstream-Image
