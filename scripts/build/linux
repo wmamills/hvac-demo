@@ -21,7 +21,7 @@ linux_common() {
 
 	export ARCH=arm64
 	export CROSS_COMPILE=aarch64-linux-gnu-
-	export KBUILD_BASE="$(cd ../../build; pwd)/${NAME}"
+	export KBUILD_BASE="$(cd ../..; pwd)/build/${NAME}"
 	export KBUILD_OUTPUT=${KBUILD_BASE}-build
 	export INSTALL_PATH_BASE=${KBUILD_BASE}-install
 	export INSTALL_PATH=$INSTALL_PATH_BASE/boot
