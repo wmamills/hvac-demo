@@ -14,9 +14,9 @@ virtio-msg such as virtio-msg-ffa.
 |------------|-----------------------------------------------------------|
 | [demo-loopback](demo-loopback.readme.md) | virtio-msg-loopback demo    |
 | [demo-xen-ffa](demo-xen-ffa.readme.md)   | virtio-msg-ffa demo with Xen |
+| [demo-amp-dual-linux](demo-amp-dual-linux.readme.md)  | dual QEMU with direct kernel virtio-msg    |
 | [demo-qemu-proxy](demo-qemu-proxy.readme.md) | QEMU with virtio-msg-proxy |
 | [demo-amp-zephyr](demo-amp-zephyr.readme.md)  | dual QEMU using cortex-m Zephyr and Linux uio |
-| [demo-amp-dual-linux](demo-amp-dual-linux.readme.md)  | dual QEMU with direct kernel virtio-msg    |
 
 Upcoming additions or changes:
 
@@ -56,7 +56,7 @@ docker run -it --rm docker.io/wmills/hvac-demo
 
 Inside the container run any of the demos like:
 ```
-./demo1
+./demo-loopback
 ```
 
 Building the demos in the container image is also possible but you would be
@@ -102,7 +102,7 @@ per machine.
 You can run the demos using commands like this:
 
 ```
-./demo1
+./demo-loopback
 ```
 
 The demo scripts will fetch any needed images from the save-images sub-module
