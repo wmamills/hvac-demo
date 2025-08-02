@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME=demo3
+NAME=demo-amp-zephyr
 
 # include the common variable settings
 ME_ABS=$(readlink -f $0)
@@ -24,4 +24,4 @@ ${QEMU} \
 	-chardev socket,path=shm.sock,id=ivsh \
 	-netdev type=user,id=net0,hostfwd=tcp::2224-:22,hostfwd=tcp::2225-10.0.2.16:22 \
 	-kernel "${IMAGES}/${KERNEL2}" \
-	-append "root=$ROOT console=ttyAMA0 earlycon autorun=./$NAME/${NAME}.sh"
+	-append "root=$ROOT console=ttyAMA0 earlycon autorun=./$NAME/demo.sh"

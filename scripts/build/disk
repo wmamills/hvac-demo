@@ -149,7 +149,7 @@ build_disk_debian_mixins() {
 	debian_mixins_common debian \
 		demo-xen-ffa.d/mixins/debian \
 		demo-qemu-proxy.d/mixins/debian \
-		demo3.d/mixins/debian \
+		demo-amp-zephyr.d/mixins/debian \
 		demo-amp-dual-linux.d/mixins/debian \
 		demo-loopback.d/mixins/debian \
 

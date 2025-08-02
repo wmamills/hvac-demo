@@ -1,4 +1,7 @@
-# Demo3: Cortex-M MCU with ivshmem-flat and Linux uio
+# demo-amp-zephyr: Cortex-M MCU with ivshmem-flat and Linux uio
+
+**This demo is a work in progress.**  It currently shows the low level AMP
+basics that will be used but does not yet implement virtio-msg-amp.
 
 This demo shows how to do shared memory and bi-directional interrupts between
 a MCU platform and Linux using two QEMU instances.
@@ -22,7 +25,7 @@ such as using vfio or perhaps the generic PCI uio driver.  However since
 demo-amp-dual-linux uses a ivshmem pci driver for virtio-msg, this demo tests
 some of the low level facilities for that using an existing kernel pci driver.
 
-### Demo3 software layers
+### Demo software layers
 
 ```
 Cortex-M Side:

@@ -15,12 +15,12 @@ virtio-msg such as virtio-msg-ffa.
 | [demo-loopback](demo-loopback.readme.md) | virtio-msg-loopback demo    |
 | [demo-xen-ffa](demo-xen-ffa.readme.md)   | virtio-msg-ffa demo with Xen |
 | [demo-qemu-proxy](demo-qemu-proxy.readme.md) | QEMU with virtio-msg-proxy |
-| [demo3](demo3.readme.md)  | dual QEMU using cortex-m Zephyr and Linux uio |
+| [demo-amp-zephyr](demo-amp-zephyr.readme.md)  | dual QEMU using cortex-m Zephyr and Linux uio |
 | [demo-amp-dual-linux](demo-amp-dual-linux.readme.md)  | dual QEMU with direct kernel virtio-msg    |
 
 Upcoming additions or changes:
 
-* Update demo3 to be Linux + Zephyr with virtio-msg
+* Update demo-amp-zephyr to be Linux + Zephyr with virtio-msg
 * Eliminate the requirement for Debian 12 if only running the demos
 * Add option to use Yocto project rootfs for faster demo times
 
