@@ -13,6 +13,7 @@ virtio-msg such as virtio-msg-ffa.
 | Name       | Description                                               |
 |------------|-----------------------------------------------------------|
 | [demo-loopback](demo-loopback.readme.md) | virtio-msg-loopback demo    |
+| [demo-amp-qemu-pci](demo-amp-qemu-pci.readme.md) | virtio-msg-amp device on PCIe card inside QEMU |
 | [demo-xen-ffa](demo-xen-ffa.readme.md)   | virtio-msg-ffa demo with Xen |
 | [demo-amp-dual-linux](demo-amp-dual-linux.readme.md)  | dual QEMU with direct kernel virtio-msg    |
 | [demo-qemu-proxy](demo-qemu-proxy.readme.md) | QEMU with virtio-msg-proxy |

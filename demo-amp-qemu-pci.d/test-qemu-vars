@@ -1,0 +1,9 @@
+NUM_QEMU=1
+
+# The only qemu runs the driver side (and IS the device side)
+QEMU_SSH_NAME[0]=driver-side
+QEMU_BOOT_SCRIPT[0]="demo-amp-qemu-pci.d/scripts/run-A.sh"
+QEMU_BOOT_ARG[0]=""
+
+CLEANUP_SCRIPT="demo-amp-qemu-pci.d/scripts/cleanup.sh"
+SETUP_SCRIPT="demo-amp-qemu-pci.d/scripts/setup.sh"

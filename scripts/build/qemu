@@ -180,6 +180,23 @@ build_qemu_msg() {
 	qemu_common_host qemu-msg
 }
 
+# QEMU w/ virtio-msg for the host system
+build_qemu_msg_v2() {
+	echo "****** Build qemu w/ virtio-msg-v2 (host side for system emulation)"
+
+	qemu_msg_common
+	BRANCH=""
+	TAG=edgar-virtio-msg-v2
+	# Originally from https://github.com/edgarigl/qemu.git
+	# Branch: edgar/virtio-msg
+	# Commit: 868416c044ff1875f8c32e668e8007e67a65116a
+	# Dated:  2025-06-02
+
+	TARGETS="aarch64-softmmu"
+	EXTRA_CONFIG=""
+	qemu_common_host qemu-msg-v2
+}
+
 build_qemu_ivshmem_flat() {
 	echo "****** Build qemu w/ ivshmem-flat (host side for system emulation)"
 	URL=https://github.com/gromero/qemu.git

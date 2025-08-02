@@ -74,6 +74,19 @@ build_linux_virtio_msg_amp_v1() {
 	linux_common linux-virtio-msg-amp-v1
 }
 
+# Build Edgars branch for demo-amp-qemu-pci
+build_linux_virtio_msg_amp_v2() {
+	linux_virtio_common
+	BRANCH=""
+	TAG="hvac-demo-qemu-pci-v1"
+	# Originally from https://github.com/edgarigl/linux.git
+	# Branch: edgari/msg-v2-xen
+	# Commit: 9fe1cf81f95eb495f50ab1e574bf9a414d6570f3
+	# Dated:  2025-06-19
+
+	linux_common linux-virtio-msg-amp-v2
+}
+
 build_linux_virtio_msg() {
 	linux_virtio_common
 	#URL=git://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
