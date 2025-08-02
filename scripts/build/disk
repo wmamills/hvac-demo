@@ -145,6 +145,19 @@ build_disk_demo_amp_dual_linux() {
 		images/target/aarch64/linux-virtio-msg-amp-v1-modules.tar.gz
 }
 
+# Build initramfs for this demo
+build_disk_demo_amp_qemu_pci() {
+	echo "****** Get components needed for demo-amp-qemu-pci"
+	$FETCH --image target/aarch64/debian-12/devmem2
+	$FETCH --image target/aarch64/linux-virtio-msg-amp-v2-modules.tar.gz
+	cp images/target/aarch64/debian-12/devmem2 \
+		demo-amp-qemu-pci.d/mixins/minimal/root
+	chmod +x demo-amp-qemu-pci.d/mixins/minimal/root/devmem2
+	buildroot_mixins_common demo-amp-qemu-pci \
+		demo-amp-qemu-pci.d/mixins/minimal \
+		images/target/aarch64/linux-virtio-msg-amp-v2-modules.tar.gz
+}
+
 build_disk_debian_mixins() {
 	debian_mixins_common debian \
 		demo-xen-ffa.d/mixins/debian \
