@@ -192,7 +192,7 @@ build_qemu_msg_v2() {
 	# Commit: 868416c044ff1875f8c32e668e8007e67a65116a
 	# Dated:  2025-06-02
 
-	TARGETS="aarch64-softmmu"
+	TARGETS="aarch64-softmmu,x86_64-softmmu"
 	EXTRA_CONFIG=""
 	qemu_common_host qemu-msg-v2
 }

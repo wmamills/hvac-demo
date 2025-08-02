@@ -7,5 +7,3 @@ MY_DIR=$(dirname $ME_ABS)
 
 $FETCH --image $KERNEL1 $QEMU_DIR
 $CHK_BUILD $INITRD1
-
-echo "This is a setup test"; sleep 3
