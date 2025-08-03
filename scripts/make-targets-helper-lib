@@ -133,7 +133,7 @@ do_one_initramfs() {
 
 	# fetch any missing input
 	$BASE/scripts/maybe-fetch --image \
-		disk/$ROOTFS_FILE
+		disk/$ROOTFS_FILE \
 		$TP/linux-${KERNEL_NAME}-Image \
 		$TP/linux-${KERNEL_NAME}-modules.tar.gz
 
