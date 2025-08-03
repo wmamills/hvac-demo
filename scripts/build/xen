@@ -31,7 +31,7 @@ xen_common() {
 	    --disable-docs --disable-golang --disable-ocamltools \
 	    --with-system-qemu=/opt/qemu/bin/qemu-system-i386
 	if ! make -j9 debball \
-		CROSS_COMPILE=aarch64-linux-gnu- \
+		CROSS_COMPILE=aarch64-poky-linux- \
 		XEN_TARGET_ARCH=arm64; then
 		return
 	fi
