@@ -7,6 +7,7 @@ MY_DIR=$(cd $(dirname $0); pwd)
 build_qemu_host() {
 	(build_qemu_i2c)
 	(build_qemu_msg)
+	(build_qemu_msg_v2)
 	(build_qemu_ivshmem_flat)
 }
 
@@ -180,20 +181,22 @@ build_qemu_msg() {
 	qemu_common_host qemu-msg
 }
 
-# QEMU w/ virtio-msg for the host system
+# QEMU w/ virtio-msg for host  w/ "amp pci" support
 build_qemu_msg_v2() {
 	echo "****** Build qemu w/ virtio-msg-v2 (host side for system emulation)"
 
 	qemu_msg_common
 	BRANCH=""
-	TAG=edgar-virtio-msg-v2
+	TAG=edgar-virtio-msg-v2.1
 	# Originally from https://github.com/edgarigl/qemu.git
-	# Branch: edgar/virtio-msg
-	# Commit: 868416c044ff1875f8c32e668e8007e67a65116a
-	# Dated:  2025-06-02
+	# Branch: edgar/virtio-msg-test
+	# Commit: eec8e22f52e6c49ae18de8188aabc0da89553945
+	# Dated:  2025-08-04
+	COMMIT=""
+	PATCH=""
 
 	TARGETS="aarch64-softmmu"
-	EXTRA_CONFIG=""
+	EXTRA_CONFIG="" # --disable-werror"
 	qemu_common_host qemu-msg-v2
 }
 
