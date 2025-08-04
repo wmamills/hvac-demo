@@ -14,6 +14,15 @@ MY_DIR=$(cd $(dirname $0); pwd)
 xen_common() {
 	NAME=$1
 
+	case $DISTRO in
+	yocto)
+		CROSS_C=aarch64-poky-linux-
+		;;
+	debian|"")
+		CROSS_C=aarch64-linux-gnu-
+		;;
+	esac
+
 	mkdir -p build
 
 	if worktree_common xen https://github.com/xen-project/xen.git $NAME; then
@@ -31,7 +40,7 @@ xen_common() {
 	    --disable-docs --disable-golang --disable-ocamltools \
 	    --with-system-qemu=/opt/qemu/bin/qemu-system-i386
 	if ! make -j9 debball \
-		CROSS_COMPILE=aarch64-poky-linux- \
+		CROSS_COMPILE=${CROSS_C} \
 		XEN_TARGET_ARCH=arm64; then
 		return
 	fi
@@ -57,6 +66,19 @@ build_xen_upstream() {
 "CONFIG_EXPERT=y\n"\
 "CONFIG_TESTS=y\n"
 	xen_common xen-upstream
+}
+
+build_xen_upstream_yp() {
+	DISTRO=yocto
+	URL=https://github.com/xen-project/xen.git
+	TAG=RELEASE-4.19.0
+	BRANCH=""
+	COMMIT=""
+	EXTRA_CONFIG=""\
+"CONFIG_IOREQ_SERVER=y\n"\
+"CONFIG_EXPERT=y\n"\
+"CONFIG_TESTS=y\n"
+	xen_common xen-upstream-yp
 }
 
 build_xen_virtio_msg() {
