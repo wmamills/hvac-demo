@@ -4,7 +4,7 @@
 QEMU=/opt/qemu-msg/bin/qemu-system-aarch64
 MACHINE="-M virt"
 KERNEL=${HOME}/linux-upstream-Image
-ROOTFS=${HOME}/demo-qemu-proxy-kvm-rootfs.cpio.gz
+ROOTFS=${HOME}/demo-proxy-qemu-kvm-rootfs.cpio.gz
 R_VMID=$1
 shift
 

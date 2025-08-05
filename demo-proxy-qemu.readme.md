@@ -1,4 +1,4 @@
-# demo-qemu-proxy : QEMU with virtio-msg-proxy
+# demo-proxy-qemu : QEMU with virtio-msg-proxy
 
 This demo has QEMU with virtio-msg implemented.  QEMU also has a 
 virtio-msg-proxy that functions as a bridge between existing transports like 
@@ -40,7 +40,7 @@ side can run the guest kernel using KVM or as a DomU under Xen.  In practice
 the choice on each side is independent but we will show direct/kvm and xen/xen
 for illustration.
 
-### demo-qemu-proxy using direct and kvm (default)
+### demo-proxy-qemu using direct and kvm (default)
 
 ```
 Device Side:
@@ -64,7 +64,7 @@ Driver Side:
         configures and tests the bridged ethernet (eth1)
 ```
 
-### demo-qemu-proxy-xen using Xen on both sides
+### demo-proxy-qemu-xen using Xen on both sides
 
 ```
 Device Side:

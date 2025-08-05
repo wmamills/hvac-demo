@@ -2,4 +2,4 @@
 MY_DIR=$(dirname $0)
 cd $MY_DIR
 
-./demo-qemu-proxy xen xen
+./demo-proxy-qemu xen xen

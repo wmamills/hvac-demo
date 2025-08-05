@@ -26,4 +26,4 @@ ARG2=$(fixup_arg "$ARG2")
 
 #echo "ARG1=$ARG1 ARG2=$ARG2"
 
-./scripts/multi-qemu demo-qemu-proxy.d $ARG1 $ARG2 "$@"
+./scripts/multi-qemu demo-proxy-qemu.d $ARG1 $ARG2 "$@"

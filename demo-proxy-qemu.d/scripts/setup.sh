@@ -6,7 +6,7 @@ MY_DIR=$(dirname $ME_ABS)
 . $MY_DIR/common-vars.sh
 
 $FETCH --image $QEMU_DIR $KERNEL $U_BOOT $XEN $ROOTFS
-copy_debian_disk demo-qemu-proxy-A demo-qemu-proxy-B
+copy_debian_disk demo-proxy-qemu-A demo-proxy-qemu-B
 
 # make the dtb, only used for u-boot mode
 (cd $TEST_DIR/dts; make)

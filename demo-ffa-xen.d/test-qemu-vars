@@ -1,0 +1,8 @@
+NUM_QEMU=1
+
+QEMU_SSH_NAME[0]=qemu1
+QEMU_BOOT_SCRIPT[0]="demo-ffa-xen.d/scripts/run-A.sh"
+QEMU_BOOT_ARG[0]=""
+
+CLEANUP_SCRIPT="demo-ffa-xen.d/scripts/cleanup.sh"
+SETUP_SCRIPT="demo-ffa-xen.d/scripts/setup.sh"

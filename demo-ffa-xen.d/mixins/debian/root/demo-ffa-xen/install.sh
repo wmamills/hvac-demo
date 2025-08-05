@@ -2,7 +2,7 @@
 # needed by xen xl tool stack and qemu-system-i386
 set -e 
 
-if [ -e ~/.done/install-demo-xen-ffa.done ]; then
+if [ -e ~/.done/install-demo-ffa-xen.done ]; then
 	exit 0
 fi
 
@@ -20,4 +20,4 @@ chmod +x vhost-device-* xen-vhost-frontend
 
 echo "Installing packages done"
 mkdir -p ~/.done
-touch ~/.done/install-demo-xen-ffa.done
+touch ~/.done/install-demo-ffa-xen.done
