@@ -14,6 +14,8 @@ export BUILD=$BASE_DIR/build
 
 set_default_env() {
     MODE=demo
+    TIMEOUT=35
+    : ${QUIET:=false}
 
     : ${NOW:=$(date +%Y-%m-%d-%H%M%S)}
     export NOW
@@ -49,6 +51,8 @@ set_default_env() {
 
     SESSION_NAME=${MY_NAME}-${NOW}-${RANDOM}
     TESTS=( )
+
+    update_env
 }
 
 error() {
@@ -106,19 +110,19 @@ qemu_running_all() {
 }
 
 wait_qemu_stop() {
-    echo -n "waiting for qemu to stop "
+    $LOG_INFO -n "waiting for qemu to stop "
     start_timer
     for i in $(seq 1 $SHUTDOWN_WAIT); do
         if ! qemu_running_all; then
             DELAY=$(get_timer)
-            echo " OK"
+            $LOG_INFO " OK"
             return
         fi
-        echo -n "."
+        $LOG_INFO -n "."
         sleep 1
     done
     DELAY=$(get_timer)
-    echo " TIMEOUT"
+    $LOG_ERROR " TIMEOUT"
     false
 }
 
@@ -154,20 +158,20 @@ kill_qemu() {
 ###### Windows and main
 
 cleanup() {
-    echo "** clean-up"
+    $LOG_INFO "** clean-up"
     MY_TMPDIR=$(dirname $TMPDIR)
     if [ -e $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER ]; then
-        echo "cleaning our private tmp dir"
+        $LOG_INFO "cleaning our private tmp dir"
         rm -rf $MY_TMPDIR/test-qemu-tmp/* || true
         touch $MY_TMPDIR/test-qemu-tmp/$TMP_MARKER || error "Can't touch tmp marker"
     else
-        echo "private tmp dir not found"
+        $LOG_ERROR "private tmp dir not found"
     fi
 
     if [ -n "$CLEANUP_SCRIPT" ]; then
-        echo "running $CLEANUP_SCRIPT"
+        $LOG_INFO "running $CLEANUP_SCRIPT"
         if ! $BASE_DIR/$CLEANUP_SCRIPT; then
-            echo "$BASE_DIR/$CLEANUP_SCRIPT failed"
+            $LOG_ERROR "$BASE_DIR/$CLEANUP_SCRIPT failed"
         fi
     fi
 
@@ -176,7 +180,7 @@ cleanup() {
         qemu_debug_help $i
     done
 
-    echo "LOGS=$LOGS"
+    $LOG_INFO "LOGS=$LOGS"
     ln -sfT $(basename $LOGS) $(dirname $LOGS)/latest
     if [ -r $TOTALS ]; then
         cat $TOTALS
@@ -207,6 +211,10 @@ do_host_demo() {
     tmux kill-win
 }
 
+do_host_demo_test() {
+    do_host_demo "MODE=demo-test" "$@"
+}
+
 # for test mode, each qemu exit does nothing and the host pane is expected to
 # take action
 qemu_done_test() {
@@ -215,6 +223,11 @@ qemu_done_test() {
 
 # for demo mode, any qemu exit kills the whole tmux session
 qemu_done_demo() {
+    tmux kill-win
+}
+
+# for demo test mode, any qemu exit kills the whole tmux session
+qemu_done_demo_test() {
     tmux kill-win
 }
 
@@ -244,7 +257,7 @@ qemu_debug_help() {
     if [ -e $LOGS/$NAME-rc.txt ]; then
         RC=$(cat $LOGS/$NAME-rc.txt)
         if [ $RC -ne 0 ]; then
-            echo "****** Error exit from $NAME, tail of $LOGS/$NAME-log.txt"
+            $LOG_ERROR "****** Error exit from $NAME, tail of $LOGS/$NAME-log.txt"
             tail -n 25 $LOGS/$NAME-log.txt
         fi
     fi
@@ -259,6 +272,7 @@ export LOG="$LOG"
 export TOTALS="$TOTALS"
 export PID_FILE="$PID_FILE"
 export MODE="$MODE"
+export QUIET="$QUIET"
 
 RUNS="$RUNS"
 TRYS="$TRYS"
@@ -291,7 +305,31 @@ EOF
     fi
 }
 
-start_tmux_demo() {
+# used after import and after set_defaults
+update_env() {
+    if $QUIET; then
+        LOG_INFO=true
+    else
+        LOG_INFO=echo
+    fi
+    LOG_NORM=echo
+    LOG_ERROR=echo
+}
+
+import_env() {
+    . $1
+    update_env
+}
+
+tmux_has_session() {
+    tmux -L multi-qemu has-session -t "$SESSION_NAME" 2>/dev/null
+}
+
+tmux_kill_session() {
+    tmux -L multi-qemu kill-session -t "$SESSION_NAME"
+}
+
+start_tmux_common() {
     touch $LOG
     echo "" >$TOTALS
 
@@ -301,10 +339,37 @@ start_tmux_demo() {
 
     tmux -L multi-qemu set -s -t "$SESSION_NAME" mouse on
     tmux -L multi-qemu set -w -t "$SESSION_NAME:$QEMU_WIN_NAME" pane-border-status top
-    tmux -L multi-qemu attach -t "$SESSION_NAME:$QEMU_WIN_NAME"
 
     # Note: the tmux commands in tmux panes will find the right server via the
     # TMUX environment variable it exports to them
+}
+
+start_tmux_demo() {
+    start_tmux_common
+    tmux -L multi-qemu attach -t "$SESSION_NAME:$QEMU_WIN_NAME"
+    echo $? >$LOGS/tmux-rc.txt
+}
+
+start_tmux_demo_test() {
+    start_tmux_common
+    $LOG_INFO "SESSION=$SESSION_NAME LOGS=$LOGS"
+    $LOG_INFO "Waiting for demo to finish"
+    for (( s=0; s < $TIMEOUT; s+=1 )); do
+        if ! tmux_has_session; then
+            $LOG_INFO
+            $LOG_NORM "demo finished in $s seconds"
+            echo 0 >$LOGS/tmux-rc.txt
+            return 0
+        fi
+        sleep 1
+        if (( (s % 10) == 0 )); then
+            $LOG_INFO -n "."
+        fi
+    done
+    $LOG_INFO
+    $LOG_ERROR "demo timed out after $TIMEOUT seconds"
+    tmux_kill_session
+    echo 1 >$LOGS/tmux-rc.txt
 }
 
 # main starts things up and then waits for tmux to finish or detach
@@ -312,7 +377,7 @@ main() {
     set_default_env
 
     if [ -n "$TMUX" ]; then
-        echo "nested tmux not supported"
+        $LOG_ERROR "nested tmux not supported"
         exit 2
     fi
 
@@ -330,8 +395,19 @@ main() {
         . ./test-qemu-vars
     fi
 
-    # save the rest of the arguments for the sub-processes
-    SUB_ARGS=( "$@" )
+    # look at all the args
+    SUB_ARGS=( )
+    for i in "$@"; do
+        case $i in
+        --test|--demo-test)
+            MODE=demo_test
+            ;;
+        *)
+            # all other args are saved for the sub-processes
+            SUB_ARGS+=( $i )
+            ;;
+        esac
+    done
 
     export ENV_FILE="$LOGS/this-session-qemu-vars"
     mk_env
@@ -345,9 +421,9 @@ main() {
     export TMPDIR=$MY_TMPDIR/test-qemu-tmp
 
     if [ -n "$SETUP_SCRIPT" ]; then
-        echo "running $SETUP_SCRIPT"
+        $LOG_INFO "running $SETUP_SCRIPT"
         if ! $BASE_DIR/$SETUP_SCRIPT; then
-            echo "$BASE_DIR/$SETUP_SCRIPT script failed"
+            $LOG_ERROR "$BASE_DIR/$SETUP_SCRIPT script failed"
             cleanup
             exit 2
         fi
@@ -374,7 +450,7 @@ if [ x"$1" = x"subcmd" ]; then
     ENV_FILE="$2"
     CMD=$3
     shift 3
-    . "$ENV_FILE"
+    import_env "$ENV_FILE"
     do_$CMD "$@"
 elif [ x"$1" = x"help" ]; then
     do_help_$MODE
