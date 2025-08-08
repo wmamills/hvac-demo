@@ -12,7 +12,8 @@ copy_debian_disk demo-loopback
 # Get the dtb for the configuration we are going to use
 ${QEMU} \
 	"${QEMU_BASE[@]}" \
-	-machine dumpdtb=$MY_DIR/qemu.dtb
+	-machine dumpdtb=$MY_DIR/qemu.dtb 2>&1 \
+	| grep -v 'info: dtb dumped'
 
 # get the source for debug
 dtc -I dtb -O dts -o $MY_DIR/qemu.dts $MY_DIR/qemu.dtb
@@ -20,4 +21,5 @@ dtc -I dtb -O dts -o $MY_DIR/qemu.dts $MY_DIR/qemu.dtb
 # poorman's overlay
 # adapted from https://docs.u-boot.org/en/latest/develop/devicetree/dt_qemu.html
 cat  $MY_DIR/qemu.dts $MY_DIR/reserved-memory.dts >$MY_DIR/merged.dts
-dtc -o $MY_DIR/merged.dtb $MY_DIR/merged.dts
+dtc -o $MY_DIR/merged.dtb $MY_DIR/merged.dts 2>&1 \
+	| grep -v 'is not a phandle reference' || true
