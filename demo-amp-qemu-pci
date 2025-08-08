@@ -2,4 +2,4 @@
 MY_DIR=$(dirname $0)
 cd $MY_DIR
 
-./scripts/multi-qemu demo-amp-qemu-pci.d
+./scripts/multi-qemu demo-amp-qemu-pci.d "$@"
