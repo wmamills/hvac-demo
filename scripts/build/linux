@@ -125,6 +125,7 @@ build_linux_upstream() {
 build_linux() {
 	(build_linux_virtio_msg)
 	(build_linux_virtio_msg_amp_v1)
+	(build_linux_virtio_msg_amp_v2)
 	(build_linux_upstream)
 }
 
