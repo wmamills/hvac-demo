@@ -108,7 +108,7 @@ read_ready() {
 }
 
 wait_ready() {
-	TIMEOUT=${1:-300}
+	TIMEOUT=${1:-600}
 	for  i in $(seq $TIMEOUT); do
 		VAL=$(read_ready)
 		if [  "$VAL" == "$READY" ]; then
