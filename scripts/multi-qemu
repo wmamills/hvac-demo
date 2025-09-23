@@ -295,7 +295,7 @@ start_tmux_demo() {
     touch $LOG
     echo "" >$TOTALS
 
-    tmux -L multi-qemu -f /dev/null start-server
+    tmux -L multi-qemu -f /dev/null -u start-server
     tmux -L multi-qemu new-session -d -s "$SESSION_NAME" -n "$QEMU_WIN_NAME" \
         "$ME subcmd \"$ENV_FILE\" host_$MODE"
 
