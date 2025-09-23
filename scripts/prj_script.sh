@@ -95,6 +95,10 @@ check_distro_build_target() {
 		error "Distro $ID $VERSION_CODENAME, not supported for building target code"
 		;;
 	esac
+}
+
+get_distro_kernel_name() {
+	get_distro_type
 
 	case ${HOST_ARCH}-${ID}-${VERSION_CODENAME} in
 	x86_64-debian-bookworm)
@@ -121,6 +125,9 @@ check_distro() {
 		;;
 	""|"build"|"build-target")
 		check_distro_build_target
+		;;
+	"guestfish")
+		true # do nothing
 		;;
 	*)
 		error "Unknown check_distro type $1"
@@ -158,6 +165,16 @@ admin_setup_build_host() {
 	setup_done admin build-host
 }
 
+admin_setup_guestfish() {
+	check_setup admin guestfish && return 0
+
+	get_distro_kernel_name
+	# guestfish support, it also needs a readable kernel in /boot
+	apt-get install -yqq --no-install-recommends \
+		guestfish $KERNEL guestfs-tools
+	chmod +r /boot/*
+}
+
 admin_setup_build_target() {
 	check_setup admin build-target && return 0
 
@@ -179,10 +196,7 @@ admin_setup_build_target() {
 	apt-get install -yqq pkg-config:arm64 libglib2.0-dev:arm64 \
 	    libpixman-1-dev:arm64 libslirp-dev:arm64
 
-	# guestfish support, it also needs a readable kernel in /boot
-	apt-get install -yqq --no-install-recommends \
-		guestfish $KERNEL guestfs-tools
-	chmod +r /boot/*
+	admin_setup_guestfish
 
 	setup_done admin build-target
 }
@@ -203,6 +217,8 @@ admin_setup_run() {
 	    tmux fakeroot cpio bzip2 xz-utils \
 	    tcpdump device-tree-compiler net-tools
 
+	# temp, util we can remove guestfish from demo run requirements
+	admin_setup_guestfish
 
 	setup_done admin run
 }
